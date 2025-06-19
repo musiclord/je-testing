@@ -1,0 +1,30 @@
+{
+    "background.enabled": true,
+    "background.editor": {
+        "useFront": true,
+        "style": {
+            "background-position": "80% 50%",
+            "background-size": "cover",
+            "opacity": 0.15
+        },
+        "styles": [ {},{},{}],
+        "images": [
+            "file:///C:\\Users\\rich2\\OneDrive\\Library\\twitter_media_harvest\\84242940-1751249279879188726-01.jpg",
+            "file:///C:\\Users\\rich2\\OneDrive\\Library\\twitter_media_harvest\\_AGOTO-1835601956284530969-01.jpg",
+            "file:///C:\\Users\\rich2\\OneDrive\\Library\\twitter_media_harvest\\oekakizuki_turi-1506543380008140808-01.jpg",
+            "file:///C:\\Users\\rich2\\OneDrive\\Library\\twitter_media_harvest\\oekakizuki_turi-1903377621154722101-01.jpg",
+            "file:///C:\\Users\\rich2\\OneDrive\\Library\\twitter_media_harvest\\oekakizuki_turi-1851913654259847442-01.jpg",
+            "file:///C:\\Users\\rich2\\OneDrive\\Library\\twitter_media_harvest\\moleshi_-1903145621839810594-01.jpg",
+            "file:///C:/Users/rich2/OneDrive/Library/twitter_media_harvest/gaku69229487-1845277828453224739-01.jpg",
+            "file:///C:/Users/rich2/OneDrive/Library/twitter_media_harvest/_Machi0910-1881265428875649258-01.jpg",
+            "file:///C:\\Users\\rich2\\OneDrive\\Library\\twitter_media_harvest\\MizuAhiru-1861726558957998290-01.jpg",
+            "file:///C:/Users/rich2/OneDrive/Library/twitter_media_harvest/alllisso_-1919474600745816433-01.jpg",
+            "file:///C:/Users/rich2/OneDrive/Library/twitter_media_harvest/TEDDYPOCKY-1921527160717599042-01.jpg",
+            "file:///C:/Users/rich2/OneDrive/Library/twitter_media_harvest/pottsness-1527242664550223872-01.jpg"
+             ],
+        "interval": 45,
+        "random": true
+    },
+    "telemetry.telemetryLevel": "on",
+    "telemetry.feedback.enabled": true,
+}
