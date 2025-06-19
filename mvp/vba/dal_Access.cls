@@ -14,14 +14,14 @@ Option Explicit
 ' Purpose:  實作 Access 資料庫的具體操作
 '===============================================================================
 
+' === 實作介面 ===
+Implements i_dal
+
 ' === 常數 ===
 Private Const MODULE_NAME As String = "dal_Access"
 
 ' === 私有成員 ===
-Private m_connection As ADODB.Connection
-Private m_connectionString As String
-Private m_isConnected As Boolean
-Private m_inTransaction As Boolean
-
-' === 實作介面 ===
-
+Private m_database As DAO.Database
+Private m_workspace As DAO.Workspace
+Private m_dbPath As String
+Private m_enableDebugPrinting As Boolean

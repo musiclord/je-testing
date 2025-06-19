@@ -1,3 +1,39 @@
+```vb
+' 庫存監控系統 - 需要看到其他使用者的即時異動
+Set rs = dal.ExecuteQuery("SELECT ProductName, Stock FROM Products WHERE Stock < 10", offline:=False)
+
+Do While Not rs.EOF
+    ' 在處理過程中，如果其他使用者更新了庫存
+    ' 線上記錄集能反映最新的資料變化
+    Debug.Print rs("ProductName") & ": " & rs("Stock")
+    rs.MoveNext
+Loop
+```
+
+```vb
+' 需要透過 Recordset 直接修改資料
+Set rs = dal.ExecuteQuery("SELECT * FROM Employees WHERE Dept='Sales'", offline:=False)
+
+Do While Not rs.EOF
+    rs.Edit
+    rs("Salary") = rs("Salary") * 1.1  ' 調薪 10%
+    rs.Update  ' 這需要連線才能執行
+    rs.MoveNext
+Loop
+```
+
+```vb
+' 處理百萬筆資料，不想一次全部載入記憶體
+Set rs = dal.ExecuteQuery("SELECT * FROM HugeTable ORDER BY ID", offline:=False)
+
+' 可以逐筆處理，不會耗盡記憶體
+Do While Not rs.EOF
+    ProcessRecord rs  ' 處理單筆記錄
+    rs.MoveNext       ' 從資料庫動態載入下一筆
+Loop
+```
+
+
 好的，這是一份關於我們所有對話內容的摘要，涵蓋了討論的技術內容、框架、系統及應用：
 
 **核心目標與應用場景：**
