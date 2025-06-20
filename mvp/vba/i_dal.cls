@@ -17,6 +17,7 @@ Option Explicit
 ' === 常數 ===
 Private Const MODULE_NAME As String = "i_dal"
 
+
 ' === 屬性管理 ===
 Public Property Get DbPath() As String
 End Property
@@ -26,11 +27,11 @@ End Property
 
 ' === 連線管理 ===
 Public Function Connect() As Boolean
-    ' 建立資料庫連線
+    ' 建立連線
 End Function
 
 Public Sub Disconnect()
-    ' 中斷資料庫連線
+    ' 中斷連線
 End Sub
 
 Public Property Get IsConnected() As Boolean
@@ -38,14 +39,14 @@ Public Property Get IsConnected() As Boolean
 End Property
 
 ' === 基本 SQL 執行 ===
-Public Function ExecuteSQL(ByVal sql As String, Optional ByVal useTransaction As Boolean = False) As Long
-    ' 執行 INSERT, UPDATE, DELETE, CREATE TABLE 等操作
-    ' 返回受影響的記錄數，失敗返回 -1
+Public Function ExecuteNonQuery(ByVal sql As String, Optional ByVal transacted As Boolean = False) As Long
+    ' 執行修改型SQL 語句 ( INSERT、UPDATE、DELETE、CREATE TABLE 等 )
+    ' 返回受影響的記錄數
 End Function
 
-Public Function GetRecordset(ByVal sql As String, Optional ByVal disconnectRecordset As Boolean = False) As Object
-    ' 執行 SELECT 查詢，返回 Recordset 物件
-    ' disconnectRecordset: True 時返回離線的 Recordset
+Public Function ExecuteQuery(ByVal sql As String, Optional ByVal offline As Boolean = False) As Object
+    ' 執行查詢型SQL 語句 ( SELECT )
+    ' 返回實際資料結果
 End Function
 
 Public Function GetScalar(ByVal sql As String) As Variant
@@ -55,25 +56,9 @@ End Function
 
 ' === 資料表管理 ===
 Public Function TableExists(ByVal tableName As String) As Boolean
-    ' 檢查指定資料表是否存在
+    ' 檢查資料表是否存在
 End Function
 
 Public Sub DropTable(ByVal tableName As String)
     ' 刪除指定資料表
 End Sub
-
-Public Function GetTableNames() As Variant
-    ' 取得資料庫中所有使用者資料表的名稱陣列
-    ' 返回 String 陣列，如果沒有資料表則返回 Empty
-End Function
-
-Public Function GetTableFieldNames(ByVal tableName As String) As Variant
-    ' 取得指定資料表的所有欄位名稱
-    ' 返回 String 陣列，如果資料表不存在則 Empty
-End Function
-
-' === 資料統計 ===
-Public Function GetRecordCount(ByVal tableName As String) As Long
-    ' 取得指定資料表的記錄數
-    ' 返回記錄數，失敗為 -1，資料表不存在則 0
-End Function
