@@ -14,5 +14,14 @@ Option Explicit
 ' Purpose:  匯入檔案程序的控制器
 '===============================================================================
 
-' === 常數 ===
+' ----- 常數 -----
 Private Const MODULE_NAME As String = "c_Import"
+' ----- 表單事件 -----
+Private WithEvents viewImport As v_Import
+Attribute viewImport.VB_VarHelpID = -1
+' ----- 類別成員 -----
+Private csvPath As String
+Private acePath As String
+Private tableName As String
+
+

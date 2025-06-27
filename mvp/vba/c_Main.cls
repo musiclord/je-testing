@@ -11,37 +11,38 @@ Option Explicit
 
 '===============================================================================
 ' Name:     c_Main
-' Purpose:  應用程式主控制器
+' Purpose:  主要控制器，使用如 context.dal, context.project.name
 '===============================================================================
 
-' === 常數 ===
+' ----- 常數 -----
 Private Const MODULE_NAME As String = "c_Main"
-
-' === 介面事件 ===
+' ----- 表單事件 -----
 Private WithEvents viewMain As v_Main
 Attribute viewMain.VB_VarHelpID = -1
+' ----- 類別成員 -----
+Private m_config As m_ManagerConfig
+Private m_context As m_ManagerContext
 
-' === 控制器變數 ===
-Private ctrlImport As c_Import                  ' as Step1
-Private ctrlValidation As c_Validation          ' as Step2
-Private ctrlFilter As c_Filter                  ' as Step3
-Private ctrlExport As c_Export                  ' as Step4
 
-' --- c_Main ---
+' ----- [ c_Main ] -----
 Private Sub Class_Initialize()
+    Set m_config = New m_ManagerConfig
+    Set m_context = New m_ManagerContext
     Set viewMain = New v_Main
 End Sub
 
 Private Sub Class_Terminate()
-
 End Sub
 
-Public Sub Run()
+Public Sub Run(ByVal config As m_ManagerConfig, ByVal context As m_ManagerContext)
+    
+    Set m_config = config
+    Set m_context = context
+    ' ...
     viewMain.Show (vbModeless)
 End Sub
 
-' --- v_Main ---
+
 Private Sub viewMain_DoExit()
-    Unload viewMain
-    Set viewMain = Nothing
+    viewMain.Hide
 End Sub

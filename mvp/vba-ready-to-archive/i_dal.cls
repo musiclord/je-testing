@@ -14,16 +14,18 @@ Option Explicit
 ' Purpose:  資料庫操作的標準介面，應支援 Access 和的 SQL Server
 '===============================================================================
 
-' ----- 常數 -----
+' === 常數 ===
 Private Const MODULE_NAME As String = "i_dal"
 
-' ----- 屬性管理 -----
+
+' === 屬性管理 ===
 Public Property Get dbPath() As String
 End Property
+
 Public Property Let dbPath(ByVal value As String)
 End Property
 
-' ----- 連線管理 -----
+' === 連線管理 ===
 Public Function Connect() As Boolean
     ' 建立連線
 End Function
@@ -36,7 +38,7 @@ Public Property Get IsConnected() As Boolean
     ' 檢查連線狀態
 End Property
 
-' ----- 基本 SQL 執行 -----
+' === 基本 SQL 執行 ===
 Public Function ExecuteNonQuery(ByVal sql As String, Optional ByVal transacted As Boolean = False) As Long
     ' 執行修改型SQL 語句 ( INSERT、UPDATE、DELETE、CREATE TABLE 等 )
     ' 返回受影響的記錄數
@@ -52,7 +54,7 @@ Public Function GetScalar(ByVal sql As String) As Variant
     ' 用於 COUNT(*), SUM() 等聚合查詢
 End Function
 
-' ----- 資料表管理 -----
+' === 資料表管理 ===
 Public Function TableExists(ByVal tableName As String) As Boolean
     ' 檢查資料表是否存在
 End Function
@@ -60,4 +62,3 @@ End Function
 Public Sub DropTable(ByVal tableName As String)
     ' 刪除指定資料表
 End Sub
-

@@ -15,17 +15,19 @@ Option Explicit
 ' Description:  可以參考 https://www.hosp.ncku.edu.tw/~cww/oldguy/oldguy.htm
 '===============================================================================
 
-' ----- 實作介面 -----
+' === 實作介面 ===
 Implements i_dal
-' ----- 常數 -----
+
+' === 常數 ===
 Private Const MODULE_NAME As String = "dal_Access"
-' ----- 類別成員 -----
+
+' === 私有成員 ===
 Private m_database As DAO.Database
 Private m_workspace As DAO.Workspace
 Private m_recordset As DAO.Recordset
 Private m_dbPath As String
 
-' ----- 類別初始化 -----
+' === 類別初始化 ===
 Private Sub Class_Initialize()
     Set m_database = Nothing
     Set m_workspace = Nothing
@@ -37,45 +39,64 @@ Private Sub Class_Terminate()
     Set m_workspace = Nothing
 End Sub
 
-' ----- 屬性管理 -----
-Private Property Get i_dal_dbPath() As String
-    i_dal_dbPath = m_dbPath
+' === 屬性管理 ===
+Private Property Let i_dal_DbPath(ByVal Path As String)
+    m_dbPath = Path
+End Property
+Private Property Get i_dal_DbPath() As String
+    i_dal_DbPath = m_dbPath
 End Property
 
-Private Property Let i_dal_dbPath(ByVal value As String)
-    m_dbPath = value
-End Property
-
-' ----- 連線管理 -----
+' === 連線管理 ===
 Private Function i_dal_Connect() As Boolean
-    i_dal_Connect = False
+    ' 建立連線
+    On Error GoTo ErrorHandler
+    
+    If Not m_database Is Nothing Then
+        i_dal_Connect = True
+        Exit Function
+    End If
+    
+    If Len(m_dbPath) = 0 Then
+        Err.Raise vbObjectError + 1001, MODULE_NAME, "資料庫路徑未設定"
+    End If
+    
+    If Not Dir(m_dbPath) <> "" Then
+        Err.Raise vbObjectError + 1002, MODULE_NAME, "資料庫檔案不存在: " & m_dbPath
+    End If
+    
+    
 End Function
+
 Private Sub i_dal_Disconnect()
+    ' 中斷連線
 End Sub
 
 Private Property Get i_dal_IsConnected() As Boolean
-    i_dal_IsConnected = False
+    ' 檢查連線狀態
 End Property
 
-' ----- 基本 SQL 執行 -----
+' === 基本 SQL 執行 ===
 Private Function i_dal_ExecuteNonQuery(ByVal sql As String, Optional ByVal transacted As Boolean = False) As Long
-    i_dal_ExecuteNonQuery = Nothing
+    ' 執行修改型SQL 語句 ( INSERT、UPDATE、DELETE、CREATE TABLE 等 )
+    ' 返回受影響的記錄數
 End Function
 
 Private Function i_dal_ExecuteQuery(ByVal sql As String, Optional ByVal offline As Boolean = False) As Object
-    i_dal_ExecuteQuery = Nothing
+    ' 執行查詢型SQL 語句 ( SELECT )
+    ' 返回實際資料結果
 End Function
 
 Private Function i_dal_GetScalar(ByVal sql As String) As Variant
-    i_dal_GetScalar = Nothing
+    ' 執行單一值查詢，返回第一行第一列的值
+    ' 用於 COUNT(*), SUM() 等聚合查詢
 End Function
 
-' ----- 資料表管理 -----
+' === 資料表管理 ===
 Private Function i_dal_TableExists(ByVal tableName As String) As Boolean
-    i_dal_TableExists = False
+    ' 檢查資料表是否存在
 End Function
 
 Private Sub i_dal_DropTable(ByVal tableName As String)
+    ' 刪除指定資料表
 End Sub
-
-

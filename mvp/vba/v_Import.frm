@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} v_Import 
-   Caption         =   "Import"
-   ClientHeight    =   5415
+   Caption         =   "Step1 - Import"
+   ClientHeight    =   4410
    ClientLeft      =   120
    ClientTop       =   465
-   ClientWidth     =   7755
+   ClientWidth     =   4755
    OleObjectBlob   =   "v_Import.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End
@@ -19,4 +19,3 @@ Public Event DoExit()
 Private Sub btnExit_Click()
     RaiseEvent DoExit
 End Sub
-

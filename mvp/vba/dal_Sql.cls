@@ -14,7 +14,56 @@ Option Explicit
 ' Purpose:  實作 SQL 資料庫的具體操作
 '===============================================================================
 
-' === 常數 ===
+' ----- 實作介面 -----
+Implements i_dal
+' ----- 常數 -----
 Private Const MODULE_NAME As String = "dal_Sql"
+' ----- 類別成員 -----
+Private m_dbPath As String
 
+' ----- 屬性管理 -----
+Private Property Get i_dal_dbPath() As String
+    i_dal_dbPath = m_dbPath
+End Property
+
+Private Property Let i_dal_dbPath(ByVal value As String)
+    m_dbPath = value
+End Property
+
+
+
+' ----- 連線管理 -----
+Private Function i_dal_Connect() As Boolean
+    i_dal_Connect = False
+End Function
+
+Private Sub i_dal_Disconnect()
+
+End Sub
+
+Private Property Get i_dal_IsConnected() As Boolean
+    i_dal_IsConnected = False
+End Property
+
+' ----- 基本 SQL 執行 -----
+Private Function i_dal_ExecuteNonQuery(ByVal sql As String, Optional ByVal transacted As Boolean = False) As Long
+    i_dal_ExecuteNonQuery = Nothing
+End Function
+
+Private Function i_dal_ExecuteQuery(ByVal sql As String, Optional ByVal offline As Boolean = False) As Object
+    i_dal_ExecuteQuery = Nothing
+End Function
+
+Private Function i_dal_GetScalar(ByVal sql As String) As Variant
+    i_dal_GetScalar = Nothing
+End Function
+
+' ----- 資料表管理 -----
+Private Function i_dal_TableExists(ByVal tableName As String) As Boolean
+    i_dal_TableExists = False
+End Function
+
+Private Sub i_dal_DropTable(ByVal tableName As String)
+
+End Sub
 

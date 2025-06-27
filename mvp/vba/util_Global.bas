@@ -1,9 +1,7 @@
 Attribute VB_Name = "util_Global"
 Option Explicit
 
-Private application As c_Main
-
-Public Sub RunApplication()
-    Set application = New c_Main
-    application.Run
-End Sub
+'===============================================================================
+' Name:     util_Global
+' Purpose:  公開模組，列有通用工具庫供所有方法使用。
+'===============================================================================
