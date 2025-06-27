@@ -8,9 +8,6 @@
 
 # 擷取紀錄筆記
 
-
-
-
 ```vb
 ' 庫存監控系統 - 需要看到其他使用者的即時異動
 Set rs = dal.ExecuteQuery("SELECT ProductName, Stock FROM Products WHERE Stock < 10", offline:=False)
@@ -47,30 +44,12 @@ Loop
 ```
 
 # 技術規格
-### VBA
-- VBA 的類別模型是比較簡化的 `COM` 架構，與 C#、Java 等語言不同，不支援多個建構子（Overloaded Constructors），不允許 Class_Initialize() 帶參數，無法在 New 關鍵字後傳入參數
-    - 要能夠依賴注入，得自定義方法:
-    ```vb
-    ' 類別模組: clsCustomer
-    Private m_name As String
-    Private Sub Class_Initialize()
-        ' 預設初始化
-    End Sub
-    Public Sub Initialize(ByVal p_name As String)
-        m_name = p_name
-    End Sub
-    ' 類別模組: 主程式
-    Dim customer As clsCustomer
-    Set customer = New clsCustomer
-    customer.Initialize("Alice")
-    ```
 
 ### Access
 ...
 
 ### Excel
 ...
-
 
 ### MVC
 - Model 
@@ -88,23 +67,71 @@ Loop
     - 欄位映射，欄位 ↔ 物件屬性 (Property)
     - 關係映射，外鍵關係 ↔ 物件關聯
 - DAO:
-    - `Microsoft Office 16.0 Access database engine Object Library`
+    - **Microsoft Office 16.0 Access database engine Object Library**
     - 直接對本地 Access 資料庫操作，通常具有更佳的性能、較低的記憶體消耗及穩定性
     - 直接使用 ACE/JET 引擎與資料庫溝通
 - ADO:
-    - `Microsoft ActiveX Data Objects 6.1 Library`
-    - 處理 `DML`，也就是 `SELECT`、`INSERT`、`UPDATE`、`DELETE`
+    - **Microsoft ActiveX Data Objects 6.1 Library**
+    - 處理 **DML**，也就是 `SELECT`、`INSERT`、`UPDATE`、`DELETE`
     - 通用性強，可連接多種資料庫 (MS-SQL, Oracle, MySQL) ，也可直接將 **Excel** 工作表作為資料來源做SQL查詢 `SELECT * FROM [Sheet1$]`
     - 基於 `OLE DB` 而多一層抽象，因此性能略遜於 DAO，且記憶體消耗較高，尤其大量 COM 物件操作
 - ADOX:
-    - `Microsoft ADO Ext. 6.0 for DDL and Security`
-    - 處理 `DDL`，也就是 `CREATE`、`ALTER`、`DROP`、`TRUNCATE`
-    - 屬於 `ADO` 的擴充套件
+    - **Microsoft ADO Ext. 6.0 for DDL and Security**
+    - 處理 **DDL**，也就是 `CREATE`、`ALTER`、`DROP`、`TRUNCATE`
+    - 屬於 **ADO** 的擴充套件
 - Script:
     - `Microsoft Scripting Runtime`
 
 ### 程式設計
 - Implement
     - 定義一個介面標準，實作類別來提供介面中聲明的所有公共方法和屬性，實現鬆耦合，例如輕易替換 `DAL` 層的具體實作為 `SQL` 或 `ACE` 等連接方法。
-- Dependency Injection
-    - 不直接在類別內部創建依賴的物件，而是透過 `建構函式` 或 `初始化方法` 將依賴物件傳入，藉此在不同
+#### 依賴注入
+- VBA 的類別模型是比較簡化的 `COM` 架構，與 C#、Java 等語言不同，不支援多個建構子（Overloaded Constructors），不允許 Class_Initialize() 帶參數，無法在 New 關鍵字後傳入參數
+- 這就像每個工匠不自己打造錘子，而是由工頭發給每個工匠一把共用的、標準的錘子。
+- 依賴注入的核心是「**控制反轉 (Inversion of Control, IoC)**」，
+    - 傳統方式：子控制器自己建立它需要的物件 ( `Set dal = New c_AccessDAL` )。
+    - 依賴注入：子控制器不自己建立，而是由外部 (主控制器) 將它需要的物件「注入」進來。
+- 方法一：建構子注入 (Constructor Injection)
+    ```vb
+    'Sub.cls
+        Private m_dal As i_dal
+        
+        Public Sub Initialize(ByVal dal As i_dal) '額外定義方法來模擬建構子注入
+            Set m_dal = dal '將傳入的參數 dal 物件指派給 m_dal
+        End Sub
+
+        Public Sub DoSomething()
+            m_dal.Execute "..."
+        End Sub
+    ```
+    ```vb
+    'Main.cls
+        Private m_dal As i_dal
+        Private sub As Sub
+
+        Set sub = New Sub '建立實例
+        Call sub.Initialize (m_dal) '模擬建構子注入
+        Call sub.DoSomething
+    ```
+- 方法二：屬性注入 (Property Injection)
+    ```vb
+    'Sub.cls
+        Private m_dal As i_dal
+
+        Public Property Set dal(ByVal value As i_dal) '定義屬性用來從外部注入
+            Set m_dal = value '將傳入的參數 value 物件指派給 m_dal
+        End Property
+
+        Public Sub DoSomething()
+            m_dal.Execute "..."
+        End Sub
+    ```
+    ```vb
+        'Main.cls
+        Private m_dal As i_dal
+        Private sub As Sub
+
+        Set sub = New Sub '建立實例
+        Set sub.dal = m_dal '屬性注入
+        Call sub.DoSomething
+    ```

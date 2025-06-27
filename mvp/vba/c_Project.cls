@@ -28,6 +28,7 @@ Private m_root As String
 
 ' ----- [ c_Project ] -----
 Private Sub Class_Initialize()
+    Const METHOD_NAME As String = ""
     Set m_config = New m_ManagerConfig
     Set m_context = New m_ManagerContext
     Set m_project = New m_ManagerProject
@@ -36,9 +37,11 @@ Private Sub Class_Initialize()
 End Sub
 
 Private Sub Class_Terminate()
+    Const METHOD_NAME As String = ""
 End Sub
 
 Public Function Build(ByRef config As m_ManagerConfig, ByRef context As m_ManagerContext) As Boolean
+    Const METHOD_NAME As String = "Build"
     Build = False
     
     ' 傳 vbModal 來鎖住程序
@@ -52,32 +55,31 @@ End Function
 
 ' ----- [ v_Project ] -----
 Private Sub viewProject_DoNew()
-    
+    Const METHOD_NAME As String = "viewProject_DoNew"
     ' 取得文字欄輸入為新專案名稱
     Dim projectName As String
     projectName = viewProject.txtbProjectName.value
-    
     ' 建立專案
     If Not m_project.Create(projectName, m_root) Then
-        MsgBox "創建專案目錄失敗。", vbExclamation, "創建專案"
+        MsgBox "創建專案失敗。", vbExclamation, "創建專案"
         Exit Sub
     End If
     
-    ' 建置環境
-    
-    
     viewProject.Hide
+    
 End Sub
 
 Private Sub viewProject_DoSelect()
-    
-    ' 取得清單選取的值為專案名稱
+    Const METHOD_NAME As String = "viewProject_DoSelect"
+    ' 取得清單選取值為專案名稱
     Dim projectName As String
     projectName = viewProject.listProjects.value
-    
     ' 載入專案
-    
-    ' 建置環境
+    If Not m_project.Load(projectName, m_root) Then
+        MsgBox "載入專案失敗", vbExclamation, "載入專案"
+        Exit Sub
+    End If
     
     viewProject.Hide
+    
 End Sub

@@ -34,11 +34,11 @@ Public Property Get root() As String
 End Property
 
 Public Function Create(ByVal name As String, ByVal root As String) As Boolean
+    Const METHOD_NAME = "Create"
     On Error GoTo ErrorHandler
-    
     Create = False
     
-    ' 創建專案目錄
+    ' 1. 創建專案目錄
     Dim path As String
     path = root & "\" & name
     If Dir(path, vbDirectory) <> "" Then
@@ -48,31 +48,55 @@ Public Function Create(ByVal name As String, ByVal root As String) As Boolean
         MkDir path
     End If
     
+    ' 2. 創建資料庫
+    If Not CreateDatabase(path & "\config.accdb") Then Exit Function    ' 專案配置組態
+    If Not CreateDatabase(path & "\pbc.accdb") Then Exit Function       ' PBC 資料
+    If Not CreateDatabase(path & "\data.accdb") Then Exit Function      ' 專案資料
+    If Not CreateDatabase(path & "\result.accdb") Then Exit Function    ' 驗計結果
 
-    ' 創建資料庫
+    Create = True
+    
+ErrorHandler:
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & Err.Description
+    Create = False
+    Exit Function
+End Function
+
+Public Function Load(ByVal name As String, ByVal root As String) As Boolean
+    Const METHOD_NAME = "Load"
+    On Error GoTo ErrorHandler
+    Load = False
+    
+    ' 1. 載入專案目錄
+    Dim path As String
+    path = root & "\" & name
+    If Dir(path, vbDirectory) = "" Then
+        MsgBox "專案[" & name & "] 不存在。", vbExclamation, "載入專案"
+        Exit Function
+    End If
+    
+    ' 2. 載入資料庫
+    ' 在 i_dal 中設置 dbPath 並 Connect 即可
+    ' dal.dbPath = path
+    ' dal.Connect
+        
+    Load = True
+    
+ErrorHandler:
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & Err.Description
+    Load = False
+    Exit Function
+End Function
+
+Private Function CreateDatabase(ByVal dbPath As String) As Boolean
+    On Error GoTo ErrorHandler
+    CreateDatabase = False
+    
     Dim dbEngine As DAO.dbEngine
     Dim db As DAO.Database
-    Dim configPath As String, pbcPath As String, dataPath As String, resultPath As String
     
-    configPath = path & "\" & "config.accdb"
-    pbcPath = path & "\" & "pbc.accdb"
-    dataPath = path & "\" & "data.accdb"
-    resultPath = path & "\" & "result.accdb"
+    Set dbEngine = New DAO.dbEngine
+    Set db = dbEngine.CreateDatabase(dbPath, dbLangGeneral)
     
-    ' Initialize config
-    
-    ' Initialize context
-    Create = True
-
-ErrorHandler:
-
-End Function
-
-Public Function Load() As Boolean
-    ' Load exist project by given name.
-    
-End Function
-
-Public Function Setup() As Boolean
-
+    CreateDatabase = True
 End Function
