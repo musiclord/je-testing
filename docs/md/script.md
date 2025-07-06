@@ -135,3 +135,24 @@ Loop
         Set sub.dal = m_dal '屬性注入
         Call sub.DoSomething
     ```
+#### 括號使用方式
+- 呼叫 Sub
+  - 無回傳值
+    ```vb
+    ' 單一參數
+    DoSomething value
+    '多個參數
+    DoSomething value1, value2, value3
+    ```
+- 呼叫 Function
+  - 使用回傳值
+    ```vb
+    ' 單一參數
+    result = GetSomething (value)
+    ' 多個參數
+    result = GetSomething (value1, value2, value3)
+    ```
+  - 不使用回傳值
+    ```vb
+    DoSomething value
+    ```

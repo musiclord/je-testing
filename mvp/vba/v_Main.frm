@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} v_Main
    ClientHeight    =   5415
    ClientLeft      =   120
    ClientTop       =   465
-   ClientWidth     =   9765.001
+   ClientWidth     =   9660.001
    OleObjectBlob   =   "v_Main.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End
@@ -19,3 +19,4 @@ Public Event DoExit()
 Private Sub btnExit_Click()
     RaiseEvent DoExit
 End Sub
+

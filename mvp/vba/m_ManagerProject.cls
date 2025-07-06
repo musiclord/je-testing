@@ -35,6 +35,8 @@ End Property
 
 Public Function Create(ByVal name As String, ByVal root As String) As Boolean
     Const METHOD_NAME = "Create"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": Start"
+    
     On Error GoTo ErrorHandler
     Create = False
     
@@ -56,14 +58,18 @@ Public Function Create(ByVal name As String, ByVal root As String) As Boolean
 
     Create = True
     
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
+    Exit Function
+    
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & Err.Description
     Create = False
-    Exit Function
 End Function
 
 Public Function Load(ByVal name As String, ByVal root As String) As Boolean
     Const METHOD_NAME = "Load"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": Start"
+    
     On Error GoTo ErrorHandler
     Load = False
     
@@ -82,13 +88,18 @@ Public Function Load(ByVal name As String, ByVal root As String) As Boolean
         
     Load = True
     
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
+    Exit Function
+    
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & Err.Description
     Load = False
-    Exit Function
 End Function
 
 Private Function CreateDatabase(ByVal dbPath As String) As Boolean
+    Const METHOD_NAME = "CreateDatabase"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": Start"
+    
     On Error GoTo ErrorHandler
     CreateDatabase = False
     
@@ -99,4 +110,11 @@ Private Function CreateDatabase(ByVal dbPath As String) As Boolean
     Set db = dbEngine.CreateDatabase(dbPath, dbLangGeneral)
     
     CreateDatabase = True
+    
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
+    Exit Function
+    
+ErrorHandler:
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & Err.Description
+    CreateDatabase = False
 End Function

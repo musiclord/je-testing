@@ -19,7 +19,6 @@ Option Explicit
 Public Event DoNew()
 Public Event DoSelect()
 
-
 Private Sub btnNew_Click()
     RaiseEvent DoNew
 End Sub
@@ -27,3 +26,13 @@ End Sub
 Private Sub btnSelect_Click()
     RaiseEvent DoSelect
 End Sub
+
+Public Sub UpdateListProjects(projects As Collection)
+    ' Update listProject
+    Dim item As Variant
+    Me.listProjects.Clear
+    For Each item In projects
+        Me.listProjects.AddItem item
+    Next item
+End Sub
+

@@ -26,23 +26,38 @@ Private m_context As m_ManagerContext
 
 ' ----- [ c_Main ] -----
 Private Sub Class_Initialize()
-    Set m_config = New m_ManagerConfig
-    Set m_context = New m_ManagerContext
+    Const METHOD_NAME As String = "Class_Initialize"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": Start"
+    
     Set viewMain = New v_Main
+    
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
 End Sub
 
 Private Sub Class_Terminate()
+    Const METHOD_NAME As String = "Class_Terminate"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": Start"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
 End Sub
 
-Public Sub Run(ByVal config As m_ManagerConfig, ByVal context As m_ManagerContext)
+Public Sub Run(ByVal Config As m_ManagerConfig, ByVal Context As m_ManagerContext)
+    Const METHOD_NAME As String = "Run"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": Start"
     
-    Set m_config = config
-    Set m_context = context
+    Set m_config = Config
+    Set m_context = Context
     ' ...
     viewMain.Show (vbModeless)
+    
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
 End Sub
 
 
 Private Sub viewMain_DoExit()
+    Const METHOD_NAME As String = "viewMain_DoExit"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": Start"
+    
     viewMain.Hide
+    
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
 End Sub

@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} v_Import 
-   Caption         =   "Step1 - Import"
-   ClientHeight    =   4410
+   Caption         =   "Step1 - Import Data"
+   ClientHeight    =   7020
    ClientLeft      =   120
    ClientTop       =   465
-   ClientWidth     =   4755
+   ClientWidth     =   12360
    OleObjectBlob   =   "v_Import.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End
