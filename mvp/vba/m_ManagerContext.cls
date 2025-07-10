@@ -11,35 +11,41 @@ Option Explicit
 
 '===============================================================================
 ' Name:     m_ManagerContext
-' Purpose:  處理共享元件的服務，藉由依賴注入給其他類別使用，
-'           例如:
+' Purpose:  處理共享元件的服務，藉由依賴注入給其他類別使用
 '===============================================================================
-
-' ----- 常數 -----
 Private Const MODULE_NAME As String = "m_ManagerContext"
+' ----- 成員 -----
+Private m_Project As m_ManagerProject
+Private m_Config As m_ManagerConfig
+Private m_dal As i_dal
+Private m_dal_Sql As dal_Sql
+Private m_dal_Ace As dal_Access
+' ----- 屬性 -----
+Public Property Get Project() As m_ManagerProject
+    Set Project = m_Project
+End Property
+Public Property Set Project(ByVal p_Project As m_ManagerProject)
+    Set m_Project = p_Project
+End Property
 
-' ----- 類別成員 -----
-Private project As m_ManagerProject
-Private dal As i_dal
-Private dalAce As dal_Access
-Private dalSql As dal_Sql
+Public Property Get Config() As m_ManagerConfig
+    Set Config = m_Config
+End Property
+Public Property Set Config(ByVal p_Config As m_ManagerConfig)
+    Set m_Config = p_Config
+End Property
+Public Property Get Dal() As i_dal
+
+End Property
+
+
 
 Private Sub Class_Initialize()
-    Set project = New m_ManagerProject
-    Set dal = New i_dal
-    Set dal = dalAce
+    Const METHOD_NAME = "Class_Initialize"
+    Set m_Project = New m_ManagerProject
+    Set m_Config = New m_ManagerConfig
 End Sub
 
 Private Sub Class_Terminate()
-
+    Const METHOD_NAME = "Class_Terminate"
 End Sub
-
-' ----- 屬性 -----
-Private m_base As String    ' 專案目錄
-Public Property Let base(ByVal path As String)
-    m_base = path
-End Property
-Public Property Get base() As String
-    base = m_base
-End Property
-

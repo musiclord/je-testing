@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} v_Validation 
-   Caption         =   "Step 2- Data Validation"
+   Caption         =   "Step2 - Validation"
    ClientHeight    =   3015
    ClientLeft      =   120
    ClientTop       =   465
@@ -14,4 +14,8 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+Public Event DoExit()
 
+Private Sub btnExit_Click()
+    RaiseEvent DoExit
+End Sub

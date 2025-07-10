@@ -85,7 +85,8 @@ Loop
 ### 程式設計
 - Implement
     - 定義一個介面標準，實作類別來提供介面中聲明的所有公共方法和屬性，實現鬆耦合，例如輕易替換 `DAL` 層的具體實作為 `SQL` 或 `ACE` 等連接方法。
-#### 依賴注入
+
+### 依賴注入
 - VBA 的類別模型是比較簡化的 `COM` 架構，與 C#、Java 等語言不同，不支援多個建構子（Overloaded Constructors），不允許 Class_Initialize() 帶參數，無法在 New 關鍵字後傳入參數
 - 這就像每個工匠不自己打造錘子，而是由工頭發給每個工匠一把共用的、標準的錘子。
 - 依賴注入的核心是「**控制反轉 (Inversion of Control, IoC)**」，
@@ -135,24 +136,86 @@ Loop
         Set sub.dal = m_dal '屬性注入
         Call sub.DoSomething
     ```
-#### 括號使用方式
+### 括號使用方式
 - 呼叫 Sub
-  - 無回傳值
-    ```vb
-    ' 單一參數
-    DoSomething value
-    '多個參數
-    DoSomething value1, value2, value3
-    ```
+    - 沒有回傳值則不加括號
+        ```vb
+        ' 單一參數
+        DoSomething value
+        '多個參數
+        DoSomething value1, value2, value3
+        ```
 - 呼叫 Function
-  - 使用回傳值
-    ```vb
-    ' 單一參數
-    result = GetSomething (value)
-    ' 多個參數
-    result = GetSomething (value1, value2, value3)
-    ```
-  - 不使用回傳值
-    ```vb
-    DoSomething value
-    ```
+    - 有回傳值則加括號
+        ```vb
+        ' 單一參數
+        result = GetSomething (value)
+        ' 多個參數
+        result = GetSomething (value1, value2, value3)
+        ```
+
+### 型別
+- 以**記憶體行為**區分
+    |分類|值型別|參考型別|
+    |:--|:--|:--|
+    |儲存方式|儲存於 `Stack` 為值|儲存於 `Heap` 為參考位址|
+    |指派行為|指派會副本一個值，兩個變數不會相互影響|指派為參考位址，兩個變數會指向同一個物件|
+    |使用方式|不需要 `Set` 關鍵字|需要 `Set` 關鍵字|
+    |範例型別|Integer, Double, Boolean, Date|Object, Collection, Excel.Range|
+
+    - 值型別
+        ```vb
+        Dim a As Integer
+        Dim b As Integer
+        a = 10
+        b = a
+        a = 20  '對 a 修改不會影響 b 的值
+        ```
+    - 參考型別
+        ```vb
+        Dim p1 As Person
+        Dim p2 As Person
+        Set p1 = New Person
+        Set p2 = p1
+        p1.Name = "Alice"   'p2.Name 也會是 Alice，因為參考指向同一個物件
+        ```
+
+- 以**語法語來源**區分
+    |分類|基本型別|自訂型別|
+    |:--|:--|:--|
+    |定義方式|語言內建的型別|開發者自己定義的型別|
+    |彈性|功能固定，無法擴充。|可定義屬性、方法、事件等。|
+    |範例型別|Integer, String, Boolean, Double|Type 結構、Class 類別、Enum 列舉等|
+
+    - 基本型別
+        ```vb
+        Dim name As String
+        Dim age As Integer
+        ```
+    - 自訂型別
+        ```vb
+        Type Student
+            Name As String
+            Age As Integer
+        End Type
+
+        Dim student As Student
+        student.Name = "Alice"
+        student.Age = 20
+        ```
+
+### 前綴
+- 類別語法內
+    - **m_** : Member，為類別成員
+    - **p_** : Parameter，為函式參數
+- 類別命名
+    - **i_** : Interface，介面
+    - **m_** : Model，模型
+    - **v_** : View，視圖
+    - **c_** : Controller，控制器
+    - **dal_** : Data Access Layer，資料存取層
+- 變數
+    - 小寫開頭
+        - 基本型別: `m_name As String`
+    - 大寫開頭
+        - 自訂型別: `m_Project As m_ManagerProject`

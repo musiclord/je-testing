@@ -14,4 +14,8 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+Public Event DoExit()
 
+Private Sub btnExit_Click()
+    RaiseEvent DoExit
+End Sub

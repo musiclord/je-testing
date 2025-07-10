@@ -13,16 +13,12 @@ Option Explicit
 ' Name:     i_dal
 ' Purpose:  資料庫操作的標準介面，應支援 Access 和的 SQL Server
 '===============================================================================
-
-' ----- 常數 -----
 Private Const MODULE_NAME As String = "i_dal"
-
-' ----- 屬性管理 -----
+' ----- 屬性 -----
 Public Property Get dbPath() As String
 End Property
 Public Property Let dbPath(ByVal value As String)
 End Property
-
 ' ----- 連線管理 -----
 Public Function Connect() As Boolean
     ' 建立連線

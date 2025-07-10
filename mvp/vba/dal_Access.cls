@@ -14,18 +14,24 @@ Option Explicit
 ' Purpose:  實作 Access 資料庫的具體操作
 ' Description:  可以參考 https://www.hosp.ncku.edu.tw/~cww/oldguy/oldguy.htm
 '===============================================================================
-
-' ----- 實作介面 -----
-Implements i_dal
-' ----- 常數 -----
 Private Const MODULE_NAME As String = "dal_Access"
-' ----- 類別成員 -----
+' ----- 實作 -----
+Implements i_dal
+' ----- 成員 -----
 Private m_database As DAO.Database
 Private m_workspace As DAO.Workspace
 Private m_recordset As DAO.Recordset
 Private m_dbPath As String
+' ----- 屬性 -----
+Private Property Get i_dal_dbPath() As String
+    i_dal_dbPath = m_dbPath
+End Property
 
-' ----- 類別初始化 -----
+Private Property Let i_dal_dbPath(ByVal value As String)
+    m_dbPath = value
+End Property
+
+
 Private Sub Class_Initialize()
     Set m_database = Nothing
     Set m_workspace = Nothing
@@ -36,15 +42,6 @@ Private Sub Class_Terminate()
     Set m_database = Nothing
     Set m_workspace = Nothing
 End Sub
-
-' ----- 屬性管理 -----
-Private Property Get i_dal_dbPath() As String
-    i_dal_dbPath = m_dbPath
-End Property
-
-Private Property Let i_dal_dbPath(ByVal value As String)
-    m_dbPath = value
-End Property
 
 ' ----- 連線管理 -----
 Private Function i_dal_Connect() As Boolean
