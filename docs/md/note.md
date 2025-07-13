@@ -13,3 +13,7 @@
   - 確保借貸不平測試
   - 確保篩選條件邏輯
 5. 使用測試資料驗證模組功能
+
+- 由於 VBA 無法將 queryTable 或 Power Query 的查詢結果進行物件操作，因此限定資料來源須先前處理，確保完整後再統一由 ADO/DAO 匯入。
+- `DAO` 確實是 ACE/JET 的原生 API，對迴圈式寫入或查詢通常筆 `ADO` 快，但若 VBA 主程式位於 Excel 則單純為了叫用 `DoCmd.TransferText` 而自動化啟動 `Access` 其實會抵銷部分 `DAO` 優勢，改用 **ADO + ACE OLEDB + INSERT...SELECT FROM [TEXT]** 在 Excel 端效能僅慢約10%-20%，省去額外行程、UI 及 COM 繫結開銷。
+- 在 Excel 環境最佳實務: `ADO` + `ACE OLEDB 16.0` + `Text Driver` + `BeginTrans`
