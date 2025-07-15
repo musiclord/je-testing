@@ -25,6 +25,7 @@ Private m_Config As m_ManagerConfig
 Private m_Context As m_ManagerContext
 
 
+
 ' ----- [ c_Main ] -----
 Private Sub Class_Initialize()
     Const METHOD_NAME As String = "Class_Initialize"
@@ -48,9 +49,11 @@ Public Sub Run(ByVal Config As m_ManagerConfig, ByVal Context As m_ManagerContex
     '設定表單
     viewMain.Caption = m_Context.Project.name
     '顯示主介面
-    viewMain.Show (vbModeless)
+    viewMain.Show vbModeless
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
 End Sub
+
+
 
 ' ----- [ v_Main ] -----
 Private Sub viewMain_DoExit()
@@ -68,7 +71,7 @@ End Sub
 Private Sub viewMain_DoStep2()
     Const METHOD_NAME As String = "viewMain_DoStep2"
     Dim result As Dictionary
-    result = ctrlValidation.Execute(m_Config, m_Context)
+    Set result = ctrlValidation.Execute(m_Config, m_Context)
 End Sub
 
 Private Sub viewMain_DoStep3()

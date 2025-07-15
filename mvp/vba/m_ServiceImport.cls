@@ -14,28 +14,47 @@ Option Explicit
 ' Purpose:  資料匯入服務，將 PBC 檔案匯入至資料庫
 '===============================================================================
 Private Const MODULE_NAME = "m_ServiceImport"
+' ----- 依賴項 -----
+Private m_Context As m_ManagerContext
 ' ----- 成員 -----
-Private m_gl As String
-Private m_tb As String
+Private m_fieldsGL As Dictionary
+Private m_fieldsTB As Dictionary
+Private m_batchSize As Integer
 ' ----- 屬性 -----
-Public Property Get gl() As String
-    gl = m_gl
-End Property
-Public Property Get tb() As String
-    tb = m_tb
+Public Property Let batchSize(ByVal k As Integer)
+    m_batchSize = k
 End Property
 
 
-Public Function DefinePQ() As Boolean
-    Const METHOD_NAME = "DefinePQ"
-    DefinePQ = False
-    '定義 Power Query 連接
+
+Public Sub Initialize(ByRef Context As m_ManagerContext, ByVal k As Integer)
+    Set m_Context = Context
+    m_batchSize = k
+End Sub
+
+Public Function ImportCsv(ByVal filePath As String, ByVal tableName As String) As Boolean
+    ' 匯入資料至 PBC.accdb
+    Const METHOD_NAME = "ImportCsv"
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": Start"
     
-    '轉成 ADO 記錄集
+    On Error GoTo ErrorHandler
+    ImportCsv = False
+    '初始化
+    Dim DalPbc As i_dal
+    Set DalPbc = m_Context.DalPbc
+    '連線資料庫
+    If Not DalPbc.IsConnected Then DalPbc.Connect
+    '匯入資料表
+    If Not DalPbc.BulkInsert(filePath, tableName) Then
+        GoTo ErrorHandler
+    End If
     
-    DefinePQ = True
+    '...
+    ImportCsv = True
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
     Exit Function
-
+    
 ErrorHandler:
     Debug.Print ""
+    ImportCsv = False
 End Function

@@ -31,6 +31,7 @@ Public Property Get Context() As m_ManagerContext
 End Property
 
 
+
 ' ----- [ c_Project ] -----
 Private Sub Class_Initialize()
     Const METHOD_NAME As String = "Class_Initialize"
@@ -39,7 +40,6 @@ Private Sub Class_Initialize()
     Set m_Context = New m_ManagerContext
     Set m_Project = New m_ManagerProject
     m_root = ThisWorkbook.path
-    
 End Sub
 
 Private Sub Class_Terminate()
@@ -66,6 +66,8 @@ Public Function Build() As Boolean
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": End"
 End Function
 
+
+
 ' ----- [ v_Project ] -----
 Private Sub viewProject_DoNew()
     Const METHOD_NAME As String = "viewProject_DoNew"
@@ -74,7 +76,7 @@ Private Sub viewProject_DoNew()
     '取得輸入
     Dim projectName As String
     Dim projectPath As String
-    projectName = viewProject.txtbProjectName.value
+    projectName = viewProject.txtbProjectName.Value
     projectPath = m_root & "\" & projectName
     m_Project.name = projectName
     m_Project.path = projectPath
@@ -95,7 +97,7 @@ Private Sub viewProject_DoSelect()
     '取得輸入
     Dim projectName As String
     Dim projectPath As String
-    projectName = viewProject.listProjects.value
+    projectName = viewProject.listProjects.Value
     projectPath = m_root & "\" & projectName
     m_Project.name = projectName
     m_Project.path = projectPath
