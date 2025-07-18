@@ -23,12 +23,12 @@
 ### 系統架構
 - **前端**：Excel VBA (UserForms、Excel Worksheet)
 - **後端**：Access 資料庫 (.accdb)
-- **資料交互**：前期開發使用 DAO (ACE) 後期需兼容 ADO (SQL)
+- **資料交互**：前期開發使用 DAO 後期需兼容 ADO
 - **分層設計**：
-  - View：
-  - Controller：協調流程，處理觸發事件並執行
-  - Manager：管理員，負責
-  - Service：定義邏輯與功能的服務
+  - View：表單介面，前端呈現
+  - Controller：協調前後端流程，僅捕獲事件並執行業務模型
+  - Manager：作為資源或狀態的管理員，協調多個服務，且有事務管理需求
+  - Service：定義邏輯與功能的服務，一般設計為無狀態的純業務邏輯，且可重複使用的功能
   - Data Access：封裝資料庫操作
 
 ## 核心功能需求
