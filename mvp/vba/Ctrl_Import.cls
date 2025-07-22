@@ -35,6 +35,9 @@ Public Sub Initialize(ByRef Config As Mgr_Config, ByRef Context As Mgr_Context)
     '實例化
     Set m_ImportService = New Svc_Import
     Set viewImport = New View_Import
+    '初始化
+    m_ImportService.Initialize m_ctx
+    
 End Sub
 
 Public Function Execute() As Dictionary

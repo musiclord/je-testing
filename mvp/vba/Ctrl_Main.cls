@@ -60,7 +60,6 @@ Private Sub viewMain_DoStep1()
     Dim result As Dictionary
     Set m_ImportController = New Ctrl_Import
     m_ImportController.Initialize m_cfg, m_ctx
-    '更新處理狀態
     Set result = m_ImportController.Execute()
     
 End Sub
@@ -71,8 +70,8 @@ Private Sub viewMain_DoStep2()
     Dim result As Dictionary
     Set m_ValidationController = New Ctrl_Validation
     m_ValidationController.Initialize m_cfg, m_ctx
-    '更新處理狀態
     Set result = m_ValidationController.Execute()
+    '更新處理狀態
     
 End Sub
 
@@ -82,8 +81,8 @@ Private Sub viewMain_DoStep3()
     Dim result As Dictionary
     Set m_FilterController = New Ctrl_Filter
     m_FilterController.Initialize m_cfg, m_ctx
-    '更新處理狀態
     Set result = m_FilterController.Execute()
+    '更新處理狀態
     
 End Sub
 
@@ -93,7 +92,7 @@ Private Sub viewMain_DoStep4()
     Dim result As Dictionary
     Set m_ExportController = New Ctrl_Export
     m_ExportController.Initialize m_cfg, m_ctx
-    '更新處理狀態
     Set result = m_ExportController.Execute()
+    '更新處理狀態
     
 End Sub

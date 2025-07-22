@@ -17,7 +17,7 @@ Private Const MODULE_NAME = "Svc_Import"
 '===============================================================================
 
 '--類別成員
-Private m_ContextManager As Mgr_Context
+Private m_ctx As Mgr_Context
 Private m_fieldsGL As Dictionary
 Private m_fieldsTB As Dictionary
 
@@ -26,7 +26,7 @@ Private m_fieldsTB As Dictionary
 Public Sub Initialize(ByRef Context As Mgr_Context)
     Const METHOD_NAME As String = "Initialize"
     '依賴注入
-    Set m_ContextManager = Context
+    Set m_ctx = Context
     '實例化
     Set m_fieldsGL = New Dictionary
     Set m_fieldsTB = New Dictionary
@@ -39,7 +39,7 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     ImportGL = False
     Dim tableName As String
     tableName = "GL"
-    
+    Call ImportCsv(m_ctx.DalPbc, filePath, tableName)
     ImportGL = True
     Exit Function
     
@@ -66,12 +66,20 @@ End Function
 
 
 '--Custom
-Private Function ImportCsv() As Boolean
+Private Function ImportCsv(ByVal dal As I_Dal, ByVal filePath As String, tableName As String) As Boolean
     Const METHOD_NAME As String = "ImportCsv"
     On Error GoTo ErrorHandler
     ImportCsv = False
     
-    '...
+    '在這裡實現匯入CSV檔案並寫入置資料庫的邏輯
+    '使用 I_Dal 物件實作 Dal_Access 方法來操作資料庫
+    '預計使用 .BulkInsert()
+    
+    If Not dal.IsConnected Then dal.Connect
+    
+    If Not dal.BulkInsert(filePath, tableName) Then
+        GoTo ErrorHandler
+    End If
     
     ImportCsv = True
     Exit Function
@@ -91,7 +99,7 @@ Private Function AddLineItem() As Boolean
     Dim sql As String
     Dim affected As Long
     Dim dal As I_Dal
-    Set dal = m_ContextManager.DalData
+    Set dal = m_ctx.DalData
     
     dal.Connect
     '開始事務

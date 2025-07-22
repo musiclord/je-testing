@@ -21,6 +21,7 @@ Private m_cfg As Mgr_Config
 Private m_ctx As Mgr_Context
 Private m_path As String
 Private m_name As String
+
 '--ÄÝ©Ê
 Public Property Get Config() As Mgr_Config
     Set Config = m_cfg

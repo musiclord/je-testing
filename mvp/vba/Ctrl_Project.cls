@@ -27,7 +27,7 @@ Attribute viewProject.VB_VarHelpID = -1
 '--Ctrl_Project
 Public Sub Initialize(ByRef ProjectManager As Mgr_Project)
     Const METHOD_NAME As String = "Initialize"
-    '依賴注入
+    '依賴注入xperia 5 ivxp
     Set m_ProjectManager = ProjectManager
     '實例化
     Set viewProject = New View_Project

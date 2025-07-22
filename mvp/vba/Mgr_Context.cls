@@ -55,7 +55,7 @@ Public Property Set DalResult(ByVal dal As I_Dal)
 End Property
 '------------------|tableGL
 Public Property Get nameGL() As String
-    Let gl = m_gl
+    Let nameGL = m_gl
 End Property
 Public Property Let nameGL(ByVal value As String)
     m_gl = value
