@@ -135,16 +135,16 @@ Public Function I_Dal_CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal table
     ' HEAD
     sql = "CREATE TABLE [" & tableName & "] ("
     ' BODY
-    For i = 0 To sourceRs.Fields.Count - 1
+    For i = 0 To sourceRs.fields.Count - 1
         If i > 0 Then sql = sql & ", "
-        sql = sql & "[" & sourceRs.Fields(i).name & "] TEXT"
+        sql = sql & "[" & sourceRs.fields(i).name & "] TEXT"
     Next i
     ' TAIL
     sql = sql & ")"
     ' 使用 DAO 執行 DDL
     m_db.Execute sql, dbFailOnError
     
-    Debug.Print "資料表已建立: " & tableName & " (" & sourceRs.Fields.Count & " 欄位)"
+    Debug.Print "資料表已建立: " & tableName & " (" & sourceRs.fields.Count & " 欄位)"
     I_Dal_CreateTable = True
     Exit Function
 
@@ -304,7 +304,7 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
                     '單筆記錄 (一維陣列)
                     targetRs.AddNew
                     For j = 0 To UBound(dataChunk, 1)
-                        targetRs.Fields(j).value = dataChunk(j)
+                        targetRs.fields(j).value = dataChunk(j)
                     Next j
                     targetRs.Update
                 Else
@@ -314,9 +314,9 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
                         For j = 0 To UBound(dataChunk, 1)
                             '檢查空值
                             If IsNull(dataChunk(j, i)) Then
-                                targetRs.Fields(j).value = ""
+                                targetRs.fields(j).value = ""
                             Else
-                                targetRs.Fields(j).value = dataChunk(j, i)
+                                targetRs.fields(j).value = dataChunk(j, i)
                             End If
                         Next j
                         targetRs.Update

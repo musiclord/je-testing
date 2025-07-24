@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} View_Main 
    Caption         =   "Main"
-   ClientHeight    =   5412
+   ClientHeight    =   5415
    ClientLeft      =   120
-   ClientTop       =   465
-   ClientWidth     =   9765.001
+   ClientTop       =   468
+   ClientWidth     =   9768.001
    OleObjectBlob   =   "View_Main.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End

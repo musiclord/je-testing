@@ -81,6 +81,9 @@ Private Sub viewImport_ImportGL()
     '匯入資料表
     If Not m_ImportService.ImportGL(filePath) Then
         MsgBox "資料匯入失敗", vbCritical, "匯入GL"
+    Else
+        '匯入成功，更新欄位控制項
+        Call viewImport.UpdatePageGL
     End If
 End Sub
 
@@ -97,12 +100,18 @@ Private Sub viewImport_ImportTB()
     '匯入資料表
     If Not m_ImportService.ImportTB(filePath) Then
         MsgBox "資料匯入失敗", vbCritical, "匯入TB"
+    Else
+        '匯入成功，更新欄位控制項
+        
     End If
 End Sub
 
 Private Sub viewImport_ApplyGL()
     Const METHOD_NAME As String = "viewImport_ApplyGL"
-    '標準化欄位名稱至 Ent_FieldsGL
+    
+    Dim fieldMapping As Dictionary
+    Set fieldMapping = viewImport
+    
     
 End Sub
 

@@ -75,7 +75,35 @@ ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
+Public Function ApplyGLMapping(ByVal fieldsMapping As Dictionary) As Boolean
+    Const METHOD_NAME As String = "ApplyGLMapping"
+    On Error GoTo ErrorHandler
+    
+    ApplyGLMapping = False
+    '..
+    ApplyGLMapping = True
+    Exit Function
+    
+ErrorHandler:
+    ApplyGLMapping = False
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
+                Err.Number & ":" & Err.Description
+End Function
 
+Public Function ApplyTBMapping(ByVal fieldsMapping As Dictionary) As Boolean
+    Const METHOD_NAME As String = "ApplyTBMapping"
+    On Error GoTo ErrorHandler
+    
+    ApplyTBMapping = False
+    '..
+    ApplyTBMapping = True
+    Exit Function
+    
+ErrorHandler:
+    ApplyGLMapping = False
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
+                Err.Number & ":" & Err.Description
+End Function
 
 '--Custom
 Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
