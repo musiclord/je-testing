@@ -1,9 +1,13 @@
 # 簡要文字筆記
 
-- 使用者為一般審計員及中央小組，審計案件的資料量應不超過一百萬筆，
-- Power Query 無法直接連接並匯出至 Access
+- 使用者為一般審計員及中央小組，審計案件的資料量應不超過一百萬筆
 - Power Query 的查詢結果可以透過 `WorkbookConnection.OLEDBConnection` 取得 ADO Recordset
-- 記憶體效率最高：完全跳過 Excel 工作表儲存，轉換次數最少：Power Query → ADO RS → DAO RS，符合原始需求：保留 Power Query 的資料清理優勢
+- Power Query 優勢在複雜的 ETL，但使用者應該自行先處理好，確保格式為正確的 CSV 檔案
+- 為什麼不使用純 **DAO** 來處理所有程序？
+  - 理論上的優勢：如果只用 **DAO**，就不需要混合使用 **ADO** 和 **DAO** 兩種技術，程式碼看起來會更單純。
+  - 現實中的缺陷：**DAO** 內建的文字檔案驅動程式 (Text ISAM) 比較老舊，對於現代 CSV 檔案的支援很差。特別是在處理 UTF-8 編碼、複雜的引號和分隔符時，非常容易出錯；相較之下，**ADO** 的文字檔案驅動程式 (`Microsoft.ACE.OLEDB.16.0` 的 Text 擴展屬性) 功能更強大、更穩定，也更容易設定（例如 `CharacterSet=65001`）
+  - Excel VBA 環境的限制（無法直接使用 DoCmd）
+  - 批量操作的優化技巧（移除索引、使用事務）
 - 
 
 # 擷取紀錄筆記

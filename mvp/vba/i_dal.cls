@@ -11,11 +11,12 @@ Option Explicit
 Private Const MODULE_NAME = "I_Dal"
 '===============================================================================
 ' Module:   I_Dal
-' Purpose:  資料存取層的介面定義，規範資料存取操作的標準契約
+' Purpose:  資料存取層的介面定義，主要提供 CRUD 操作
 ' Layer:    Interface
 ' Domain:   Data Access
 '===============================================================================
-
+'額外註記:
+'- 保留資料存取層的通用方法，未來可擴展至 SQL Server
 
 
 '--連線管理
@@ -33,7 +34,7 @@ End Sub
 
 
 '--資料定義 DDL (Data Definition Language)
-Public Function CreateTable(ByVal tableName As String, ByVal rs As ADODB.Recordset, Optional ByVal dropIfExists As Boolean = True) As Boolean
+Public Function CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName As String) As Boolean
 End Function
 Public Function DropTable(ByVal tableName As String) As Boolean
 End Function
@@ -53,7 +54,7 @@ End Function
 
 
 '--批次操作 (Bulk Operations)
-Public Function BulkInsert(ByVal dataSource As Variant, ByVal tableName As String)
+Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As String) As Boolean
 End Function
 
 

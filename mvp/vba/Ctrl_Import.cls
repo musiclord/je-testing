@@ -102,8 +102,12 @@ End Sub
 
 Private Sub viewImport_ApplyGL()
     Const METHOD_NAME As String = "viewImport_ApplyGL"
+    '標準化欄位名稱至 Ent_FieldsGL
+    
 End Sub
 
 Private Sub viewImport_ApplyTB()
     Const METHOD_NAME As String = "viewImport_ApplyTB"
+    '標準化欄位名稱至 Ent_FieldsTB
+    
 End Sub

@@ -37,9 +37,14 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     On Error GoTo ErrorHandler
     
     ImportGL = False
+    Dim sourceRs As ADODB.Recordset
     Dim tableName As String
-    tableName = "GL"
-    Call ImportCsv(m_ctx.DalPbc, filePath, tableName)
+    Dim dal As I_Dal
+    Let tableName = "GL"
+    Set dal = m_ctx.DalPbc
+    Set sourceRs = PrepareRecordset(filePath)
+    If Not dal.BulkInsert(sourceRs, tableName) Then Exit Function
+    
     ImportGL = True
     Exit Function
     
@@ -54,8 +59,15 @@ Public Function ImportTB(ByVal filePath As String) As Boolean
     On Error GoTo ErrorHandler
     
     ImportTB = False
-    '...
-    ImportTB = False
+    Dim sourceRs As ADODB.Recordset
+    Dim tableName As String
+    Dim dal As I_Dal
+    Let tableName = "TB"
+    Set dal = m_ctx.DalPbc
+    Set sourceRs = PrepareRecordset(filePath)
+    If Not dal.BulkInsert(sourceRs, tableName) Then Exit Function
+    
+    ImportTB = True
     Exit Function
     
 ErrorHandler:
@@ -66,26 +78,39 @@ End Function
 
 
 '--Custom
-Private Function ImportCsv(ByVal dal As I_Dal, ByVal filePath As String, tableName As String) As Boolean
-    Const METHOD_NAME As String = "ImportCsv"
+Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
+    Const METHOD_NAME As String = "PrepareRecordset"
     On Error GoTo ErrorHandler
-    ImportCsv = False
     
-    '在這裡實現匯入CSV檔案並寫入置資料庫的邏輯
-    '使用 I_Dal 物件實作 Dal_Access 方法來操作資料庫
-    '預計使用 .BulkInsert()
+    Dim conn As ADODB.Connection
+    Dim rs As ADODB.Recordset
+    Dim connString As String
+    Dim folderPath As String, fileName As String
+    Dim sql As String, encoding As String
     
-    If Not dal.IsConnected Then dal.Connect
+    Set conn = New ADODB.Connection
+    Set rs = New ADODB.Recordset
+    '設編碼為 utf-8
+    encoding = "65001"
+    '拆解路徑
+    folderPath = Left(filePath, InStrRev(filePath, "\") - 1)
+    fileName = Mid(filePath, InStrRev(filePath, "\") + 1)
+    '連線字串
+    connString = "Provider=Microsoft.ACE.OLEDB.12.0;" & _
+                       "Data Source=" & folderPath & ";" & _
+                       "Extended Properties=""Text;HDR=Yes;FMT=Delimited;IMEX=1;CharacterSet=" & encoding & """"
+    '建立連線
+    conn.Open connString
+    '建立查詢
+    sql = "SELECT * FROM [" & fileName & "]"
+    '開啟查詢
+    rs.Open sql, conn, adOpenStatic, adLockReadOnly, adCmdText
     
-    If Not dal.BulkInsert(filePath, tableName) Then
-        GoTo ErrorHandler
-    End If
-    
-    ImportCsv = True
+    Set PrepareRecordset = rs
     Exit Function
     
 ErrorHandler:
-    ImportCsv = False
+    Set PrepareRecordset = Nothing
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
