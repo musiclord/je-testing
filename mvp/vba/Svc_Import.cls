@@ -18,8 +18,6 @@ Private Const MODULE_NAME = "Svc_Import"
 
 '--類別成員
 Private m_ctx As Mgr_Context
-Private m_fieldsGL As Dictionary
-Private m_fieldsTB As Dictionary
 
 
 '--Svc_Import
@@ -27,9 +25,6 @@ Public Sub Initialize(ByRef Context As Mgr_Context)
     Const METHOD_NAME As String = "Initialize"
     '依賴注入
     Set m_ctx = Context
-    '實例化
-    Set m_fieldsGL = New Dictionary
-    Set m_fieldsTB = New Dictionary
 End Sub
 
 Public Function ImportGL(ByVal filePath As String) As Boolean
@@ -41,6 +36,7 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     Dim tableName As String
     Dim dal As I_Dal
     Let tableName = "GL"
+    ' Let tableName = m_ctx.m_gl.name
     Set dal = m_ctx.DalPbc
     Set sourceRs = PrepareRecordset(filePath)
     If Not dal.BulkInsert(sourceRs, tableName) Then Exit Function
@@ -75,12 +71,23 @@ ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
-Public Function ApplyGLMapping(ByVal fieldsMapping As Dictionary) As Boolean
+Public Function ApplyGLMapping(ByVal sourceFields As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyGLMapping"
     On Error GoTo ErrorHandler
     
+    '擷取表單所有控制項 為 欄位映射表
+    '複製 PBC 至 DATA 並將設置好欄位
+    
     ApplyGLMapping = False
-    '..
+    'Dim sourceTable As String, targetTable As String
+    'Dim sourceFields As String, standardFields As String
+    'Dim sql As String, affected As Long
+    'sql = "INSERT INTO [" & targetTable & "] " & _
+    '      "(" & standardFields & ") " & _
+    '      "SELECT " & _
+    '      "(" & customerFields & ") " & _
+    '      "FROM [" & sourceTable & "] IN [" & m_ctx.DalPbc.path & "]"
+    'affected = m_ctx.DalData.ExecuteNonQuery(sql)
     ApplyGLMapping = True
     Exit Function
     
@@ -100,7 +107,7 @@ Public Function ApplyTBMapping(ByVal fieldsMapping As Dictionary) As Boolean
     Exit Function
     
 ErrorHandler:
-    ApplyGLMapping = False
+    ApplyTBMapping = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function

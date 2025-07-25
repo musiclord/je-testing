@@ -44,7 +44,7 @@ End Function
 
 
 '--資料操作 DML (Data Manipulation Language)
-Public Function ExecuteQuery(ByVal sql$) As ADODB.Recordset
+Public Function ExecuteQuery(ByVal sql$) As DAO.Recordset '型別受約束，之後得修改通用
 End Function
 Public Function ExecuteNonQuery(ByVal sql$) As Long
 End Function

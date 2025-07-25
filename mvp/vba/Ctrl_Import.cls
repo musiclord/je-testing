@@ -72,6 +72,7 @@ Private Sub viewImport_ImportGL()
     Const METHOD_NAME As String = "viewImport_ImportGL"
     
     Dim filePath As String
+    Dim fields As Dictionary
     '選取CSV路徑
     filePath = Application.GetOpenFilename()
     If filePath = "False" Then
@@ -83,7 +84,7 @@ Private Sub viewImport_ImportGL()
         MsgBox "資料匯入失敗", vbCritical, "匯入GL"
     Else
         '匯入成功，更新欄位控制項
-        Call viewImport.UpdatePageGL
+        viewImport.UpdatePageGL fields
     End If
 End Sub
 
@@ -108,9 +109,9 @@ End Sub
 
 Private Sub viewImport_ApplyGL()
     Const METHOD_NAME As String = "viewImport_ApplyGL"
-    
-    Dim fieldMapping As Dictionary
-    Set fieldMapping = viewImport
+    ' sourceFields = viewImport.GetSourceFields()
+    ' If Not m_ImportService.ApplyGLMapping(sourceFields) Then
+    ' End If
     
     
 End Sub

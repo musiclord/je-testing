@@ -44,7 +44,9 @@ End Sub
 Public Sub UpdatePageGL(ByVal fieldNames As Dictionary)
     Const METHOD_NAME As String = "UpdatePageGL"
     '更新 GL 頁面控制項
+    Dim ctrl As Controls
     Dim cbo As MSForms.ComboBox
+    Dim fieldName As Variant
     '遍歷表單控制項
     For Each ctrl In Me.Controls
         '若為 ComboBox
@@ -54,17 +56,19 @@ Public Sub UpdatePageGL(ByVal fieldNames As Dictionary)
             '總帳金額對應欄位
             '必要設定欄位
             '可選設定欄位
-            For Each fieldName In fieldNames
+            For Each fieldName In fieldNames.Keys
                 cbo.AddItem fieldName
             Next fieldName
         End If
     Next ctrl
 End Sub
 
-Public Sub UpdatePageTB()
+Public Sub UpdatePageTB(ByVal fieldNames As Dictionary)
     Const METHOD_NAME As String = "UpdatePageTB"
     '更新 TB 頁面控制項
+    Dim ctrl As Controls
     Dim cbo As MSForms.ComboBox
+    Dim fieldName As Variant
     '遍歷表單控制項
     For Each ctrl In Me.Controls
         '若為 ComboBox
@@ -74,12 +78,11 @@ Public Sub UpdatePageTB()
             '總帳金額對應欄位
             '必要設定欄位
             '可選設定欄位
-            For Each fieldName In fieldNames
+            For Each fieldName In fieldNames.Keys
                 cbo.AddItem fieldName
             Next fieldName
         End If
     Next ctrl
-End Sub
 End Sub
 
 Public Function GetGLMapping() As Dictionary
@@ -87,6 +90,7 @@ Public Function GetGLMapping() As Dictionary
     '回傳 GL 欄位映射表
     Dim key As String
     Dim cbo As MSForms.ComboBox
+    Dim ctrl As Controls
     Dim mapping As Dictionary
     Set mapping = New Dictionary
     For Each ctrl In Me.Controls
@@ -108,9 +112,9 @@ End Function
 Public Function GetTBMapping() As Dictionary
     Const METHOD_NAME As String = "GetTBMapping"
     '回傳 TB 欄位映射表
-    Dim mapping As Dictionary
     Dim key As String
     Dim cbo As MSForms.ComboBox
+    Dim ctrl As Controls
     Dim mapping As Dictionary
     Set mapping = New Dictionary
     For Each ctrl In Me.Controls
@@ -128,3 +132,4 @@ Public Function GetTBMapping() As Dictionary
     
     Set GetTBMapping = mapping
 End Function
+

@@ -210,11 +210,16 @@ End Function
 
 
 '--資料操作 DML (Data Manipulation Language)
-Public Function I_Dal_ExecuteQuery(ByVal sql As String) As ADODB.Recordset
+Public Function I_Dal_ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Const METHOD_NAME As String = "I_Dal_ExecuteQuery"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
     On Error GoTo ErrorHandler
     
+    '確保連接
+    If Not m_isConnected Then I_Dal_Connect
+    '執行查詢並返回 DAO Recordset
+    Set I_Dal_ExecuteQuery = m_db.OpenRecordset(sql, dbOpenSnapshot)
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 查詢成功"
     Exit Function
 
 ErrorHandler:
@@ -224,15 +229,21 @@ End Function
 
 Public Function I_Dal_ExecuteNonQuery(ByVal sql As String) As Long
     Const METHOD_NAME As String = "I_Dal_ExecuteNonQuery"
-    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
     On Error GoTo ErrorHandler
     
-    ' 確保連線
+    '確保連接
     If Not m_isConnected Then I_Dal_Connect
+    '執行 SQL 命令
+    Dim recordsAffected As Long
+    m_db.Execute sql, dbFailOnError
     
+    '返回受影響的記錄數
+    I_Dal_ExecuteNonQuery = m_db.recordsAffected
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已執行，影響 " & recordsAffected & " 筆記錄"
     Exit Function
 
 ErrorHandler:
+    I_Dal_ExecuteNonQuery = -1
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function

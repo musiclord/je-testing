@@ -18,6 +18,7 @@ Private Const MODULE_NAME = "Svc_Validation"
 
 '--類別成員
 Private m_ContextManager As Mgr_Context
+'Private m_tb As Ent_TB
 
 
 '--Svc_Validation
@@ -25,13 +26,23 @@ Public Sub Initialize()
     Const METHOD_NAME As String = "Initialize"
 End Sub
 
-Public Function TestCompleteness() As Boolean
+Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date) As Boolean
     '完整性測試
     Const METHOD_NAME As String = "TestCompleteness"
     On Error GoTo ErrorHandler
     
     TestCompleteness = False
-    '...
+    '準備日期格式
+    Dim sStart As String, sEnd As String
+    sStart = Format(startDate, "\#yyyy\-MM\-dd\#")
+    sEnd = Format(endDate, "\#yyyy\-MM\-dd\#")
+    '修改欄位類型
+    Dim sql As String, affected As Long
+    Dim fieldsArray As Variant, fieldName As Variant
+    'fieldsArray = Array(m_tb.change, m_tb.credit, m_tb.debit) <-- Dict
+    For Each fieldName In fieldsArray
+        
+    Next fieldName
     TestCompleteness = True
     Exit Function
     
