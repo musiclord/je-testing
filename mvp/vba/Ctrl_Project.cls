@@ -55,7 +55,7 @@ Public Function Build() As Boolean
 ErrorHandler:
     Build = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 

@@ -73,7 +73,7 @@ Public Function Create(ByVal name As String, path As String) As Boolean
 ErrorHandler:
     Create = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Public Function Load(ByVal name As String, ByVal path As String) As Boolean
@@ -101,7 +101,7 @@ Public Function Load(ByVal name As String, ByVal path As String) As Boolean
 ErrorHandler:
     Load = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 
@@ -129,7 +129,7 @@ Private Function CreateDatabase(ByVal dbName As String) As I_Dal
     
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Private Function LoadDatabase(ByVal dbName As String) As I_Dal
@@ -155,5 +155,5 @@ Private Function LoadDatabase(ByVal dbName As String) As I_Dal
     
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function

@@ -44,11 +44,11 @@ End Function
 
 
 '--資料操作 DML (Data Manipulation Language)
-Public Function ExecuteQuery(ByVal sql$) As DAO.Recordset '型別受約束，之後得修改通用
+Public Function ExecuteQuery(ByVal SQL$) As DAO.Recordset '型別受約束，之後得修改通用
 End Function
-Public Function ExecuteNonQuery(ByVal sql$) As Long
+Public Function ExecuteNonQuery(ByVal SQL$) As Long
 End Function
-Public Function GetScalar(ByVal sql$) As Variant
+Public Function GetScalar(ByVal SQL$) As Variant
 End Function
 
 

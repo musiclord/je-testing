@@ -37,7 +37,7 @@ Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date)
     sStart = Format(startDate, "\#yyyy\-MM\-dd\#")
     sEnd = Format(endDate, "\#yyyy\-MM\-dd\#")
     '修改欄位類型
-    Dim sql As String, affected As Long
+    Dim SQL As String, affected As Long
     Dim fieldsArray As Variant, fieldName As Variant
     'fieldsArray = Array(m_tb.change, m_tb.credit, m_tb.debit) <-- Dict
     For Each fieldName In fieldsArray
@@ -49,7 +49,7 @@ Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date)
 ErrorHandler:
     TestCompleteness = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Public Function TestBalance() As Boolean
@@ -65,7 +65,7 @@ Public Function TestBalance() As Boolean
 ErrorHandler:
     TestBalance = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Public Function TestRDE() As Boolean
@@ -81,7 +81,7 @@ Public Function TestRDE() As Boolean
 ErrorHandler:
     TestRDE = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 

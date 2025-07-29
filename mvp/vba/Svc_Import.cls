@@ -47,7 +47,7 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
 ErrorHandler:
     ImportGL = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Public Function ImportTB(ByVal filePath As String) As Boolean
@@ -69,7 +69,7 @@ Public Function ImportTB(ByVal filePath As String) As Boolean
 ErrorHandler:
     ImportTB = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 Public Function ApplyGLMapping(ByVal sourceFields As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyGLMapping"
@@ -79,6 +79,18 @@ Public Function ApplyGLMapping(ByVal sourceFields As Dictionary) As Boolean
     '複製 PBC 至 DATA 並將設置好欄位
     
     ApplyGLMapping = False
+    Dim gl As New Ent_GL
+    Dim key As Variant
+    Dim index As FieldsId
+    Dim value As String
+    For Each key In sourceFields.Keys
+        
+        value = sourceFields(key)
+        If Len(value) > 0 Then
+            gl.SetMapping index, value
+        End If
+        ' gl.SetMapping
+    Next
     'Dim sourceTable As String, targetTable As String
     'Dim sourceFields As String, standardFields As String
     'Dim sql As String, affected As Long
@@ -94,7 +106,7 @@ Public Function ApplyGLMapping(ByVal sourceFields As Dictionary) As Boolean
 ErrorHandler:
     ApplyGLMapping = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Public Function ApplyTBMapping(ByVal fieldsMapping As Dictionary) As Boolean
@@ -109,7 +121,7 @@ Public Function ApplyTBMapping(ByVal fieldsMapping As Dictionary) As Boolean
 ErrorHandler:
     ApplyTBMapping = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 '--Custom
@@ -121,7 +133,7 @@ Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
     Dim rs As ADODB.Recordset
     Dim connString As String
     Dim folderPath As String, fileName As String
-    Dim sql As String, encoding As String
+    Dim SQL As String, encoding As String
     
     Set conn = New ADODB.Connection
     Set rs = New ADODB.Recordset
@@ -137,9 +149,9 @@ Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
     '建立連線
     conn.Open connString
     '建立查詢
-    sql = "SELECT * FROM [" & fileName & "]"
+    SQL = "SELECT * FROM [" & fileName & "]"
     '開啟查詢
-    rs.Open sql, conn, adOpenStatic, adLockReadOnly, adCmdText
+    rs.Open SQL, conn, adOpenStatic, adLockReadOnly, adCmdText
     
     Set PrepareRecordset = rs
     Exit Function
@@ -147,7 +159,7 @@ Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
 ErrorHandler:
     Set PrepareRecordset = Nothing
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Private Function AddLineItem() As Boolean
@@ -156,7 +168,7 @@ Private Function AddLineItem() As Boolean
     AddLineItem = False
     On Error GoTo ErrorHandler
     
-    Dim sql As String
+    Dim SQL As String
     Dim affected As Long
     Dim dal As I_Dal
     Set dal = m_ctx.DalData
@@ -165,20 +177,20 @@ Private Function AddLineItem() As Boolean
     '開始事務
     dal.BeginTransaction
     '新增欄位: ID
-    sql = ""
-    affected = dal.ExecuteNonQuery(sql)
+    SQL = ""
+    affected = dal.ExecuteNonQuery(SQL)
     '新增欄位: LineItem
-    sql = ""
-    affected = dal.ExecuteNonQuery(sql)
+    SQL = ""
+    affected = dal.ExecuteNonQuery(SQL)
     '計算項次（按傳票號碼分組，依序編號）
-    sql = ""
-    affected = dal.ExecuteNonQuery(sql)
+    SQL = ""
+    affected = dal.ExecuteNonQuery(SQL)
     '新增欄位: 傳票金額
-    sql = ""
-    affected = dal.ExecuteNonQuery(sql)
+    SQL = ""
+    affected = dal.ExecuteNonQuery(SQL)
     '計算傳票金額（借方-貸方）
-    sql = ""
-    affected = dal.ExecuteNonQuery(sql)
+    SQL = ""
+    affected = dal.ExecuteNonQuery(SQL)
     '提交事務
     dal.CommitTransaction
     dal.Disconnect
@@ -192,5 +204,5 @@ ErrorHandler:
     dal.RollbackTransaction
     AddLineItem = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function

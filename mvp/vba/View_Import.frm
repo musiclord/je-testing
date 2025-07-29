@@ -95,9 +95,14 @@ Public Function GetGLMapping() As Dictionary
     Set mapping = New Dictionary
     For Each ctrl In Me.Controls
         If (TypeOf ctrl Is MSForms.ComboBox) Then
+            Set cbo = ctrl
             If ctrl.Tag = "mapping" Then
-                Set cbo = ctrl
                 '移除控制項名稱前綴
+                key = Replace(cbo.name, "cbo", "")
+                If cbo.Text <> "" Then
+                    mapping(key) = cbo.Text
+                End If
+            ElseIf ctrl.Tag = "amount" Then
                 key = Replace(cbo.name, "cbo", "")
                 If cbo.Text <> "" Then
                     mapping(key) = cbo.Text

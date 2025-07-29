@@ -57,7 +57,7 @@ Public Function Execute() As Dictionary
     
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 
@@ -72,7 +72,7 @@ Private Sub viewImport_ImportGL()
     Const METHOD_NAME As String = "viewImport_ImportGL"
     
     Dim filePath As String
-    Dim fields As Dictionary
+    Dim Fields As Dictionary
     '選取CSV路徑
     filePath = Application.GetOpenFilename()
     If filePath = "False" Then
@@ -84,7 +84,7 @@ Private Sub viewImport_ImportGL()
         MsgBox "資料匯入失敗", vbCritical, "匯入GL"
     Else
         '匯入成功，更新欄位控制項
-        viewImport.UpdatePageGL fields
+        viewImport.UpdatePageGL Fields
     End If
 End Sub
 
@@ -109,11 +109,13 @@ End Sub
 
 Private Sub viewImport_ApplyGL()
     Const METHOD_NAME As String = "viewImport_ApplyGL"
-    ' sourceFields = viewImport.GetSourceFields()
-    ' If Not m_ImportService.ApplyGLMapping(sourceFields) Then
-    ' End If
     
-    
+    Dim sourceFields As Dictionary
+    Set sourceFields = viewImport.GetGLMapping()
+    If Not m_ImportService.ApplyGLMapping(sourceFields) Then
+        '...
+        
+    End If
 End Sub
 
 Private Sub viewImport_ApplyTB()

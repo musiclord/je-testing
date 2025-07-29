@@ -17,7 +17,7 @@ Private Const MODULE_NAME = "Ent_GL"
 '===============================================================================
 
 '--列舉
-Public Enum FieldIndex
+Public Enum FieldsId
     '總帳金額對應方式
     HandlingMethod = 0
     EntryAmount = 1
@@ -31,125 +31,72 @@ Public Enum FieldIndex
     DocumentNumber = 8
     LineItem = 9
     PostDate = 10
-    Description = 11
+    EntryDescription = 11
     '可選欄位
     ApprovalDate = 12
     ApprovedBy = 13
     CreatedBy = 14
     SourceModule = 15
     IsManual = 16
-    IsApprovedOn = 17
+    IsApprovedDateAsLedgerDate = 17
+    '基於列舉自動+1為總數
+    Count
 End Enum
 
 '--私有變數
-Private m_Field(0 To 17) As String '儲存映射後欄位名稱
-
+Private m_Fields() As String    '儲存映射後欄位名稱
+Private m_Map As Dictionary     '儲存字典
 '--屬性
-Public Property Get HandlingMethod() As String
-    HandlingMethod = m_FieldNames(FieldIndex.HandlingMethod)
+Public Property Get Field(ByVal index As FieldsId) As String
+    Dim result As String
+    Field = m_Fields(index)
 End Property
 
-Public Property Get EntryAmount() As String
-    EntryAmount = m_FieldNames(FieldIndex.EntryAmount)
-End Property
 
-Public Property Get DebitAmount() As String
-    DebitAmount = m_FieldNames(FieldIndex.DebitAmount)
-End Property
-
-Public Property Get CreditAmount() As String
-    CreditAmount = m_FieldNames(FieldIndex.CreditAmount)
-End Property
-
-Public Property Get DrCr() As String
-    DrCr = m_FieldNames(FieldIndex.DrCr)
-End Property
-
-Public Property Get IsDebit() As String
-    IsDebit = m_FieldNames(FieldIndex.IsDebit)
-End Property
-
-Public Property Get AccountNumber() As String
-    AccountNumber = m_FieldNames(FieldIndex.AccountNumber)
-End Property
-
-Public Property Get AccountName() As String
-    AccountName = m_FieldNames(FieldIndex.AccountName)
-End Property
-
-Public Property Get DocumentNumber() As String
-    DocumentNumber = m_FieldNames(FieldIndex.DocumentNumber)
-End Property
-
-Public Property Get LineItem() As String
-    LineItem = m_FieldNames(FieldIndex.LineItem)
-End Property
-
-Public Property Get PostDate() As String
-    PostDate = m_FieldNames(FieldIndex.PostDate)
-End Property
-
-Public Property Get Description() As String
-    Description = m_FieldNames(FieldIndex.Description)
-End Property
-
-Public Property Get ApprovalDate() As String
-    ApprovalDate = m_FieldNames(FieldIndex.ApprovalDate)
-End Property
-
-Public Property Get ApprovedBy() As String
-    ApprovedBy = m_FieldNames(FieldIndex.ApprovedBy)
-End Property
-
-Public Property Get CreatedBy() As String
-    CreatedBy = m_FieldNames(FieldIndex.CreatedBy)
-End Property
-
-Public Property Get SourceModule() As String
-    SourceModule = m_FieldNames(FieldIndex.SourceModule)
-End Property
-
-Public Property Get IsManual() As String
-    IsManual = m_FieldNames(FieldIndex.IsManual)
-End Property
-
-Public Property Get IsApprovedOn() As String
-    IsApprovedOn = m_FieldNames(FieldIndex.IsApprovedOn)
-End Property
 
 '--Ent_GL
-Public Sub Initialize()
-    Dim standardFields As Dictionary
-    Set standardFields = GetStandardFields()
-    
-    Dim key As Variant
-    For Each key In standardFields.Keys
-        m_Field(standardFields(key)) = CStr(key)
-    Next key
+Private Sub Class_Initialize()
+    '動態設定陣列大小
+    ReDim m_Fields(0 To FieldsId.Count - 1)
+    '總分金額對應方式
+    m_Fields(FieldsId.HandlingMethod) = "HandlingMethod"
+    m_Fields(FieldsId.EntryAmount) = "EntryAmount"
+    m_Fields(FieldsId.DebitAmount) = "DebitAmount"
+    m_Fields(FieldsId.CreditAmount) = "CreditAmount"
+    m_Fields(FieldsId.DrCr) = "DrCr"
+    m_Fields(FieldsId.IsDebit) = "IsDebit"
+    '必要欄位
+    m_Fields(FieldsId.AccountNumber) = "AccountNumber"
+    m_Fields(FieldsId.AccountName) = "AccountName"
+    m_Fields(FieldsId.DocumentNumber) = "DocumentNumber"
+    m_Fields(FieldsId.LineItem) = "LineItem"
+    m_Fields(FieldsId.PostDate) = "PostDate"
+    m_Fields(FieldsId.EntryDescription) = "EntryDescription"
+    '可選欄位
+    m_Fields(FieldsId.ApprovalDate) = "ApprovalDate"
+    m_Fields(FieldsId.ApprovedBy) = "ApprovedBy"
+    m_Fields(FieldsId.CreatedBy) = "CreatedBy"
+    m_Fields(FieldsId.SourceModule) = "SourceModule"
+    m_Fields(FieldsId.IsManual) = "IsManual"
+    m_Fields(FieldsId.IsApprovedDateAsLedgerDate) = "IsApprovalDateAsLedgerDate"
+    '建立欄位名稱到索引的映射
+    Set m_Map = New Dictionary
+    Dim i As Long
+    For i = 0 To UBound(m_Fields)
+        m_Map(m_Fields(i)) = i
+    Next i
 End Sub
 
-Public Function GetStandardFields() As Dictionary
-    Const METHOD_NAME As String = "GetStandardField"
+Private Sub InitializeField()
     
-    Dim dict As New Dictionary
-    '遍歷 Enum
-    dict.Add "HandlingMethod", FieldIndex.HandlingMethod
-    dict.Add "EntryAmount", FieldIndex.EntryAmount
-    dict.Add "DebitAmount", FieldIndex.DebitAmount
-    dict.Add "CreditAmount", FieldIndex.CreditAmount
-    dict.Add "DrCr", FieldIndex.DrCr
-    dict.Add "IsDebit", FieldIndex.IsDebit
-    dict.Add "AccountNumber", FieldIndex.AccountNumber
-    dict.Add "AccountName", FieldIndex.AccountName
-    dict.Add "DocumentNumber", FieldIndex.DocumentNumber
-    dict.Add "LineItem", FieldIndex.LineItem
-    dict.Add "PostDate", FieldIndex.PostDate
-    dict.Add "Description", FieldIndex.Description
-    dict.Add "ApprovalDate", FieldIndex.ApprovalDate
-    dict.Add "ApprovedBy", FieldIndex.ApprovedBy
-    dict.Add "CreatedBy", FieldIndex.CreatedBy
-    dict.Add "SourceModule", FieldIndex.SourceModule
-    dict.Add "IsManual", FieldIndex.IsManual
-    dict.Add "IsApprovedOn", FieldIndex.IsApprovedOn
-    Set GetStandardField = dict
+End Sub
+
+Public Sub SetMapping(index As FieldsId, name As String)
+    If Len(name) > 0 Then
+        m_Fields(index) = name '覆蓋標準名稱
+    End If
+End Sub
+
+Public Function SQL(ByVal index As FieldsId) As String
+    SQL = "[" & m_Fields(index) & "]"
 End Function

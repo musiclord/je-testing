@@ -54,7 +54,7 @@ Public Function Execute() As Dictionary
     
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 

@@ -55,6 +55,6 @@ Public Function UpdateProjects(projects As Collection) As Boolean
     UpdateProjects = True
     Exit Function
 ErrorHandler:
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.Description
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.DESCRIPTION
     UpdateProjects = False
 End Function

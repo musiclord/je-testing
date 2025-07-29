@@ -82,8 +82,8 @@ Public Sub I_Dal_Connect()
 
 ErrorHandler:
     m_isConnected = False
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " 錯誤: " & Err.Number & ": " & Err.Description
-    Err.Raise Err.Number, MODULE_NAME & "." & METHOD_NAME, Err.Description
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " 錯誤: " & Err.Number & ": " & Err.DESCRIPTION
+    Err.Raise Err.Number, MODULE_NAME & "." & METHOD_NAME, Err.DESCRIPTION
 End Sub
 
 Public Sub I_Dal_Disconnect()
@@ -109,7 +109,7 @@ Public Sub I_Dal_Disconnect()
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Sub
 
 
@@ -131,26 +131,26 @@ Public Function I_Dal_CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal table
         I_Dal_DropTable tableName
     End If
     ' 建構 CREATE TABLE
-    Dim sql As String, i As Long
+    Dim SQL As String, i As Long
     ' HEAD
-    sql = "CREATE TABLE [" & tableName & "] ("
+    SQL = "CREATE TABLE [" & tableName & "] ("
     ' BODY
-    For i = 0 To sourceRs.fields.Count - 1
-        If i > 0 Then sql = sql & ", "
-        sql = sql & "[" & sourceRs.fields(i).name & "] TEXT"
+    For i = 0 To sourceRs.Fields.Count - 1
+        If i > 0 Then SQL = SQL & ", "
+        SQL = SQL & "[" & sourceRs.Fields(i).name & "] TEXT"
     Next i
     ' TAIL
-    sql = sql & ")"
+    SQL = SQL & ")"
     ' 使用 DAO 執行 DDL
-    m_db.Execute sql, dbFailOnError
+    m_db.Execute SQL, dbFailOnError
     
-    Debug.Print "資料表已建立: " & tableName & " (" & sourceRs.fields.Count & " 欄位)"
+    Debug.Print "資料表已建立: " & tableName & " (" & sourceRs.Fields.Count & " 欄位)"
     I_Dal_CreateTable = True
     Exit Function
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Public Function I_Dal_DropTable(ByVal tableName As String) As Boolean
@@ -176,7 +176,7 @@ Public Function I_Dal_DropTable(ByVal tableName As String) As Boolean
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Public Function I_Dal_TableExists(ByVal tableName As String) As Boolean
@@ -204,30 +204,30 @@ Public Function I_Dal_TableExists(ByVal tableName As String) As Boolean
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 
 
 '--資料操作 DML (Data Manipulation Language)
-Public Function I_Dal_ExecuteQuery(ByVal sql As String) As DAO.Recordset
+Public Function I_Dal_ExecuteQuery(ByVal SQL As String) As DAO.Recordset
     Const METHOD_NAME As String = "I_Dal_ExecuteQuery"
-    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
+    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & SQL
     On Error GoTo ErrorHandler
     
     '確保連接
     If Not m_isConnected Then I_Dal_Connect
     '執行查詢並返回 DAO Recordset
-    Set I_Dal_ExecuteQuery = m_db.OpenRecordset(sql, dbOpenSnapshot)
+    Set I_Dal_ExecuteQuery = m_db.OpenRecordset(SQL, dbOpenSnapshot)
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 查詢成功"
     Exit Function
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
-Public Function I_Dal_ExecuteNonQuery(ByVal sql As String) As Long
+Public Function I_Dal_ExecuteNonQuery(ByVal SQL As String) As Long
     Const METHOD_NAME As String = "I_Dal_ExecuteNonQuery"
     On Error GoTo ErrorHandler
     
@@ -235,7 +235,7 @@ Public Function I_Dal_ExecuteNonQuery(ByVal sql As String) As Long
     If Not m_isConnected Then I_Dal_Connect
     '執行 SQL 命令
     Dim recordsAffected As Long
-    m_db.Execute sql, dbFailOnError
+    m_db.Execute SQL, dbFailOnError
     
     '返回受影響的記錄數
     I_Dal_ExecuteNonQuery = m_db.recordsAffected
@@ -245,19 +245,19 @@ Public Function I_Dal_ExecuteNonQuery(ByVal sql As String) As Long
 ErrorHandler:
     I_Dal_ExecuteNonQuery = -1
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
-Public Function I_Dal_GetScalar(ByVal sql As String) As Variant
+Public Function I_Dal_GetScalar(ByVal SQL As String) As Variant
     Const METHOD_NAME As String = "I_Dal_GetScalar"
-    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
+    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & SQL
     On Error GoTo ErrorHandler
     
     Exit Function
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 
@@ -315,7 +315,7 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
                     '單筆記錄 (一維陣列)
                     targetRs.AddNew
                     For j = 0 To UBound(dataChunk, 1)
-                        targetRs.fields(j).value = dataChunk(j)
+                        targetRs.Fields(j).value = dataChunk(j)
                     Next j
                     targetRs.Update
                 Else
@@ -325,9 +325,9 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
                         For j = 0 To UBound(dataChunk, 1)
                             '檢查空值
                             If IsNull(dataChunk(j, i)) Then
-                                targetRs.fields(j).value = ""
+                                targetRs.Fields(j).value = ""
                             Else
-                                targetRs.fields(j).value = dataChunk(j, i)
+                                targetRs.Fields(j).value = dataChunk(j, i)
                             End If
                         Next j
                         targetRs.Update
@@ -360,7 +360,7 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
     On Error Resume Next
     '回滾事務
     I_Dal_RollbackTransaction
@@ -380,7 +380,7 @@ Public Function I_Dal_GetTableSchema(ByVal tableName As String) As ADODB.Records
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 Public Function I_Dal_GetTableList() As ADODB.Recordset
@@ -391,7 +391,7 @@ Public Function I_Dal_GetTableList() As ADODB.Recordset
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Function
 
 
@@ -417,7 +417,7 @@ Public Sub I_Dal_BeginTransaction()
     
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Sub
 
 Public Sub I_Dal_CommitTransaction()
@@ -437,7 +437,7 @@ Public Sub I_Dal_CommitTransaction()
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Sub
 
 Public Sub I_Dal_RollbackTransaction()
@@ -457,5 +457,5 @@ Public Sub I_Dal_RollbackTransaction()
 
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+                Err.Number & ":" & Err.DESCRIPTION
 End Sub
