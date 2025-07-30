@@ -60,7 +60,7 @@ End Property
 
 Public Sub I_Dal_Connect()
     Const METHOD_NAME As String = "I_Dal_Connect"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     ' 檢查是否已連線
     If m_isConnected Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已經連線"
@@ -80,16 +80,16 @@ Public Sub I_Dal_Connect()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 連線至 " & m_path
     Exit Sub
 
-ErrorHandler:
+Errorhandler:
     m_isConnected = False
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " 錯誤: " & Err.Number & ": " & Err.DESCRIPTION
-    Err.Raise Err.Number, MODULE_NAME & "." & METHOD_NAME, Err.DESCRIPTION
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " 錯誤: " & Err.Number & ": " & Err.Description
+    Err.Raise Err.Number, MODULE_NAME & "." & METHOD_NAME, Err.Description
 End Sub
 
 Public Sub I_Dal_Disconnect()
     Const METHOD_NAME As String = "I_Dal_Disconnect"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & m_db.name
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     ' 檢查未完成的事務
     If m_inTransaction Then
@@ -107,9 +107,9 @@ Public Sub I_Dal_Disconnect()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已斷開連線"
     Exit Sub
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Sub
 
 
@@ -121,7 +121,7 @@ End Sub
 Public Function I_Dal_CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName As String) As Boolean
     Const METHOD_NAME As String = "I_Dal_CreateTable"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sourceRs.Source & ", " & tableName
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     I_Dal_CreateTable = False
     ' 確保連線
@@ -131,32 +131,32 @@ Public Function I_Dal_CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal table
         I_Dal_DropTable tableName
     End If
     ' 建構 CREATE TABLE
-    Dim SQL As String, i As Long
+    Dim sql As String, i As Long
     ' HEAD
-    SQL = "CREATE TABLE [" & tableName & "] ("
+    sql = "CREATE TABLE [" & tableName & "] ("
     ' BODY
-    For i = 0 To sourceRs.Fields.Count - 1
-        If i > 0 Then SQL = SQL & ", "
-        SQL = SQL & "[" & sourceRs.Fields(i).name & "] TEXT"
+    For i = 0 To sourceRs.fields.count - 1
+        If i > 0 Then sql = sql & ", "
+        sql = sql & "[" & sourceRs.fields(i).name & "] TEXT"
     Next i
     ' TAIL
-    SQL = SQL & ")"
+    sql = sql & ")"
     ' 使用 DAO 執行 DDL
-    m_db.Execute SQL, dbFailOnError
+    m_db.Execute sql, dbFailOnError
     
-    Debug.Print "資料表已建立: " & tableName & " (" & sourceRs.Fields.Count & " 欄位)"
+    Debug.Print "資料表已建立: " & tableName & " (" & sourceRs.fields.count & " 欄位)"
     I_Dal_CreateTable = True
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 Public Function I_Dal_DropTable(ByVal tableName As String) As Boolean
     Const METHOD_NAME As String = "I_Dal_DropTable"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": (" & tableName & ")"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     I_Dal_DropTable = False
     '確保連線
@@ -174,18 +174,18 @@ Public Function I_Dal_DropTable(ByVal tableName As String) As Boolean
     
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 Public Function I_Dal_TableExists(ByVal tableName As String) As Boolean
     Const METHOD_NAME As String = "I_Dal_TableExists"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": (" & tableName & ")"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     I_Dal_TableExists = False
-    Dim tbl As DAO.TableDef
+    Dim tbl As DAO.tableDef
     '確保連線
     If Not m_isConnected Then I_Dal_Connect
     '檢查資料表
@@ -202,62 +202,62 @@ Public Function I_Dal_TableExists(ByVal tableName As String) As Boolean
     End If
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 
 
 '--資料操作 DML (Data Manipulation Language)
-Public Function I_Dal_ExecuteQuery(ByVal SQL As String) As DAO.Recordset
+Public Function I_Dal_ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Const METHOD_NAME As String = "I_Dal_ExecuteQuery"
-    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & SQL
-    On Error GoTo ErrorHandler
+    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
+    On Error GoTo Errorhandler
     
     '確保連接
     If Not m_isConnected Then I_Dal_Connect
     '執行查詢並返回 DAO Recordset
-    Set I_Dal_ExecuteQuery = m_db.OpenRecordset(SQL, dbOpenSnapshot)
+    Set I_Dal_ExecuteQuery = m_db.OpenRecordset(sql, dbOpenSnapshot)
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 查詢成功"
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
-Public Function I_Dal_ExecuteNonQuery(ByVal SQL As String) As Long
+Public Function I_Dal_ExecuteNonQuery(ByVal sql As String) As Long
     Const METHOD_NAME As String = "I_Dal_ExecuteNonQuery"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     '確保連接
     If Not m_isConnected Then I_Dal_Connect
     '執行 SQL 命令
     Dim recordsAffected As Long
-    m_db.Execute SQL, dbFailOnError
+    m_db.Execute sql, dbFailOnError
     
     '返回受影響的記錄數
     I_Dal_ExecuteNonQuery = m_db.recordsAffected
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已執行，影響 " & recordsAffected & " 筆記錄"
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     I_Dal_ExecuteNonQuery = -1
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
-Public Function I_Dal_GetScalar(ByVal SQL As String) As Variant
+Public Function I_Dal_GetScalar(ByVal sql As String) As Variant
     Const METHOD_NAME As String = "I_Dal_GetScalar"
-    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & SQL
-    On Error GoTo ErrorHandler
+    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
+    On Error GoTo Errorhandler
     
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 
@@ -267,7 +267,7 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
     '將標準化 Recordset 進行大量插入
     Const METHOD_NAME As String = "I_Dal_BulkInsert"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": (" & sourceRs.Source & "), (" & tableName & ")"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     I_Dal_BulkInsert = False
     Dim targetRs As DAO.Recordset
@@ -315,7 +315,7 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
                     '單筆記錄 (一維陣列)
                     targetRs.AddNew
                     For j = 0 To UBound(dataChunk, 1)
-                        targetRs.Fields(j).value = dataChunk(j)
+                        targetRs.fields(j).value = dataChunk(j)
                     Next j
                     targetRs.Update
                 Else
@@ -325,9 +325,9 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
                         For j = 0 To UBound(dataChunk, 1)
                             '檢查空值
                             If IsNull(dataChunk(j, i)) Then
-                                targetRs.Fields(j).value = ""
+                                targetRs.fields(j).value = ""
                             Else
-                                targetRs.Fields(j).value = dataChunk(j, i)
+                                targetRs.fields(j).value = dataChunk(j, i)
                             End If
                         Next j
                         targetRs.Update
@@ -358,9 +358,9 @@ Public Function I_Dal_BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableN
     I_Dal_BulkInsert = True
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
     On Error Resume Next
     '回滾事務
     I_Dal_RollbackTransaction
@@ -372,26 +372,55 @@ End Function
 
 
 '--查詢輔助 (Query Helpers)
-Public Function I_Dal_GetTableSchema(ByVal tableName As String) As ADODB.Recordset
+Public Function I_Dal_GetTableSchema(ByVal tableName As String) As Variant
     Const METHOD_NAME As String = "I_Dal_GetTableSchema"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
+    Dim tableDef As DAO.tableDef
+    Dim field As DAO.field
+    Dim fields As New Collection
+    Dim fieldsArray() As String
+    Dim i As Long
+    '確保連接
+    If Not m_isConnected Then I_Dal_Connect
+    '檢查資料表
+    If Not I_Dal_TableExists(tableName) Then
+        I_Dal_GetTableSchema = Nothing
+        Exit Function
+    End If
+    '檢查欄位
+    Set tableDef = m_db.TableDefs(tableName)
+    If tableDef.fields.count = 0 Then
+        Debug.Print "資料表 [" & tableName & "] 沒有欄位"
+        I_Dal_GetTableSchema = Nothing
+    Else
+        For Each field In tableDef.fields
+            fields.Add field.name
+        Next field
+        '轉為陣列
+        ReDim fieldsArray(0 To fields.count - 1)
+        For i = 1 To fields.count
+            fieldsArray(i - 1) = fields(i)
+        Next i
+        Debug.Print "資料表 [" & tableName & "] 欄位已取得"
+        I_Dal_GetTableSchema = fieldsArray
+    End If
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
-Public Function I_Dal_GetTableList() As ADODB.Recordset
+Public Function I_Dal_GetTableList(ByVal tableName As String) As Variant
     Const METHOD_NAME As String = "I_Dal_GetTableList"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     Exit Function
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 
@@ -399,7 +428,7 @@ End Function
 '--事務管理
 Public Sub I_Dal_BeginTransaction()
     Const METHOD_NAME As String = "I_Dal_BeginTransaction"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     '確保連線
     If Not m_isConnected Then I_Dal_Connect
@@ -415,14 +444,14 @@ Public Sub I_Dal_BeginTransaction()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 事務已開始"
     Exit Sub
     
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Sub
 
 Public Sub I_Dal_CommitTransaction()
     Const METHOD_NAME As String = "I_Dal_CommitTransaction"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     If Not m_inTransaction Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 沒有進行中的事務"
@@ -435,14 +464,14 @@ Public Sub I_Dal_CommitTransaction()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 事務已提交"
     Exit Sub
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Sub
 
 Public Sub I_Dal_RollbackTransaction()
     Const METHOD_NAME As String = "I_Dal_RollbackTransaction"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     If Not m_inTransaction Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 沒有進行中的事務"
@@ -455,7 +484,7 @@ Public Sub I_Dal_RollbackTransaction()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 事務已回滾"
     Exit Sub
 
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Sub

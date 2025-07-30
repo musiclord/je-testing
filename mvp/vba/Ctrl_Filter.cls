@@ -39,7 +39,7 @@ End Sub
 
 Public Function Execute() As Dictionary
     Const METHOD_NAME As String = ""
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     Dim result As Dictionary
     Set result = New Dictionary
@@ -51,9 +51,9 @@ Public Function Execute() As Dictionary
     Set Execute = result
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 

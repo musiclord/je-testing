@@ -44,11 +44,12 @@ Public Sub Initialize()
     '實例化
     Set m_cfg = New Mgr_Config
     Set m_ctx = New Mgr_Context
+    m_ctx.Initialize
 End Sub
 
 Public Function Create(ByVal name As String, path As String) As Boolean
     Const METHOD_NAME As String = "Create"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     Create = False
     m_name = name
@@ -70,15 +71,15 @@ Public Function Create(ByVal name As String, path As String) As Boolean
     Create = True
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     Create = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 Public Function Load(ByVal name As String, ByVal path As String) As Boolean
     Const METHOD_NAME As String = "Load"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     Load = False
     m_name = name
@@ -98,10 +99,10 @@ Public Function Load(ByVal name As String, ByVal path As String) As Boolean
     Load = True
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     Load = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 
@@ -109,7 +110,7 @@ End Function
 '--Custom
 Private Function CreateDatabase(ByVal dbName As String) As I_Dal
     Const METHOD_NAME As String = "CreateDatabase"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     Dim dbe As DAO.DBEngine
     Dim db As DAO.Database
@@ -127,14 +128,14 @@ Private Function CreateDatabase(ByVal dbName As String) As I_Dal
     Set CreateDatabase = dal
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 Private Function LoadDatabase(ByVal dbName As String) As I_Dal
     Const METHOD_NAME As String = "LoadDatabase"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     '檢查資料庫檔案
     Dim dbPath As String
@@ -153,7 +154,7 @@ Private Function LoadDatabase(ByVal dbName As String) As I_Dal
     Set LoadDatabase = dal
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function

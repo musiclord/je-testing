@@ -42,7 +42,7 @@ End Sub
 
 Public Function Execute() As Dictionary
     Const METHOD_NAME As String = "Execute"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     Dim result As Dictionary
     Set result = New Dictionary
@@ -55,9 +55,9 @@ Public Function Execute() As Dictionary
     Set Execute = result
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 
@@ -71,9 +71,8 @@ End Sub
 Private Sub viewImport_ImportGL()
     Const METHOD_NAME As String = "viewImport_ImportGL"
     
-    Dim filePath As String
-    Dim Fields As Dictionary
     '選取CSV路徑
+    Dim filePath As String
     filePath = Application.GetOpenFilename()
     If filePath = "False" Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 使用者取消操作。"
@@ -84,7 +83,11 @@ Private Sub viewImport_ImportGL()
         MsgBox "資料匯入失敗", vbCritical, "匯入GL"
     Else
         '匯入成功，更新欄位控制項
-        viewImport.UpdatePageGL Fields
+        Dim fields As Variant
+        fields = m_ctx.DalPbc.GetTableSchema("GL")
+        If IsArray(fields) Then
+            viewImport.UpdatePageGL fields
+        End If
     End If
 End Sub
 
@@ -110,11 +113,9 @@ End Sub
 Private Sub viewImport_ApplyGL()
     Const METHOD_NAME As String = "viewImport_ApplyGL"
     
-    Dim sourceFields As Dictionary
-    Set sourceFields = viewImport.GetGLMapping()
-    If Not m_ImportService.ApplyGLMapping(sourceFields) Then
-        '...
-        
+    Dim mapping As Dictionary
+    Set mapping = viewImport.GetGLMapping()
+    If Not m_ImportService.ApplyGLMapping(mapping) Then
     End If
 End Sub
 

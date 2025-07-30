@@ -21,8 +21,8 @@ Private m_DalConfig As I_Dal
 Private m_DalPbc As I_Dal
 Private m_DalData As I_Dal
 Private m_DalResult As I_Dal
-Private m_gl As String
-Private m_tb As String
+Private m_gl As Ent_GL
+Private m_tb As Ent_TB
 
 '--ÄÝ©Ê
 '------------------|DalConfig
@@ -53,19 +53,28 @@ End Property
 Public Property Set DalResult(ByVal dal As I_Dal)
     Set m_DalResult = dal
 End Property
-'------------------|tableGL
-Public Property Get nameGL() As String
-    Let nameGL = m_gl
+'------------------|GL
+Public Property Get gl() As Ent_GL
+    Set gl = m_gl
 End Property
-Public Property Let nameGL(ByVal value As String)
-    m_gl = value
+'------------------|TB
+Public Property Get tb() As Ent_TB
+    Set tb = m_tb
 End Property
-'------------------|tableTB
 
 
 
 '--Mgr_Context
 Public Sub Initialize()
     Const METHOD_NAME As String = "Initialize"
+    
+    Set m_DalConfig = New I_Dal
+    Set m_DalPbc = New I_Dal
+    Set m_DalData = New I_Dal
+    Set m_DalResult = New I_Dal
+    Set m_gl = New Ent_GL
+    Set m_tb = New Ent_TB
+    
+    Debug.Print "Mgr_Context Initialized."
 End Sub
 

@@ -18,6 +18,9 @@ Private Const MODULE_NAME = "Svc_Import"
 
 '--類別成員
 Private m_ctx As Mgr_Context
+Private m_gl As Ent_GL
+Private m_tb As Ent_TB
+
 
 
 '--Svc_Import
@@ -25,18 +28,19 @@ Public Sub Initialize(ByRef Context As Mgr_Context)
     Const METHOD_NAME As String = "Initialize"
     '依賴注入
     Set m_ctx = Context
+    Set m_gl = Context.gl
+    Set m_tb = Context.tb
 End Sub
 
 Public Function ImportGL(ByVal filePath As String) As Boolean
     Const METHOD_NAME As String = "ImportGL"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     ImportGL = False
     Dim sourceRs As ADODB.Recordset
     Dim tableName As String
     Dim dal As I_Dal
-    Let tableName = "GL"
-    ' Let tableName = m_ctx.m_gl.name
+    Let tableName = m_gl.name
     Set dal = m_ctx.DalPbc
     Set sourceRs = PrepareRecordset(filePath)
     If Not dal.BulkInsert(sourceRs, tableName) Then Exit Function
@@ -44,21 +48,21 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     ImportGL = True
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     ImportGL = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 Public Function ImportTB(ByVal filePath As String) As Boolean
     Const METHOD_NAME As String = "ImportTB"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     ImportTB = False
     Dim sourceRs As ADODB.Recordset
     Dim tableName As String
     Dim dal As I_Dal
-    Let tableName = "TB"
+    Let tableName = m_tb.name
     Set dal = m_ctx.DalPbc
     Set sourceRs = PrepareRecordset(filePath)
     If Not dal.BulkInsert(sourceRs, tableName) Then Exit Function
@@ -66,74 +70,58 @@ Public Function ImportTB(ByVal filePath As String) As Boolean
     ImportTB = True
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     ImportTB = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
-Public Function ApplyGLMapping(ByVal sourceFields As Dictionary) As Boolean
+
+Public Function ApplyGLMapping(ByVal mapping As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyGLMapping"
-    On Error GoTo ErrorHandler
-    
-    '擷取表單所有控制項 為 欄位映射表
-    '複製 PBC 至 DATA 並將設置好欄位
+    On Error GoTo Errorhandler
     
     ApplyGLMapping = False
-    Dim gl As New Ent_GL
     Dim key As Variant
-    Dim index As FieldsId
-    Dim value As String
-    For Each key In sourceFields.Keys
-        
-        value = sourceFields(key)
-        If Len(value) > 0 Then
-            gl.SetMapping index, value
-        End If
-        ' gl.SetMapping
-    Next
-    'Dim sourceTable As String, targetTable As String
-    'Dim sourceFields As String, standardFields As String
-    'Dim sql As String, affected As Long
-    'sql = "INSERT INTO [" & targetTable & "] " & _
-    '      "(" & standardFields & ") " & _
-    '      "SELECT " & _
-    '      "(" & customerFields & ") " & _
-    '      "FROM [" & sourceTable & "] IN [" & m_ctx.DalPbc.path & "]"
-    'affected = m_ctx.DalData.ExecuteNonQuery(sql)
+    '擷取表單所有控制項 為 欄位映射表
+    For Each key In mapping.Keys
+        m_gl.SetMapping key, mapping(key)
+    Next key
+    '複製 PBC 至 DATA 並將設置好欄位
+    m_gl.debug_test
     ApplyGLMapping = True
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     ApplyGLMapping = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 Public Function ApplyTBMapping(ByVal fieldsMapping As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyTBMapping"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     ApplyTBMapping = False
     '..
     ApplyTBMapping = True
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     ApplyTBMapping = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 '--Custom
 Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
     Const METHOD_NAME As String = "PrepareRecordset"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     Dim conn As ADODB.Connection
     Dim rs As ADODB.Recordset
     Dim connString As String
     Dim folderPath As String, fileName As String
-    Dim SQL As String, encoding As String
+    Dim sql As String, encoding As String
     
     Set conn = New ADODB.Connection
     Set rs = New ADODB.Recordset
@@ -149,26 +137,26 @@ Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
     '建立連線
     conn.Open connString
     '建立查詢
-    SQL = "SELECT * FROM [" & fileName & "]"
+    sql = "SELECT * FROM [" & fileName & "]"
     '開啟查詢
-    rs.Open SQL, conn, adOpenStatic, adLockReadOnly, adCmdText
+    rs.Open sql, conn, adOpenStatic, adLockReadOnly, adCmdText
     
     Set PrepareRecordset = rs
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     Set PrepareRecordset = Nothing
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function
 
 Private Function AddLineItem() As Boolean
     '新增項次欄位，區別傳票明細項
     Const METHOD_NAME As String = "AddLineItem"
     AddLineItem = False
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
-    Dim SQL As String
+    Dim sql As String
     Dim affected As Long
     Dim dal As I_Dal
     Set dal = m_ctx.DalData
@@ -177,20 +165,20 @@ Private Function AddLineItem() As Boolean
     '開始事務
     dal.BeginTransaction
     '新增欄位: ID
-    SQL = ""
-    affected = dal.ExecuteNonQuery(SQL)
+    sql = ""
+    affected = dal.ExecuteNonQuery(sql)
     '新增欄位: LineItem
-    SQL = ""
-    affected = dal.ExecuteNonQuery(SQL)
+    sql = ""
+    affected = dal.ExecuteNonQuery(sql)
     '計算項次（按傳票號碼分組，依序編號）
-    SQL = ""
-    affected = dal.ExecuteNonQuery(SQL)
+    sql = ""
+    affected = dal.ExecuteNonQuery(sql)
     '新增欄位: 傳票金額
-    SQL = ""
-    affected = dal.ExecuteNonQuery(SQL)
+    sql = ""
+    affected = dal.ExecuteNonQuery(sql)
     '計算傳票金額（借方-貸方）
-    SQL = ""
-    affected = dal.ExecuteNonQuery(SQL)
+    sql = ""
+    affected = dal.ExecuteNonQuery(sql)
     '提交事務
     dal.CommitTransaction
     dal.Disconnect
@@ -198,11 +186,11 @@ Private Function AddLineItem() As Boolean
     AddLineItem = True
     Exit Function
     
-ErrorHandler:
+Errorhandler:
     On Error Resume Next
     '回滾事務
     dal.RollbackTransaction
     AddLineItem = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.DESCRIPTION
+                Err.Number & ":" & Err.Description
 End Function

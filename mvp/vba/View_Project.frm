@@ -3,7 +3,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} View_Project
    Caption         =   "Project"
    ClientHeight    =   3012
    ClientLeft      =   120
-   ClientTop       =   468
+   ClientTop       =   465
    ClientWidth     =   4560
    OleObjectBlob   =   "View_Project.frx":0000
    StartUpPosition =   1  '所屬視窗中央
@@ -43,7 +43,7 @@ End Sub
 Public Function UpdateProjects(projects As Collection) As Boolean
     '更新控制項: listProjects
     Const METHOD_NAME As String = "UpdateProjects"
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     UpdateProjects = False
     
     Dim item As Variant
@@ -54,7 +54,7 @@ Public Function UpdateProjects(projects As Collection) As Boolean
     
     UpdateProjects = True
     Exit Function
-ErrorHandler:
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.DESCRIPTION
+Errorhandler:
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.Description
     UpdateProjects = False
 End Function
