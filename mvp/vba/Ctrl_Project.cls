@@ -27,9 +27,7 @@ Attribute viewProject.VB_VarHelpID = -1
 '--Ctrl_Project
 Public Sub Initialize(ByRef ProjectManager As Mgr_Project)
     Const METHOD_NAME As String = "Initialize"
-    '¨Ì¿àª`¤Jxperia 5 ivxp
     Set m_ProjectManager = ProjectManager
-    '¹ê¨Ò¤Æ
     Set viewProject = New View_Project
 End Sub
 

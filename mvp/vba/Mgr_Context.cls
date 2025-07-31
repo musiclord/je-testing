@@ -17,40 +17,40 @@ Private Const MODULE_NAME = "Mgr_Context"
 '===============================================================================
 
 '--類別成員
-Private m_DalConfig As I_Dal
-Private m_DalPbc As I_Dal
-Private m_DalData As I_Dal
-Private m_DalResult As I_Dal
+Private m_DalConfig As Dal_Access
+Private m_DalPbc As Dal_Access
+Private m_DalData As Dal_Access
+Private m_DalResult As Dal_Access
 Private m_gl As Ent_GL
 Private m_tb As Ent_TB
 
 '--屬性
 '------------------|DalConfig
-Public Property Get DalConfig() As I_Dal
+Public Property Get DalConfig() As Dal_Access
     Set DalConfig = m_DalConfig
 End Property
-Public Property Set DalConfig(ByVal dal As I_Dal)
+Public Property Set DalConfig(ByVal dal As Dal_Access)
     Set m_DalConfig = dal
 End Property
 '------------------|DalPbc
-Public Property Get DalPbc() As I_Dal
-    Set DalPbc = m_DalPbc
+Public Property Get dalPbc() As Dal_Access
+    Set dalPbc = m_DalPbc
 End Property
-Public Property Set DalPbc(ByVal dal As I_Dal)
+Public Property Set dalPbc(ByVal dal As Dal_Access)
     Set m_DalPbc = dal
 End Property
 '------------------|DalData
-Public Property Get DalData() As I_Dal
-    Set DalData = m_DalData
+Public Property Get dalData() As Dal_Access
+    Set dalData = m_DalData
 End Property
-Public Property Set DalData(ByVal dal As I_Dal)
+Public Property Set dalData(ByVal dal As Dal_Access)
     Set m_DalData = dal
 End Property
 '------------------|DalResult
-Public Property Get DalResult() As I_Dal
+Public Property Get DalResult() As Dal_Access
     Set DalResult = m_DalResult
 End Property
-Public Property Set DalResult(ByVal dal As I_Dal)
+Public Property Set DalResult(ByVal dal As Dal_Access)
     Set m_DalResult = dal
 End Property
 '------------------|GL
@@ -68,10 +68,10 @@ End Property
 Public Sub Initialize()
     Const METHOD_NAME As String = "Initialize"
     
-    Set m_DalConfig = New I_Dal
-    Set m_DalPbc = New I_Dal
-    Set m_DalData = New I_Dal
-    Set m_DalResult = New I_Dal
+    Set m_DalConfig = New Dal_Access
+    Set m_DalPbc = New Dal_Access
+    Set m_DalData = New Dal_Access
+    Set m_DalResult = New Dal_Access
     Set m_gl = New Ent_GL
     Set m_tb = New Ent_TB
     

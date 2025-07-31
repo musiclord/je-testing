@@ -63,8 +63,8 @@ Public Function Create(ByVal name As String, path As String) As Boolean
         MkDir m_path
         '創建資料庫，建立DAL物件，將依賴注入給 m_ctx 管理
         Set m_ctx.DalConfig = CreateDatabase("config")
-        Set m_ctx.DalPbc = CreateDatabase("pbc")
-        Set m_ctx.DalData = CreateDatabase("data")
+        Set m_ctx.dalPbc = CreateDatabase("pbc")
+        Set m_ctx.dalData = CreateDatabase("data")
         Set m_ctx.DalResult = CreateDatabase("result")
     End If
     
@@ -91,8 +91,8 @@ Public Function Load(ByVal name As String, ByVal path As String) As Boolean
     Else
         '載入資料庫
         Set m_ctx.DalConfig = LoadDatabase("config")
-        Set m_ctx.DalPbc = LoadDatabase("pbc")
-        Set m_ctx.DalData = LoadDatabase("data")
+        Set m_ctx.dalPbc = LoadDatabase("pbc")
+        Set m_ctx.dalData = LoadDatabase("data")
         Set m_ctx.DalResult = LoadDatabase("result")
     End If
     
@@ -108,14 +108,14 @@ End Function
 
 
 '--Custom
-Private Function CreateDatabase(ByVal dbName As String) As I_Dal
+Private Function CreateDatabase(ByVal dbName As String) As Dal_Access
     Const METHOD_NAME As String = "CreateDatabase"
     On Error GoTo Errorhandler
     
     Dim dbe As DAO.DBEngine
     Dim db As DAO.Database
     Dim dbPath As String
-    Dim dal As I_Dal
+    Dim dal As Dal_Access
     '建立 DAO 資料庫
     dbPath = m_path & "\" & dbName & ".accdb"
     Set dbe = New DAO.DBEngine
@@ -133,7 +133,7 @@ Errorhandler:
                 Err.Number & ":" & Err.Description
 End Function
 
-Private Function LoadDatabase(ByVal dbName As String) As I_Dal
+Private Function LoadDatabase(ByVal dbName As String) As Dal_Access
     Const METHOD_NAME As String = "LoadDatabase"
     On Error GoTo Errorhandler
     
@@ -147,7 +147,7 @@ Private Function LoadDatabase(ByVal dbName As String) As I_Dal
     End If
     
     '建立 DAL 物件
-    Dim dal As I_Dal
+    Dim dal As Dal_Access
     Set dal = New Dal_Access
     dal.path = dbPath
     

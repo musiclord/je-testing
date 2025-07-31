@@ -20,6 +20,11 @@ Public Event ApplyGL()
 Public Event ApplyTB()
 Public Event ImportGL()
 Public Event ImportTB()
+Public Event AddLineItem()
+
+Private Sub btn_AddLineItem_Click()
+    RaiseEvent AddLineItem
+End Sub
 
 Private Sub btnApplyGL_Click()
     RaiseEvent ApplyGL
@@ -47,10 +52,12 @@ Public Sub UpdatePageGL(ByVal fields As Variant)
     Dim ctrl As Control
     Dim cbo As MSForms.ComboBox
     Dim field As Variant
+    Dim currentValue As String
     '遍歷表單控制項
     For Each ctrl In Me.Controls
         If (TypeOf ctrl Is MSForms.ComboBox) Then
             Set cbo = ctrl
+            currentValue = cbo.Text
             cbo.Clear
             '總帳金額對應欄位
             If ctrl.Tag = "amount" Then
@@ -75,6 +82,7 @@ Public Sub UpdatePageGL(ByVal fields As Variant)
                     cbo.AddItem field
                 Next field
             End If
+            cbo.Text = currentValue
         End If
     Next ctrl
 End Sub

@@ -32,6 +32,7 @@ Attribute viewMain.VB_VarHelpID = -1
 
 Public Sub Initialize(ByVal project As Mgr_Project)
     Const METHOD_NAME As String = "Initialize"
+    Debug.Print "Opened: [" & project.name & "], locate: " & project.path
     '¨Ì¿àª`¤J
     Set m_ProjectManager = project
     Set m_cfg = m_ProjectManager.Config

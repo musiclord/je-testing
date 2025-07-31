@@ -16,6 +16,8 @@ Private Const MODULE_NAME = "Svc_Validation"
 ' Domain:   Data Validation
 '===============================================================================
 
+
+
 '--類別成員
 Private m_ContextManager As Mgr_Context
 'Private m_tb As Ent_TB
@@ -27,7 +29,7 @@ Public Sub Initialize()
 End Sub
 
 Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date) As Boolean
-    '完整性測試
+    '完整性測試: 驗證 TB 期間的變動金額及 GL 期間的彙總金額，如有差異表示資料不完整。
     Const METHOD_NAME As String = "TestCompleteness"
     On Error GoTo Errorhandler
     
@@ -39,10 +41,10 @@ Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date)
     '修改欄位類型
     Dim sql As String, affected As Long
     Dim fieldsArray As Variant, fieldName As Variant
-    'fieldsArray = Array(m_tb.change, m_tb.credit, m_tb.debit) <-- Dict
-    For Each fieldName In fieldsArray
-        
-    Next fieldName
+    
+    
+    
+    
     TestCompleteness = True
     Exit Function
     

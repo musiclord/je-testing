@@ -25,6 +25,30 @@ Private WithEvents viewImport As View_Import
 Attribute viewImport.VB_VarHelpID = -1
 
 
+'--TEMPORARY DEFAULT PRESET
+Private Sub UseDefault()
+    '預設 GL 欄位
+    viewImport.GL_HandlingMethod.Text = "借方與貸方金額"
+    viewImport.GL_AccountName.Text = "會計科目"
+    viewImport.GL_AccountNumber.Text = "傳票號碼"
+    viewImport.GL_EntryAmount.Text = "傳票金額"
+    viewImport.GL_DocumentNumber.Text = "傳票號碼"
+    viewImport.GL_DebitAmount.Text = "本幣借方金額"
+    viewImport.GL_CreditAmount.Text = "本幣貸方金額"
+    viewImport.GL_EntryDescription.Text = "摘要"
+    viewImport.GL_IsDebit.Text = "借貸"
+    viewImport.GL_PostDate.Text = "日期"
+    '預設 TB 欄位
+    viewImport.TB_HandlingMethod.Text = "借方與貸方金額"
+    viewImport.TB_AccountName.Text = "項目名稱"
+    viewImport.TB_AccountNumber.Text = "會計項目"
+    viewImport.TB_ChangeAmount.Text = "借-貸(本幣)"
+    viewImport.TB_DebitAmount.Text = "原幣借方金額"
+    viewImport.TB_CreditAmount.Text = "原幣貸方金額"
+    '預設期間
+    viewImport.Date_Start.Text = "2024/01/01"
+    viewImport.Date_End.Text = "2024/12/31"
+End Sub
 
 '--Ctrl_Import
 Public Sub Initialize(ByRef Config As Mgr_Config, ByRef Context As Mgr_Context)
@@ -37,7 +61,7 @@ Public Sub Initialize(ByRef Config As Mgr_Config, ByRef Context As Mgr_Context)
     Set viewImport = New View_Import
     '初始化
     m_ImportService.Initialize m_ctx
-    
+    UseDefault
 End Sub
 
 Public Function Execute() As Dictionary
@@ -68,6 +92,14 @@ Private Sub viewImport_DoExit()
     viewImport.Hide
 End Sub
 
+Private Sub viewImport_AddLineItem()
+    Const METHOD_NAME As String = "viewImport_AddLineItem"
+    
+    If Not m_ImportService.AddLineItem() Then
+        Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 新增項次失敗。"
+    End If
+End Sub
+
 Private Sub viewImport_ImportGL()
     Const METHOD_NAME As String = "viewImport_ImportGL"
     
@@ -84,7 +116,7 @@ Private Sub viewImport_ImportGL()
     Else
         '匯入成功，更新欄位控制項
         Dim fields As Variant
-        fields = m_ctx.DalPbc.GetTableSchema("GL")
+        fields = m_ctx.dalPbc.GetTableSchema(m_ctx.gl.name)
         If IsArray(fields) Then
             viewImport.UpdatePageGL fields
         End If
@@ -106,7 +138,11 @@ Private Sub viewImport_ImportTB()
         MsgBox "資料匯入失敗", vbCritical, "匯入TB"
     Else
         '匯入成功，更新欄位控制項
-        
+        Dim fields As Variant
+        fields = m_ctx.dalPbc.GetTableSchema(m_ctx.gl.name)
+        If IsArray(fields) Then
+            viewImport.UpdatePageTB fields
+        End If
     End If
 End Sub
 
@@ -116,6 +152,9 @@ Private Sub viewImport_ApplyGL()
     Dim mapping As Dictionary
     Set mapping = viewImport.GetGLMapping()
     If Not m_ImportService.ApplyGLMapping(mapping) Then
+        MsgBox "GL 欄位映射失敗", vbCritical, "GL欄位"
+    Else
+        '欄位映射成功
     End If
 End Sub
 
@@ -123,4 +162,11 @@ Private Sub viewImport_ApplyTB()
     Const METHOD_NAME As String = "viewImport_ApplyTB"
     '標準化欄位名稱至 Ent_FieldsTB
     
+    Dim mapping As Dictionary
+    Set mapping = viewImport.GetTBMapping()
+    If Not m_ImportService.ApplyTBMapping(mapping) Then
+        MsgBox "TB 欄位映射失敗", vbCritical, "TB欄位"
+    Else
+        '欄位映射成功
+    End If
 End Sub

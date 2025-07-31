@@ -54,9 +54,11 @@ End Sub
 
 Public Sub debug_test()
     Dim i As Long
+    Debug.Print "----------------------------------------"
     For i = LBound(m_Fields) To UBound(m_Fields)
         Debug.Print "Index " & i & ": " & m_Fields(i)
     Next i
+    Debug.Print "----------------------------------------"
 End Sub
 
 Private Sub Class_Initialize()
@@ -68,15 +70,15 @@ Private Sub Class_Initialize()
     m_Fields(TBFieldsIndex.ClosingAmount) = "ClosingAmount"
     m_Fields(TBFieldsIndex.DebitAmount) = "DebitAmount"
     m_Fields(TBFieldsIndex.CreditAmount) = "CreditAmount"
+    'm_Fields --> 必要欄位
+    m_Fields(TBFieldsIndex.AccountNumber) = "AccountNumber"
+    m_Fields(TBFieldsIndex.AccountName) = "AccountName"
     'm_Map --> 總分金額對應方式
     m_Map.Add "ChangeAmount", TBFieldsIndex.ChangeAmount
     m_Map.Add "OpeningAmount", TBFieldsIndex.OpeningAmount
     m_Map.Add "ClosingAmount", TBFieldsIndex.ClosingAmount
     m_Map.Add "DebitAmount", TBFieldsIndex.DebitAmount
     m_Map.Add "CreditAmount", TBFieldsIndex.CreditAmount
-    'm_Fields --> 必要欄位
-    m_Fields(TBFieldsIndex.AccountNumber) = "AccountNumber"
-    m_Fields(TBFieldsIndex.AccountName) = "AccountName"
     'm_Map --> 必要欄位
     m_Map.Add "AccountNumber", TBFieldsIndex.AccountNumber
     m_Map.Add "AccountName", TBFieldsIndex.AccountName

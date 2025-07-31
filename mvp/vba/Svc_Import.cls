@@ -15,6 +15,15 @@ Private Const MODULE_NAME = "Svc_Import"
 ' Layer:    Service
 ' Domain:   Import Processing
 '===============================================================================
+'試算表金額處理方法
+' status_SA = 1 : 直接使用變動金額
+' status_SA = 2 : 期末 - 期初 = 變動金額
+' status_SA = 3 : 借方 - 貸方 = 變動金額
+' status_SA = 4 : (期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
+'總帳金額處理方法
+' status_Amount = 1 : 不須分辨借貸
+' status_Amount = 2 : 需要分辨借方金額與貸方金額
+' status_Amount = 3 : 依據借貸別區分
 
 '--類別成員
 Private m_ctx As Mgr_Context
@@ -39,11 +48,13 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     ImportGL = False
     Dim sourceRs As ADODB.Recordset
     Dim tableName As String
-    Dim dal As I_Dal
+    Dim dalPbc As Dal_Access, dalData As Dal_Access
     Let tableName = m_gl.name
-    Set dal = m_ctx.DalPbc
+    Set dalPbc = m_ctx.dalPbc
+    Set dalData = m_ctx.dalData
     Set sourceRs = PrepareRecordset(filePath)
-    If Not dal.BulkInsert(sourceRs, tableName) Then Exit Function
+    If Not dalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
+    If Not dalData.BulkInsert(sourceRs, tableName) Then Exit Function
     
     ImportGL = True
     Exit Function
@@ -61,11 +72,13 @@ Public Function ImportTB(ByVal filePath As String) As Boolean
     ImportTB = False
     Dim sourceRs As ADODB.Recordset
     Dim tableName As String
-    Dim dal As I_Dal
+    Dim dalPbc As Dal_Access, dalData As Dal_Access
     Let tableName = m_tb.name
-    Set dal = m_ctx.DalPbc
+    Set dalPbc = m_ctx.dalPbc
+    Set dalData = m_ctx.dalData
     Set sourceRs = PrepareRecordset(filePath)
-    If Not dal.BulkInsert(sourceRs, tableName) Then Exit Function
+    If Not dalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
+    If Not dalData.BulkInsert(sourceRs, tableName) Then Exit Function
     
     ImportTB = True
     Exit Function
@@ -82,11 +95,10 @@ Public Function ApplyGLMapping(ByVal mapping As Dictionary) As Boolean
     
     ApplyGLMapping = False
     Dim key As Variant
-    '擷取表單所有控制項 為 欄位映射表
+    '擷取表單控制項為欄位映射表
     For Each key In mapping.Keys
         m_gl.SetMapping key, mapping(key)
     Next key
-    '複製 PBC 至 DATA 並將設置好欄位
     m_gl.debug_test
     ApplyGLMapping = True
     Exit Function
@@ -97,12 +109,17 @@ Errorhandler:
                 Err.Number & ":" & Err.Description
 End Function
 
-Public Function ApplyTBMapping(ByVal fieldsMapping As Dictionary) As Boolean
+Public Function ApplyTBMapping(ByVal mapping As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyTBMapping"
     On Error GoTo Errorhandler
     
     ApplyTBMapping = False
-    '..
+    Dim key As Variant
+    '擷取表單控制項為欄位映射表
+    For Each key In mapping.Keys
+        m_tb.SetMapping key, mapping(key)
+    Next key
+    m_tb.debug_test
     ApplyTBMapping = True
     Exit Function
     
@@ -150,7 +167,7 @@ Errorhandler:
                 Err.Number & ":" & Err.Description
 End Function
 
-Private Function AddLineItem() As Boolean
+Public Function AddLineItem() As Boolean
     '新增項次欄位，區別傳票明細項
     Const METHOD_NAME As String = "AddLineItem"
     AddLineItem = False
@@ -158,17 +175,17 @@ Private Function AddLineItem() As Boolean
     
     Dim sql As String
     Dim affected As Long
-    Dim dal As I_Dal
-    Set dal = m_ctx.DalData
+    Dim dal As Dal_Access
+    Set dal = m_ctx.dalData
     
     dal.Connect
     '開始事務
     dal.BeginTransaction
     '新增欄位: ID
-    sql = ""
+    sql = "ALTER TABLE GL ADD COLUMN ID AUTOINCREMENT PRIMARY KEY;"
     affected = dal.ExecuteNonQuery(sql)
     '新增欄位: LineItem
-    sql = ""
+    sql = "ALTER TABLE GL ADD COLUMN [LineItem] INTEGER;"
     affected = dal.ExecuteNonQuery(sql)
     '計算項次（按傳票號碼分組，依序編號）
     sql = ""
