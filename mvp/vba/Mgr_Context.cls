@@ -54,12 +54,12 @@ Public Property Set DalResult(ByVal dal As Dal_Access)
     Set m_DalResult = dal
 End Property
 '------------------|GL
-Public Property Get gl() As Ent_GL
-    Set gl = m_gl
+Public Property Get GL() As Ent_GL
+    Set GL = m_gl
 End Property
 '------------------|TB
-Public Property Get tb() As Ent_TB
-    Set tb = m_tb
+Public Property Get TB() As Ent_TB
+    Set TB = m_tb
 End Property
 
 

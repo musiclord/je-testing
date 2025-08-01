@@ -15,107 +15,109 @@ Private Const MODULE_NAME = "Ent_GL"
 ' Layer:    Entity
 ' Domain:   General Ledger
 '===============================================================================
+'EntryAmount        : CURRENCY
+'DebitAmount        : CURRENCY
+'CreditAmount       : CURRENCY
+'DrCr               : TEXT
+'IsDebit            : TEXT
+'AccountNumber      : TEXT
+'AccountName        : TEXT
+'DocumentNumber     : TEXT
+'LineItem           : INT
+'PostDate           : DATE
+'EntryDescription   : LONG TEXT
+'ApprovalDate       : DATE
+'ApprovedBy         : TEXT
+'CreatedBy          : TEXT
+'SourceModule       : TEXT
+'IsManual           : TEXT
+'IsApprovedDateAsLedgerDate: TEXT
 
-'--列舉
-Public Enum GLFieldsIndex
-    '總帳金額對應方式
-    EntryAmount
-    DebitAmount
-    CreditAmount
-    DrCr
-    IsDebit
-    '必要欄位
-    AccountNumber
-    AccountName
-    DocumentNumber
-    LineItem
-    PostDate
-    EntryDescription
-    '可選欄位
-    ApprovalDate
-    ApprovedBy
-    CreatedBy
-    SourceModule
-    IsManual
-    IsApprovedDateAsLedgerDate
-    '基於列舉 +1 尾數
-    count
-End Enum
-
-'--私有變數
-Private m_Fields() As String    '設陣列儲存字串
-Private m_Map As New Dictionary
-'--屬性
-Public Property Get name() As String
-    name = "GL"
-End Property
-Public Property Get field(ByVal index As GLFieldsIndex) As String
-    field = m_Fields(index)
-End Property
-
-
+'--類別成員
+Private m_Fields As New Dictionary
 
 '--Ent_GL
-Public Sub SetMapping(ByVal key As Variant, value As String)
-    Dim index As Long
-    If Len(value) > 0 Then
-        m_Fields(m_Map(key)) = value '覆寫
+Public Sub SetMapping(ByVal key As String, ByVal value As String)
+    If m_Fields.Exists(key) And Len(value) > 0 Then
+        m_Fields(key) = value
     End If
 End Sub
 
 Public Sub debug_test()
-    Dim i As Long
-    Debug.Print "----------------------------------------"
-    For i = LBound(m_Fields) To UBound(m_Fields)
-        Debug.Print "Index " & i & ": " & m_Fields(i)
-    Next i
-    Debug.Print "----------------------------------------"
+    Dim key As Variant
+    Debug.Print "---------- [ GL ] ----------"
+    For Each key In m_Fields(key)
+        Debug.Print key & ": " & m_Fields(key)
+    Next key
+    Debug.Print "----------------------------"
 End Sub
-
 
 Private Sub Class_Initialize()
-    '動態設定陣列大小
-    ReDim m_Fields(0 To GLFieldsIndex.count - 1)
-    'm_Fields --> 總分金額對應方式
-    m_Fields(GLFieldsIndex.EntryAmount) = "EntryAmount"
-    m_Fields(GLFieldsIndex.DebitAmount) = "DebitAmount"
-    m_Fields(GLFieldsIndex.CreditAmount) = "CreditAmount"
-    m_Fields(GLFieldsIndex.DrCr) = "DrCr"
-    m_Fields(GLFieldsIndex.IsDebit) = "IsDebit"
-    'm_Fields --> 必要欄位
-    m_Fields(GLFieldsIndex.AccountNumber) = "AccountNumber"
-    m_Fields(GLFieldsIndex.AccountName) = "AccountName"
-    m_Fields(GLFieldsIndex.DocumentNumber) = "DocumentNumber"
-    m_Fields(GLFieldsIndex.LineItem) = "LineItem"
-    m_Fields(GLFieldsIndex.PostDate) = "PostDate"
-    m_Fields(GLFieldsIndex.EntryDescription) = "EntryDescription"
-    'm_Fields --> 可選欄位
-    m_Fields(GLFieldsIndex.ApprovalDate) = "ApprovalDate"
-    m_Fields(GLFieldsIndex.ApprovedBy) = "ApprovedBy"
-    m_Fields(GLFieldsIndex.CreatedBy) = "CreatedBy"
-    m_Fields(GLFieldsIndex.SourceModule) = "SourceModule"
-    m_Fields(GLFieldsIndex.IsManual) = "IsManual"
-    m_Fields(GLFieldsIndex.IsApprovedDateAsLedgerDate) = "IsApprovalDateAsLedgerDate"
-    'm_Map --> 總分金額對應方式
-    m_Map.Add "EntryAmount", GLFieldsIndex.EntryAmount
-    m_Map.Add "DebitAmount", GLFieldsIndex.DebitAmount
-    m_Map.Add "CreditAmount", GLFieldsIndex.CreditAmount
-    m_Map.Add "DrCr", GLFieldsIndex.DrCr
-    m_Map.Add "IsDebit", GLFieldsIndex.IsDebit
-    'm_Map --> 必要欄位
-    m_Map.Add "AccountNumber", GLFieldsIndex.AccountNumber
-    m_Map.Add "AccountName", GLFieldsIndex.AccountName
-    m_Map.Add "DocumentNumber", GLFieldsIndex.DocumentNumber
-    m_Map.Add "LineItem", GLFieldsIndex.LineItem
-    m_Map.Add "PostDate", GLFieldsIndex.PostDate
-    m_Map.Add "EntryDescription", GLFieldsIndex.EntryDescription
-    'm_Map --> 可選欄位
-    m_Map.Add "ApprovalDate", GLFieldsIndex.ApprovalDate
-    m_Map.Add "ApprovedBy", GLFieldsIndex.ApprovedBy
-    m_Map.Add "CreatedBy", GLFieldsIndex.CreatedBy
-    m_Map.Add "SourceModule", GLFieldsIndex.SourceModule
-    m_Map.Add "IsManual", GLFieldsIndex.IsManual
-    m_Map.Add "IsApprovalDateAsLedgerDate", GLFieldsIndex.IsApprovedDateAsLedgerDate
+    Dim fields As Variant
+    Dim i As Long
+    fields = Array("EntryAmount", "DebitAmount", "CreditAmount", _
+                   "DrCr", "IsDebit", "AccountNumber", _
+                   "AccountName", "DocumentNumber", "LineItem", _
+                   "PostDate", "EntryDescription", "ApprovalDate", _
+                   "ApprovedBy", "CreatedBy", "SourceModule", _
+                   "IsManual", "IsApprovedDateAsLedgerDate")
+    For i = LBound(fields) To UBound(fields)
+        m_Fields.Add fields(i), fields(i) '預設欄位名稱
+    Next i
 End Sub
 
-
+'--屬性
+Public Property Get name() As String
+    name = "GL"
+End Property
+Public Property Get EntryAmount() As String
+    EntryAmount = m_Fields("EntryAmount")
+End Property
+Public Property Get DebitAmount() As String
+    DebitAmount = m_Fields("DebitAmount")
+End Property
+Public Property Get CreditAmount() As String
+    CreditAmount = m_Fields("CreditAmount")
+End Property
+Public Property Get DrCr() As String
+    DrCr = m_Fields("DrCr")
+End Property
+Public Property Get IsDebit() As String
+    IsDebit = m_Fields("IsDebit")
+End Property
+Public Property Get AccountNumber() As String
+    AccountNumber = m_Fields("AccountNumber")
+End Property
+Public Property Get AccountName() As String
+    AccountName = m_Fields("AccountName")
+End Property
+Public Property Get DocumentNumber() As String
+    DocumentNumber = m_Fields("DocumentNumber")
+End Property
+Public Property Get LineItem() As String
+    LineItem = m_Fields("LineItem")
+End Property
+Public Property Get PostDate() As String
+    PostDate = m_Fields("PostDate")
+End Property
+Public Property Get EntryDescription() As String
+    EntryDescription = m_Fields("EntryDescription")
+End Property
+Public Property Get ApprovalDate() As String
+    ApprovalDate = m_Fields("ApprovalDate")
+End Property
+Public Property Get ApprovedBy() As String
+    ApprovedBy = m_Fields("ApprovedBy")
+End Property
+Public Property Get CreatedBy() As String
+    CreatedBy = m_Fields("CreatedBy")
+End Property
+Public Property Get SourceModule() As String
+    SourceModule = m_Fields("SourceModule")
+End Property
+Public Property Get IsManual() As String
+    IsManual = m_Fields("IsManual")
+End Property
+Public Property Get IsApprovedDateAsLedgerDate() As String
+    IsApprovedDateAsLedgerDate = m_Fields("IsApprovedDateAsLedgerDate")
+End Property

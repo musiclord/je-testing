@@ -59,7 +59,7 @@ End Property
 
 Public Sub Connect()
     Const METHOD_NAME As String = "Connect"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     ' 檢查是否已連線
     If m_isConnected Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已經連線"
@@ -79,7 +79,7 @@ Public Sub Connect()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 連線至 " & m_path
     Exit Sub
 
-Errorhandler:
+ErrorHandler:
     m_isConnected = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " 錯誤: " & Err.Number & ": " & Err.Description
     Err.Raise Err.Number, MODULE_NAME & "." & METHOD_NAME, Err.Description
@@ -88,7 +88,7 @@ End Sub
 Public Sub Disconnect()
     Const METHOD_NAME As String = "Disconnect"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & m_db.name
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     ' 檢查未完成的事務
     If m_inTransaction Then
@@ -106,7 +106,7 @@ Public Sub Disconnect()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已斷開連線"
     Exit Sub
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Sub
@@ -120,7 +120,7 @@ End Sub
 Public Function CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName As String) As Boolean
     Const METHOD_NAME As String = "CreateTable"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sourceRs.Source & ", " & tableName
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
      CreateTable = False
     ' 確保連線
@@ -147,7 +147,7 @@ Public Function CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName A
      CreateTable = True
     Exit Function
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
@@ -155,7 +155,7 @@ End Function
 Public Function DropTable(ByVal tableName As String) As Boolean
     Const METHOD_NAME As String = "DropTable"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": (" & tableName & ")"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
      DropTable = False
     '確保連線
@@ -173,7 +173,7 @@ Public Function DropTable(ByVal tableName As String) As Boolean
     
     Exit Function
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
@@ -181,7 +181,7 @@ End Function
 Public Function TableExists(ByVal tableName As String) As Boolean
     Const METHOD_NAME As String = "TableExists"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": (" & tableName & ")"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
      TableExists = False
     Dim tbl As DAO.tableDef
@@ -201,7 +201,7 @@ Public Function TableExists(ByVal tableName As String) As Boolean
     End If
     Exit Function
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
@@ -212,7 +212,7 @@ End Function
 Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Const METHOD_NAME As String = "ExecuteQuery"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     '確保連接
     If Not m_isConnected Then Connect
@@ -221,14 +221,14 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 查詢成功"
     Exit Function
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
 
 Public Function ExecuteNonQuery(ByVal sql As String) As Long
     Const METHOD_NAME As String = "ExecuteNonQuery"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     '確保連接
     If Not m_isConnected Then Connect
@@ -241,7 +241,7 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已執行，影響 " & recordsAffected & " 筆記錄"
     Exit Function
 
-Errorhandler:
+ErrorHandler:
      ExecuteNonQuery = -1
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
@@ -250,11 +250,11 @@ End Function
 Public Function GetScalar(ByVal sql As String) As Variant
     Const METHOD_NAME As String = " GetScalar"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Exit Function
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
@@ -266,7 +266,7 @@ Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As
     '將標準化 Recordset 進行大量插入
     Const METHOD_NAME As String = "BulkInsert"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": (" & sourceRs.Source & "), (" & tableName & ")"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
      BulkInsert = False
     Dim targetRs As DAO.Recordset
@@ -357,7 +357,7 @@ Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As
      BulkInsert = True
     Exit Function
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
     On Error Resume Next
@@ -373,7 +373,7 @@ End Function
 '--查詢輔助 (Query Helpers)
 Public Function GetTableSchema(ByVal tableName As String) As Variant
     Const METHOD_NAME As String = "GetTableSchema"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Dim tableDef As DAO.tableDef
     Dim field As DAO.field
@@ -406,18 +406,18 @@ Public Function GetTableSchema(ByVal tableName As String) As Variant
     End If
     Exit Function
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
 
 Public Function GetTableList(ByVal tableName As String) As Variant
     Const METHOD_NAME As String = "GetTableList"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Exit Function
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
@@ -427,7 +427,7 @@ End Function
 '--事務管理
 Public Sub BeginTransaction()
     Const METHOD_NAME As String = "BeginTransaction"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     '確保連線
     If Not m_isConnected Then Connect
@@ -443,14 +443,14 @@ Public Sub BeginTransaction()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 事務已開始"
     Exit Sub
     
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Sub
 
 Public Sub CommitTransaction()
     Const METHOD_NAME As String = "CommitTransaction"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     If Not m_inTransaction Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 沒有進行中的事務"
@@ -463,14 +463,14 @@ Public Sub CommitTransaction()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 事務已提交"
     Exit Sub
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Sub
 
 Public Sub RollbackTransaction()
     Const METHOD_NAME As String = "RollbackTransaction"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     If Not m_inTransaction Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 沒有進行中的事務"
@@ -483,7 +483,7 @@ Public Sub RollbackTransaction()
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 事務已回滾"
     Exit Sub
 
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Sub

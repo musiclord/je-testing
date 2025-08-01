@@ -52,37 +52,32 @@ Public Sub UpdatePageGL(ByVal fields As Variant)
     Dim ctrl As Control
     Dim cbo As MSForms.ComboBox
     Dim field As Variant
-    Dim currentValue As String
+    Dim pfx As String
+    Dim temp As String
     '遍歷表單控制項
     For Each ctrl In Me.Controls
-        If (TypeOf ctrl Is MSForms.ComboBox) Then
+        pfx = Left(ctrl.name, 2)
+        If (TypeOf ctrl Is MSForms.ComboBox) And (pfx = "GL") Then
             Set cbo = ctrl
-            currentValue = cbo.Text
+            temp = cbo.Text
             cbo.Clear
             '總帳金額對應欄位
             If ctrl.Tag = "amount" Then
                 If ctrl.name = "GL_HandlingMethod" Then
-                    cbo.AddItem "年度變動金額"
-                    cbo.AddItem "期初期末"
-                    cbo.AddItem "借方貸方"
-                    cbo.AddItem "借貸方之期初期末"
+                    cbo.AddItem "僅傳票金額"
+                    cbo.AddItem "分別借貸方金額"
+                    cbo.AddItem "依借貸別判斷"
                 Else
                     For Each field In fields
                         cbo.AddItem field
                     Next field
                 End If
-            '必要設定欄位
-            ElseIf ctrl.Tag = "required" Then
-                For Each field In fields
-                    cbo.AddItem field
-                Next field
-            '可選設定欄位
-            ElseIf ctrl.Tag = "optional" Then
+            ElseIf (ctrl.Tag = "required") Or (ctrl.Tag = "optional") Then
                 For Each field In fields
                     cbo.AddItem field
                 Next field
             End If
-            cbo.Text = currentValue
+            cbo.Text = temp
         End If
     Next ctrl
 End Sub
@@ -93,15 +88,41 @@ Public Sub UpdatePageTB(ByVal fields As Variant)
     Dim ctrl As Control
     Dim cbo As MSForms.ComboBox
     Dim field As Variant
+    Dim pfx As String
+    Dim temp As String
     '遍歷表單控制項
     For Each ctrl In Me.Controls
+        pfx = Left(ctrl.name, 2)
+        If (TypeOf ctrl Is MSForms.ComboBox) And (pfx = "TB") Then
+            Set cbo = ctrl
+            temp = cbo.Text
+            cbo.Clear
+            '總帳金額對應欄位
+            If ctrl.Tag = "amount" Then
+                If ctrl.name = "TB_HandlingMethod" Then
+                    cbo.AddItem "年度變動金額"
+                    cbo.AddItem "期初期末金額"
+                    cbo.AddItem "借方貸方金額"
+                    cbo.AddItem "借貸之期初期末金額"
+                Else
+                    For Each field In fields
+                        cbo.AddItem field
+                    Next field
+                End If
+            ElseIf (ctrl.Tag = "required") Or (ctrl.Tag = "optional") Then
+                For Each field In fields
+                    cbo.AddItem field
+                Next field
+            End If
+            cbo.Text = temp
+        End If
     Next ctrl
 End Sub
 
 Public Function GetGLMapping() As Dictionary
     Const METHOD_NAME As String = "GetGLMapping"
     Dim mapping As New Dictionary
-    '總帳金額對應方式
+    '總帳金額
     mapping("EntryAmount") = Me.GL_EntryAmount.Text
     mapping("DebitAmount") = Me.GL_DebitAmount.Text
     mapping("CreditAmount") = Me.GL_CreditAmount.Text
@@ -127,11 +148,16 @@ End Function
 Public Function GetTBMapping() As Dictionary
     Const METHOD_NAME As String = "GetTBMapping"
     '回傳 TB 欄位映射表
-    Dim key As String
-    Dim cbo As MSForms.ComboBox
-    Dim ctrl As Controls
-    Dim mapping As Dictionary
-    Set mapping = New Dictionary
+    Dim mapping As New Dictionary
+    '試算表金額
+    mapping("ChangeAmount") = Me.TB_ChangeAmount.Text
+    mapping("OpeningAmount") = Me.TB_OpeningAmount
+    mapping("ClosingAmount") = Me.TB_ClosingAmount
+    mapping("DebitAmount") = Me.TB_DebitAmount
+    mapping("CreditAmount") = Me.TB_CreditAmount
+    '必要欄位
+    mapping("AccountNumber") = Me.TB_AccountNumber
+    mapping("AccountName") = Me.TB_AccountName
     Set GetTBMapping = mapping
 End Function
 

@@ -15,20 +15,11 @@ Private Const MODULE_NAME = "Svc_Import"
 ' Layer:    Service
 ' Domain:   Import Processing
 '===============================================================================
-'試算表金額處理方法
-' status_SA = 1 : 直接使用變動金額
-' status_SA = 2 : 期末 - 期初 = 變動金額
-' status_SA = 3 : 借方 - 貸方 = 變動金額
-' status_SA = 4 : (期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
-'總帳金額處理方法
-' status_Amount = 1 : 不須分辨借貸
-' status_Amount = 2 : 需要分辨借方金額與貸方金額
-' status_Amount = 3 : 依據借貸別區分
 
 '--類別成員
 Private m_ctx As Mgr_Context
-Private m_gl As Ent_GL
-Private m_tb As Ent_TB
+Private GL As Ent_GL
+Private TB As Ent_TB
 
 
 
@@ -37,19 +28,19 @@ Public Sub Initialize(ByRef Context As Mgr_Context)
     Const METHOD_NAME As String = "Initialize"
     '依賴注入
     Set m_ctx = Context
-    Set m_gl = Context.gl
-    Set m_tb = Context.tb
+    Set GL = Context.GL
+    Set TB = Context.TB
 End Sub
 
 Public Function ImportGL(ByVal filePath As String) As Boolean
     Const METHOD_NAME As String = "ImportGL"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     ImportGL = False
     Dim sourceRs As ADODB.Recordset
     Dim tableName As String
     Dim dalPbc As Dal_Access, dalData As Dal_Access
-    Let tableName = m_gl.name
+    Let tableName = GL.name
     Set dalPbc = m_ctx.dalPbc
     Set dalData = m_ctx.dalData
     Set sourceRs = PrepareRecordset(filePath)
@@ -59,7 +50,7 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     ImportGL = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     ImportGL = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
@@ -67,13 +58,13 @@ End Function
 
 Public Function ImportTB(ByVal filePath As String) As Boolean
     Const METHOD_NAME As String = "ImportTB"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     ImportTB = False
     Dim sourceRs As ADODB.Recordset
     Dim tableName As String
     Dim dalPbc As Dal_Access, dalData As Dal_Access
-    Let tableName = m_tb.name
+    Let tableName = TB.name
     Set dalPbc = m_ctx.dalPbc
     Set dalData = m_ctx.dalData
     Set sourceRs = PrepareRecordset(filePath)
@@ -83,7 +74,7 @@ Public Function ImportTB(ByVal filePath As String) As Boolean
     ImportTB = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     ImportTB = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
@@ -91,19 +82,19 @@ End Function
 
 Public Function ApplyGLMapping(ByVal mapping As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyGLMapping"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     ApplyGLMapping = False
     Dim key As Variant
     '擷取表單控制項為欄位映射表
     For Each key In mapping.Keys
-        m_gl.SetMapping key, mapping(key)
+        GL.SetMapping key, mapping(key)
     Next key
-    m_gl.debug_test
+    GL.debug_test
     ApplyGLMapping = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     ApplyGLMapping = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
@@ -111,28 +102,147 @@ End Function
 
 Public Function ApplyTBMapping(ByVal mapping As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyTBMapping"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     ApplyTBMapping = False
     Dim key As Variant
     '擷取表單控制項為欄位映射表
     For Each key In mapping.Keys
-        m_tb.SetMapping key, mapping(key)
+        TB.SetMapping key, mapping(key)
     Next key
-    m_tb.debug_test
+    TB.debug_test
     ApplyTBMapping = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     ApplyTBMapping = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
 
 '--Custom
+Public Function AddLineItem() As Boolean
+    '新增項次欄位，區別傳票明細項
+    Const METHOD_NAME As String = "AddLineItem"
+    AddLineItem = False
+    On Error GoTo ErrorHandler
+    
+    Dim sql As String
+    Dim affected As Long
+    Dim dal As Dal_Access
+    Set dal = m_ctx.dalData
+    
+    dal.Connect
+    '開始事務
+    dal.BeginTransaction
+    '新增欄位: ID
+    sql = "ALTER TABLE GL ADD COLUMN ID AUTOINCREMENT PRIMARY KEY;"
+    affected = dal.ExecuteNonQuery(sql)
+    '新增欄位: LineItem
+    sql = "ALTER TABLE GL ADD COLUMN [LineItem] INTEGER;"
+    affected = dal.ExecuteNonQuery(sql)
+    '計算項次（按傳票號碼分組，依序編號）
+    sql = ""
+    affected = dal.ExecuteNonQuery(sql)
+    '提交事務
+    dal.CommitTransaction
+    dal.Disconnect
+    
+    AddLineItem = True
+    Exit Function
+    
+ErrorHandler:
+    On Error Resume Next
+    '回滾事務
+    dal.RollbackTransaction
+    AddLineItem = False
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
+                Err.Number & ":" & Err.Description
+End Function
+
+'金額處理方式:
+'GL: 傳票金額 (單一欄位，借方為正值，貸方為負值)
+'TB: 變動金額 (單一欄位，期間內淨變動金額)
+Private Function ProcessGLAmounts(ByVal method As Integer) As Boolean
+    '總帳金額處理方法
+    Const METHOD_NAME As String = "ProcessGLAmounts"
+    On Error GoTo ErrorHandler
+    
+    ProcessGLAmounts = False
+    Dim sql As String
+    Dim dal As Dal_Access
+    Set dal = m_ctx.dalData
+    If Not dal.IsConnected Then dal.Connect
+    
+    Select Case method
+        Case 1 '方法1: 直接使用原始金額欄位
+            '處理邏輯: EntryAmount = EntryAmount
+            '適用場景: 當金額欄位已經包含正負號區分借貸時
+            
+        Case 2 '方法2: 借方金額減去貸方金額
+            '處理邏輯: EntryAmount = IIF(ISNULL(DebitAmount), 0, DebitAmount) - IIF(ISNULL(CreditAmount), 0, CreditAmount)
+            '適用場景: 當借方金額和貸方金額分別存在不同欄位時
+            sql = "UPDATE [" & GL.name & "] SET [" & GL.EntryAmount & "] =" & _
+                  "IIF(ISNULL([" & GL.DebitAmount & "]), 0, [" & GL.DebitAmount & "])" & _
+                  " - " & _
+                  "IIF(ISNULL([" & GL.CreditAmount & "]), 0, [" & GL.CreditAmount & "])"
+            dal.ExecuteNonQuery sql
+            
+        Case 3 '方法3: 依據借貸別標示決定金額正負號
+            '處理邏輯: EntryAmount = IIF(DrCr = IsDebit, Amount, Amount * -1)
+            '適用場景: 當金額存在單一欄位，另有借貸別標示欄位時
+            sql = "UPDATE [" & GL.name & "] SET [" & GL.EntryAmount & "] = " & _
+                  "IIF(" & _
+                  "  [" & GL.DrCr & "] = [" & GL.IsDebit & "], " & _
+                  "  [" & GL.DebitAmount & "], " & _
+                  "  [" & GL.DebitAmount & "] * -1)"
+            dal.ExecuteNonQuery sql
+        Case Else
+            Err.Raise 5, METHOD_NAME, "不支援的金額處理模式: " & method
+    End Select
+    ProcessGLAmounts = True
+    Exit Function
+    
+ErrorHandler:
+    ProcessGLAmounts = False
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
+                Err.Number & ":" & Err.Description
+End Function
+
+Private Function ProcessTBAmounts(ByVal method As Integer) As Boolean
+    '試算表金額處理方法
+    Const METHOD_NAME As String = "ProcessTBAmounts"
+    On Error GoTo ErrorHandler
+    
+    ProcessTBAmounts = False
+    Dim tableName As String
+    tableName = "TB"
+    Dim dal As Dal_Access
+    Set dal = m_ctx.dalData
+    Select Case method
+        Case 1 '直接使用變動金額
+            
+        Case 2 '期末 - 期初 = 變動金額
+            
+        Case 3 '借方 - 貸方 = 變動金額
+            
+        Case 4 '(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
+            
+        Case Else
+            Err.Raise 5, METHOD_NAME, "不支援的金額處理模式: " & method
+    End Select
+    ProcessTBAmounts = True
+    Exit Function
+    
+ErrorHandler:
+    ProcessTBAmounts = False
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
+                Err.Number & ":" & Err.Description
+End Function
+
 Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
     Const METHOD_NAME As String = "PrepareRecordset"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Dim conn As ADODB.Connection
     Dim rs As ADODB.Recordset
@@ -161,53 +271,9 @@ Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
     Set PrepareRecordset = rs
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     Set PrepareRecordset = Nothing
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
 
-Public Function AddLineItem() As Boolean
-    '新增項次欄位，區別傳票明細項
-    Const METHOD_NAME As String = "AddLineItem"
-    AddLineItem = False
-    On Error GoTo Errorhandler
-    
-    Dim sql As String
-    Dim affected As Long
-    Dim dal As Dal_Access
-    Set dal = m_ctx.dalData
-    
-    dal.Connect
-    '開始事務
-    dal.BeginTransaction
-    '新增欄位: ID
-    sql = "ALTER TABLE GL ADD COLUMN ID AUTOINCREMENT PRIMARY KEY;"
-    affected = dal.ExecuteNonQuery(sql)
-    '新增欄位: LineItem
-    sql = "ALTER TABLE GL ADD COLUMN [LineItem] INTEGER;"
-    affected = dal.ExecuteNonQuery(sql)
-    '計算項次（按傳票號碼分組，依序編號）
-    sql = ""
-    affected = dal.ExecuteNonQuery(sql)
-    '新增欄位: 傳票金額
-    sql = ""
-    affected = dal.ExecuteNonQuery(sql)
-    '計算傳票金額（借方-貸方）
-    sql = ""
-    affected = dal.ExecuteNonQuery(sql)
-    '提交事務
-    dal.CommitTransaction
-    dal.Disconnect
-    
-    AddLineItem = True
-    Exit Function
-    
-Errorhandler:
-    On Error Resume Next
-    '回滾事務
-    dal.RollbackTransaction
-    AddLineItem = False
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
-End Function

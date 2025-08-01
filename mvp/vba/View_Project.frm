@@ -43,7 +43,7 @@ End Sub
 Public Function UpdateProjects(projects As Collection) As Boolean
     '更新控制項: listProjects
     Const METHOD_NAME As String = "UpdateProjects"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     UpdateProjects = False
     
     Dim item As Variant
@@ -54,7 +54,7 @@ Public Function UpdateProjects(projects As Collection) As Boolean
     
     UpdateProjects = True
     Exit Function
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.Description
     UpdateProjects = False
 End Function

@@ -31,7 +31,7 @@ End Sub
 Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date) As Boolean
     '完整性測試: 驗證 TB 期間的變動金額及 GL 期間的彙總金額，如有差異表示資料不完整。
     Const METHOD_NAME As String = "TestCompleteness"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     TestCompleteness = False
     '準備日期格式
@@ -48,7 +48,7 @@ Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date)
     TestCompleteness = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     TestCompleteness = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
@@ -57,14 +57,14 @@ End Function
 Public Function TestBalance() As Boolean
     '借貸不平測試
     Const METHOD_NAME As String = "TestBalance"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     TestBalance = False
     '...
     TestBalance = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     TestBalance = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
@@ -73,14 +73,14 @@ End Function
 Public Function TestRDE() As Boolean
     '資料攸關元素抽樣
     Const METHOD_NAME As String = "TestRDE"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     TestRDE = False
     '...
     TestRDE = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     TestRDE = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description

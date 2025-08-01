@@ -49,7 +49,7 @@ End Sub
 
 Public Function Create(ByVal name As String, path As String) As Boolean
     Const METHOD_NAME As String = "Create"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Create = False
     m_name = name
@@ -71,7 +71,7 @@ Public Function Create(ByVal name As String, path As String) As Boolean
     Create = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     Create = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
@@ -79,7 +79,7 @@ End Function
 
 Public Function Load(ByVal name As String, ByVal path As String) As Boolean
     Const METHOD_NAME As String = "Load"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Load = False
     m_name = name
@@ -99,7 +99,7 @@ Public Function Load(ByVal name As String, ByVal path As String) As Boolean
     Load = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     Load = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
@@ -110,7 +110,7 @@ End Function
 '--Custom
 Private Function CreateDatabase(ByVal dbName As String) As Dal_Access
     Const METHOD_NAME As String = "CreateDatabase"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Dim dbe As DAO.DBEngine
     Dim db As DAO.Database
@@ -128,14 +128,14 @@ Private Function CreateDatabase(ByVal dbName As String) As Dal_Access
     Set CreateDatabase = dal
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
 
 Private Function LoadDatabase(ByVal dbName As String) As Dal_Access
     Const METHOD_NAME As String = "LoadDatabase"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     '檢查資料庫檔案
     Dim dbPath As String
@@ -154,7 +154,7 @@ Private Function LoadDatabase(ByVal dbName As String) As Dal_Access
     Set LoadDatabase = dal
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function

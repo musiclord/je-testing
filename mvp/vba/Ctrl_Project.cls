@@ -33,7 +33,7 @@ End Sub
 
 Public Function Build() As Boolean
     Const METHOD_NAME As String = "Build"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Build = False
     '取得專案目錄
@@ -50,7 +50,7 @@ Public Function Build() As Boolean
     Build = True
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     Build = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description

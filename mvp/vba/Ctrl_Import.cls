@@ -28,10 +28,9 @@ Attribute viewImport.VB_VarHelpID = -1
 '--TEMPORARY DEFAULT PRESET
 Private Sub UseDefault()
     '預設 GL 欄位
-    viewImport.GL_HandlingMethod.Text = "借方與貸方金額"
+    viewImport.GL_HandlingMethod.Text = "分別借貸方金額"
     viewImport.GL_AccountName.Text = "會計科目"
     viewImport.GL_AccountNumber.Text = "傳票號碼"
-    viewImport.GL_EntryAmount.Text = "傳票金額"
     viewImport.GL_DocumentNumber.Text = "傳票號碼"
     viewImport.GL_DebitAmount.Text = "本幣借方金額"
     viewImport.GL_CreditAmount.Text = "本幣貸方金額"
@@ -39,7 +38,7 @@ Private Sub UseDefault()
     viewImport.GL_IsDebit.Text = "借貸"
     viewImport.GL_PostDate.Text = "日期"
     '預設 TB 欄位
-    viewImport.TB_HandlingMethod.Text = "借方與貸方金額"
+    viewImport.TB_HandlingMethod.Text = "借方貸方金額"
     viewImport.TB_AccountName.Text = "項目名稱"
     viewImport.TB_AccountNumber.Text = "會計項目"
     viewImport.TB_ChangeAmount.Text = "借-貸(本幣)"
@@ -66,7 +65,7 @@ End Sub
 
 Public Function Execute() As Dictionary
     Const METHOD_NAME As String = "Execute"
-    On Error GoTo Errorhandler
+    On Error GoTo ErrorHandler
     
     Dim result As Dictionary
     Set result = New Dictionary
@@ -79,7 +78,7 @@ Public Function Execute() As Dictionary
     Set Execute = result
     Exit Function
     
-Errorhandler:
+ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
@@ -116,7 +115,7 @@ Private Sub viewImport_ImportGL()
     Else
         '匯入成功，更新欄位控制項
         Dim fields As Variant
-        fields = m_ctx.dalPbc.GetTableSchema(m_ctx.gl.name)
+        fields = m_ctx.dalPbc.GetTableSchema(m_ctx.GL.name)
         If IsArray(fields) Then
             viewImport.UpdatePageGL fields
         End If
@@ -139,7 +138,7 @@ Private Sub viewImport_ImportTB()
     Else
         '匯入成功，更新欄位控制項
         Dim fields As Variant
-        fields = m_ctx.dalPbc.GetTableSchema(m_ctx.gl.name)
+        fields = m_ctx.dalPbc.GetTableSchema(m_ctx.TB.name)
         If IsArray(fields) Then
             viewImport.UpdatePageTB fields
         End If
