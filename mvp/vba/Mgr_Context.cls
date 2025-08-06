@@ -33,17 +33,17 @@ Public Property Set DalConfig(ByVal dal As Dal_Access)
     Set m_DalConfig = dal
 End Property
 '------------------|DalPbc
-Public Property Get dalPbc() As Dal_Access
-    Set dalPbc = m_DalPbc
+Public Property Get DalPbc() As Dal_Access
+    Set DalPbc = m_DalPbc
 End Property
-Public Property Set dalPbc(ByVal dal As Dal_Access)
+Public Property Set DalPbc(ByVal dal As Dal_Access)
     Set m_DalPbc = dal
 End Property
 '------------------|DalData
-Public Property Get dalData() As Dal_Access
-    Set dalData = m_DalData
+Public Property Get DalData() As Dal_Access
+    Set DalData = m_DalData
 End Property
-Public Property Set dalData(ByVal dal As Dal_Access)
+Public Property Set DalData(ByVal dal As Dal_Access)
     Set m_DalData = dal
 End Property
 '------------------|DalResult
@@ -54,27 +54,24 @@ Public Property Set DalResult(ByVal dal As Dal_Access)
     Set m_DalResult = dal
 End Property
 '------------------|GL
-Public Property Get GL() As Ent_GL
-    Set GL = m_gl
+Public Property Get gl() As Ent_GL
+    Set gl = m_gl
 End Property
 '------------------|TB
-Public Property Get TB() As Ent_TB
-    Set TB = m_tb
+Public Property Get tb() As Ent_TB
+    Set tb = m_tb
 End Property
 
 
 
 '--Mgr_Context
 Public Sub Initialize()
-    Const METHOD_NAME As String = "Initialize"
-    
     Set m_DalConfig = New Dal_Access
     Set m_DalPbc = New Dal_Access
     Set m_DalData = New Dal_Access
     Set m_DalResult = New Dal_Access
     Set m_gl = New Ent_GL
     Set m_tb = New Ent_TB
-    
     Debug.Print "Mgr_Context Initialized."
 End Sub
 

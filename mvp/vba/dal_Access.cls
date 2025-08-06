@@ -71,8 +71,13 @@ Public Sub Connect()
     ElseIf Len(Dir(m_path)) = 0 Then
         Err.Raise vbObjectError + 1002, MODULE_NAME & "." & METHOD_NAME, "資料庫檔案不存在: " & m_path
     End If
-    ' 建立容器
+    ' 建立私有容器
+    'Dim wsName As String
+    'wsName = "DAL_WS_" & Format(Now(), "yyyymmddhhnnss") & "_" & Rnd()
+    'Set m_ws = DBEngine.CreateWorkspace(wsName, "admin", "", dbUseJet)
+    ' 建立全局容器
     Set m_ws = DBEngine.Workspaces(0)
+    
     Set m_db = m_ws.OpenDatabase(m_path, False, False)
     m_isConnected = True
     
@@ -94,15 +99,20 @@ Public Sub Disconnect()
     If m_inTransaction Then
          RollbackTransaction
     End If
+    ' 紀錄工作區名稱
+    Dim wsName As String
+    If Not m_ws Is Nothing Then wsName = m_ws.name
     ' 關閉資料庫連線
     If Not m_db Is Nothing Then
         m_db.Close
         Set m_db = Nothing
     End If
-    
-    Set m_ws = Nothing
+    '關閉並移除工作區
+    If Not m_ws Is Nothing Then
+        m_ws.Close
+        Set m_ws = Nothing
+    End If
     m_isConnected = False
-    
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已斷開連線"
     Exit Sub
 
@@ -122,8 +132,7 @@ Public Function CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName A
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sourceRs.Source & ", " & tableName
     On Error GoTo ErrorHandler
     
-     CreateTable = False
-    ' 確保連線
+    CreateTable = False
     If Not m_isConnected Then Connect
     ' 刪除現有資料表
     If TableExists(tableName) Then
@@ -143,8 +152,9 @@ Public Function CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName A
     ' 使用 DAO 執行 DDL
     m_db.Execute sql, dbFailOnError
     
-    Debug.Print "資料表已建立: " & tableName & " (" & sourceRs.fields.count & " 欄位)"
-     CreateTable = True
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 資料表已建立 [" & tableName & "], " & sourceRs.fields.count & "欄位"
+    CreateTable = True
+    
     Exit Function
 
 ErrorHandler:
@@ -158,17 +168,15 @@ Public Function DropTable(ByVal tableName As String) As Boolean
     On Error GoTo ErrorHandler
     
      DropTable = False
-    '確保連線
     If Not m_isConnected Then Connect
     '檢查資料表
     If Not TableExists(tableName) Then
-        Debug.Print "資料表 [" & tableName & "] 不存在"
-         DropTable = True
+        DropTable = True
     Else
         '刪除資料表
         m_db.Execute "DROP TABLE [" & tableName & "]", dbFailOnError
         Debug.Print "已刪除資料表 [" & tableName & "]"
-         DropTable = True
+        DropTable = True
     End If
     
     Exit Function
@@ -180,25 +188,24 @@ End Function
 
 Public Function TableExists(ByVal tableName As String) As Boolean
     Const METHOD_NAME As String = "TableExists"
-    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": (" & tableName & ")"
     On Error GoTo ErrorHandler
     
-     TableExists = False
-    Dim tbl As DAO.tableDef
-    '確保連線
+    TableExists = False
     If Not m_isConnected Then Connect
+    Dim tbl As DAO.tableDef
     '檢查資料表
     For Each tbl In m_db.TableDefs
         If UCase(tbl.name) = UCase(tableName) Then
-             TableExists = True
-            Debug.Print "資料表 [" & tableName & "] 存在"
+            TableExists = True
+            Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 資料表 [" & tableName & "] 存在"
             Exit For
         End If
     Next tbl
     
     If Not TableExists Then
-        Debug.Print "資料表 [" & tableName & "] 不存在"
+        Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 資料表 [" & tableName & "] 不存在"
     End If
+    
     Exit Function
 
 ErrorHandler:
@@ -213,9 +220,8 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Const METHOD_NAME As String = "ExecuteQuery"
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
     On Error GoTo ErrorHandler
-    
-    '確保連接
     If Not m_isConnected Then Connect
+    
     '執行查詢並返回 DAO Recordset
     Set ExecuteQuery = m_db.OpenRecordset(sql, dbOpenSnapshot)
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 查詢成功"
@@ -239,6 +245,7 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
     '返回受影響的記錄數
      ExecuteNonQuery = m_db.recordsAffected
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已執行，影響 " & recordsAffected & " 筆記錄"
+    
     Exit Function
 
 ErrorHandler:
@@ -265,10 +272,12 @@ End Function
 Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As String) As Boolean
     '將標準化 Recordset 進行大量插入
     Const METHOD_NAME As String = "BulkInsert"
-    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": (" & sourceRs.Source & "), (" & tableName & ")"
+    Debug.Print MODULE_NAME & "."; METHOD_NAME & " --> " & sourceRs.Source & "; [" & tableName & "]"
     On Error GoTo ErrorHandler
     
-     BulkInsert = False
+    BulkInsert = False
+    If Not m_isConnected Then Connect
+    
     Dim targetRs As DAO.Recordset
     Dim dataChunk As Variant
     Dim fetched As Long, total As Long, batchCount As Long
@@ -353,8 +362,11 @@ Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As
     
     Debug.Print "批次寫入完成，總計: " & total & " 筆"
     Call RestoreExcel
+    Application.Wait Now + TimeValue("00:00:01")
     Debug.Print "寫入時間: " & Format(Timer - startTime, "0.00") & " 秒"
-     BulkInsert = True
+    
+    If m_isConnected Then Disconnect
+    BulkInsert = True
     Exit Function
 
 ErrorHandler:
@@ -371,39 +383,34 @@ End Function
 
 
 '--查詢輔助 (Query Helpers)
-Public Function GetTableSchema(ByVal tableName As String) As Variant
+Public Function GetTableSchema(ByVal tableName As String) As Collection
     Const METHOD_NAME As String = "GetTableSchema"
     On Error GoTo ErrorHandler
     
     Dim tableDef As DAO.tableDef
     Dim field As DAO.field
-    Dim fields As New Collection
-    Dim fieldsArray() As String
-    Dim i As Long
-    '確保連接
+    Dim fieldsArray As New Collection
+    Set GetTableSchema = fieldsArray
+    Debug.Print "資料庫路徑: " & m_path
     If Not m_isConnected Then Connect
-    '檢查資料表
+    
+    '先檢查表格是否存在
     If Not TableExists(tableName) Then
-         Set GetTableSchema = Nothing
+        Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 資料表 [" & tableName & "] 不存在"
         Exit Function
     End If
     '檢查欄位
     Set tableDef = m_db.TableDefs(tableName)
     If tableDef.fields.count = 0 Then
-        Debug.Print "資料表 [" & tableName & "] 沒有欄位"
-        Set GetTableSchema = Nothing
-    Else
-        For Each field In tableDef.fields
-            fields.Add field.name
-        Next field
-        '轉為陣列
-        ReDim fieldsArray(0 To fields.count - 1)
-        For i = 1 To fields.count
-            fieldsArray(i - 1) = fields(i)
-        Next i
-        Debug.Print "資料表 [" & tableName & "] 欄位已取得"
-        GetTableSchema = fieldsArray
+        Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 資料表 [" & tableName & "] 沒有欄位"
+        Exit Function
     End If
+    '收集欄位
+    For Each field In tableDef.fields
+        fieldsArray.Add field.name
+    Next field
+    
+    Set GetTableSchema = fieldsArray
     Exit Function
 
 ErrorHandler:

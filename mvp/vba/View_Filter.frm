@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} View_Filter 
    Caption         =   "Filter"
-   ClientHeight    =   3015
+   ClientHeight    =   3630
    ClientLeft      =   120
    ClientTop       =   465
-   ClientWidth     =   4560
+   ClientWidth     =   6570
    OleObjectBlob   =   "View_Filter.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -14,6 +14,15 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
+Private Const MODULE_NAME = "View_FilterStratification"
+'===============================================================================
+' Module:   View_FilterStratification
+' Purpose:  原本的 Account Mapping 負責將
+' Layer:    View
+' Domain:   Filter Stratification
+'===============================================================================
+
+
 
 Public Event DoExit()
 

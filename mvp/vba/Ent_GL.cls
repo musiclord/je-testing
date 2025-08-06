@@ -71,53 +71,53 @@ Public Property Get name() As String
     name = "GL"
 End Property
 Public Property Get EntryAmount() As String
-    EntryAmount = m_Fields("EntryAmount")
+    EntryAmount = " [" & m_Fields("EntryAmount") & "] "
 End Property
 Public Property Get DebitAmount() As String
-    DebitAmount = m_Fields("DebitAmount")
+    DebitAmount = " [" & m_Fields("DebitAmount") & "] "
 End Property
 Public Property Get CreditAmount() As String
-    CreditAmount = m_Fields("CreditAmount")
+    CreditAmount = " [" & m_Fields("CreditAmount") & "] "
 End Property
 Public Property Get DrCr() As String
-    DrCr = m_Fields("DrCr")
+    DrCr = " [" & m_Fields("DrCr") & "] "
 End Property
 Public Property Get IsDebit() As String
-    IsDebit = m_Fields("IsDebit")
+    IsDebit = " [" & m_Fields("IsDebit") & "] "
 End Property
 Public Property Get AccountNumber() As String
-    AccountNumber = m_Fields("AccountNumber")
+    AccountNumber = " [" & m_Fields("AccountNumber") & "] "
 End Property
 Public Property Get AccountName() As String
-    AccountName = m_Fields("AccountName")
+    AccountName = " [" & m_Fields("AccountName") & "] "
 End Property
 Public Property Get DocumentNumber() As String
-    DocumentNumber = m_Fields("DocumentNumber")
+    DocumentNumber = " [" & m_Fields("DocumentNumber") & "] "
 End Property
 Public Property Get LineItem() As String
-    LineItem = m_Fields("LineItem")
+    LineItem = " [" & m_Fields("LineItem") & "] "
 End Property
 Public Property Get PostDate() As String
-    PostDate = m_Fields("PostDate")
+    PostDate = " [" & m_Fields("PostDate") & "] "
 End Property
 Public Property Get EntryDescription() As String
-    EntryDescription = m_Fields("EntryDescription")
+    EntryDescription = " [" & m_Fields("EntryDescription") & "] "
 End Property
 Public Property Get ApprovalDate() As String
-    ApprovalDate = m_Fields("ApprovalDate")
+    ApprovalDate = " [" & m_Fields("ApprovalDate") & "] "
 End Property
 Public Property Get ApprovedBy() As String
-    ApprovedBy = m_Fields("ApprovedBy")
+    ApprovedBy = " [" & m_Fields("ApprovedBy") & "] "
 End Property
 Public Property Get CreatedBy() As String
-    CreatedBy = m_Fields("CreatedBy")
+    CreatedBy = " [" & m_Fields("CreatedBy") & "] "
 End Property
 Public Property Get SourceModule() As String
-    SourceModule = m_Fields("SourceModule")
+    SourceModule = " [" & m_Fields("SourceModule") & "] "
 End Property
 Public Property Get IsManual() As String
-    IsManual = m_Fields("IsManual")
+    IsManual = " [" & m_Fields("IsManual") & "] "
 End Property
 Public Property Get IsApprovedDateAsLedgerDate() As String
-    IsApprovedDateAsLedgerDate = m_Fields("IsApprovedDateAsLedgerDate")
+    IsApprovedDateAsLedgerDate = " [" & m_Fields("IsApprovedDateAsLedgerDate") & "] "
 End Property

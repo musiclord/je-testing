@@ -17,7 +17,11 @@ Private Const MODULE_NAME = "Ent_TB"
 '===============================================================================
 'ChangeAmount       : CURRENCY
 'OpeningAmount      : CURRENCY
+'OpeningDebitAmount : CURRENCY
+'OpeningCreditAmount: CURRENCY
 'ClosingAmount      : CURRENCY
+'ClosingDebitAmount : CURRENCY
+'ClosingCreditAmount: CURRENCY
 'DebitAmount        : CURRENCY
 'CreditAmount       : CURRENCY
 'AccountNumber      : TEXT
@@ -45,9 +49,10 @@ End Sub
 Private Sub Class_Initialize()
     Dim fields As Variant
     Dim i As Long
-    fields = Array("ChangeAmount", "OpeningAmount", "ClosingAmount", _
-                   "DebitAmount", "CreditAmount", "AccountNumber", _
-                   "AccountName")
+    fields = Array("ChangeAmount", "OpeningAmount", , "OpeningDebitAmount", _
+                   "OpeningCreditAmount", "ClosingAmount", "ClosingDebitAmount", _
+                   "ClosingCreditAmount", "DebitAmount", "CreditAmount", _
+                   "AccountNumber", "AccountName")
     For i = LBound(fields) To UBound(fields)
         m_Fields.Add fields(i), fields(i) '預設欄位名稱
     Next i
@@ -58,23 +63,35 @@ Public Property Get name() As String
     name = "TB"
 End Property
 Public Property Get ChangeAmount() As String
-    ChangeAmount = m_Fields("ChangeAmount")
+    ChangeAmount = " [" & m_Fields("ChangeAmount") & "] "
 End Property
 Public Property Get OpeningAmount() As String
-    OpeningAmount = m_Fields("OpeningAmount")
+    OpeningAmount = " [" & m_Fields("OpeningAmount") & "] "
+End Property
+Public Property Get OpeningDebitAmount() As String
+    OpeningDebitAmount = " [" & m_Fields("OpeningDebitAmount") & "] "
+End Property
+Public Property Get OpeningCreditAmount() As String
+    OpeningCreditAmount = " [" & m_Fields("OpeningCreditAmount") & "] "
 End Property
 Public Property Get ClosingAmount() As String
-    ClosingAmount = m_Fields("ClosingAmount")
+    ClosingAmount = " [" & m_Fields("ClosingAmount") & "] "
+End Property
+Public Property Get ClosingDebitAmount() As String
+    ClosingDebitAmount = " [" & m_Fields("ClosingDebitAmount") & "] "
+End Property
+Public Property Get ClosingCreditAmount() As String
+    ClosingCreditAmount = " [" & m_Fields("ClosingCreditAmount") & "] "
 End Property
 Public Property Get DebitAmount() As String
-    DebitAmount = m_Fields("DebitAmount")
+    DebitAmount = " [" & m_Fields("DebitAmount") & "] "
 End Property
 Public Property Get CreditAmount() As String
-    CreditAmount = m_Fields("CreditAmount")
+    CreditAmount = " [" & m_Fields("CreditAmount") & "] "
 End Property
 Public Property Get AccountNumber() As String
-    AccountNumber = m_Fields("AccountNumber")
+    AccountNumber = " [" & m_Fields("AccountNumber") & "] "
 End Property
 Public Property Get AccountName() As String
-    AccountName = m_Fields("AccountName")
+    AccountName = " [" & m_Fields("AccountName") & "] "
 End Property

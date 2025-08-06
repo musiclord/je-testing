@@ -46,14 +46,14 @@ Private Sub btnExit_Click()
     RaiseEvent DoExit
 End Sub
 
-Public Sub UpdatePageGL(ByVal fields As Variant)
+Public Sub UpdatePageGL(ByVal fields As Collection)
     Const METHOD_NAME As String = "UpdatePageGL"
     '更新 GL 頁面控制項
     Dim ctrl As Control
     Dim cbo As MSForms.ComboBox
-    Dim field As Variant
     Dim pfx As String
     Dim temp As String
+    Dim i As Long
     '遍歷表單控制項
     For Each ctrl In Me.Controls
         pfx = Left(ctrl.name, 2)
@@ -68,28 +68,28 @@ Public Sub UpdatePageGL(ByVal fields As Variant)
                     cbo.AddItem "分別借貸方金額"
                     cbo.AddItem "依借貸別判斷"
                 Else
-                    For Each field In fields
-                        cbo.AddItem field
-                    Next field
+                    For i = 1 To fields.count
+                        cbo.AddItem fields.item(i)
+                    Next i
                 End If
             ElseIf (ctrl.Tag = "required") Or (ctrl.Tag = "optional") Then
-                For Each field In fields
-                    cbo.AddItem field
-                Next field
+                For i = 1 To fields.count
+                    cbo.AddItem fields.item(i)
+                Next i
             End If
             cbo.Text = temp
         End If
     Next ctrl
 End Sub
 
-Public Sub UpdatePageTB(ByVal fields As Variant)
+Public Sub UpdatePageTB(ByVal fields As Collection)
     Const METHOD_NAME As String = "UpdatePageTB"
     '更新 TB 頁面控制項
     Dim ctrl As Control
     Dim cbo As MSForms.ComboBox
-    Dim field As Variant
     Dim pfx As String
     Dim temp As String
+    Dim i As Long
     '遍歷表單控制項
     For Each ctrl In Me.Controls
         pfx = Left(ctrl.name, 2)
@@ -105,14 +105,14 @@ Public Sub UpdatePageTB(ByVal fields As Variant)
                     cbo.AddItem "借方貸方金額"
                     cbo.AddItem "借貸之期初期末金額"
                 Else
-                    For Each field In fields
-                        cbo.AddItem field
-                    Next field
+                    For i = 1 To fields.count
+                        cbo.AddItem fields.item(i)
+                    Next i
                 End If
             ElseIf (ctrl.Tag = "required") Or (ctrl.Tag = "optional") Then
-                For Each field In fields
-                    cbo.AddItem field
-                Next field
+                For i = 1 To fields.count
+                    cbo.AddItem fields.item(i)
+                Next i
             End If
             cbo.Text = temp
         End If

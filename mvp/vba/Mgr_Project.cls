@@ -63,8 +63,8 @@ Public Function Create(ByVal name As String, path As String) As Boolean
         MkDir m_path
         '創建資料庫，建立DAL物件，將依賴注入給 m_ctx 管理
         Set m_ctx.DalConfig = CreateDatabase("config")
-        Set m_ctx.dalPbc = CreateDatabase("pbc")
-        Set m_ctx.dalData = CreateDatabase("data")
+        Set m_ctx.DalPbc = CreateDatabase("pbc")
+        Set m_ctx.DalData = CreateDatabase("data")
         Set m_ctx.DalResult = CreateDatabase("result")
     End If
     
@@ -91,8 +91,8 @@ Public Function Load(ByVal name As String, ByVal path As String) As Boolean
     Else
         '載入資料庫
         Set m_ctx.DalConfig = LoadDatabase("config")
-        Set m_ctx.dalPbc = LoadDatabase("pbc")
-        Set m_ctx.dalData = LoadDatabase("data")
+        Set m_ctx.DalPbc = LoadDatabase("pbc")
+        Set m_ctx.DalData = LoadDatabase("data")
         Set m_ctx.DalResult = LoadDatabase("result")
     End If
     

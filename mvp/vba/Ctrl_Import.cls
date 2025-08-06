@@ -26,7 +26,7 @@ Attribute viewImport.VB_VarHelpID = -1
 
 
 '--TEMPORARY DEFAULT PRESET
-Private Sub UseDefault()
+Private Sub DefaultTemplate()
     '預設 GL 欄位
     viewImport.GL_HandlingMethod.Text = "分別借貸方金額"
     viewImport.GL_AccountName.Text = "會計科目"
@@ -60,7 +60,7 @@ Public Sub Initialize(ByRef Config As Mgr_Config, ByRef Context As Mgr_Context)
     Set viewImport = New View_Import
     '初始化
     m_ImportService.Initialize m_ctx
-    UseDefault
+    Call DefaultTemplate
 End Sub
 
 Public Function Execute() As Dictionary
@@ -114,11 +114,9 @@ Private Sub viewImport_ImportGL()
         MsgBox "資料匯入失敗", vbCritical, "匯入GL"
     Else
         '匯入成功，更新欄位控制項
-        Dim fields As Variant
-        fields = m_ctx.dalPbc.GetTableSchema(m_ctx.GL.name)
-        If IsArray(fields) Then
-            viewImport.UpdatePageGL fields
-        End If
+        Dim fields As Collection
+        Set fields = m_ctx.DalPbc.GetTableSchema(m_ctx.gl.name)
+        viewImport.UpdatePageGL fields
     End If
 End Sub
 
@@ -138,7 +136,7 @@ Private Sub viewImport_ImportTB()
     Else
         '匯入成功，更新欄位控制項
         Dim fields As Variant
-        fields = m_ctx.dalPbc.GetTableSchema(m_ctx.TB.name)
+        fields = m_ctx.DalPbc.GetTableSchema(m_ctx.tb.name)
         If IsArray(fields) Then
             viewImport.UpdatePageTB fields
         End If

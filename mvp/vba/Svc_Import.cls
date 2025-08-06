@@ -18,8 +18,8 @@ Private Const MODULE_NAME = "Svc_Import"
 
 '--類別成員
 Private m_ctx As Mgr_Context
-Private GL As Ent_GL
-Private TB As Ent_TB
+Private gl As Ent_GL
+Private tb As Ent_TB
 
 
 
@@ -28,8 +28,8 @@ Public Sub Initialize(ByRef Context As Mgr_Context)
     Const METHOD_NAME As String = "Initialize"
     '依賴注入
     Set m_ctx = Context
-    Set GL = Context.GL
-    Set TB = Context.TB
+    Set gl = Context.gl
+    Set tb = Context.tb
 End Sub
 
 Public Function ImportGL(ByVal filePath As String) As Boolean
@@ -37,15 +37,24 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     On Error GoTo ErrorHandler
     
     ImportGL = False
-    Dim sourceRs As ADODB.Recordset
     Dim tableName As String
-    Dim dalPbc As Dal_Access, dalData As Dal_Access
-    Let tableName = GL.name
-    Set dalPbc = m_ctx.dalPbc
-    Set dalData = m_ctx.dalData
+    Let tableName = gl.name
+    
+    Dim DalPbc As Dal_Access
+    Set DalPbc = m_ctx.DalPbc
+    
+    Dim DalData As Dal_Access
+    Set DalData = m_ctx.DalData
+    
+    Dim sourceRs As ADODB.Recordset
+    
+    Debug.Print "---Svc_Import: dalPbc.BulkInsert---"
     Set sourceRs = PrepareRecordset(filePath)
-    If Not dalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
-    If Not dalData.BulkInsert(sourceRs, tableName) Then Exit Function
+    If Not DalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
+    
+    Debug.Print "---Svc_Import: dalData.BulkInsert---"
+    Set sourceRs = PrepareRecordset(filePath)
+    If Not DalData.BulkInsert(sourceRs, tableName) Then Exit Function
     
     ImportGL = True
     Exit Function
@@ -63,13 +72,13 @@ Public Function ImportTB(ByVal filePath As String) As Boolean
     ImportTB = False
     Dim sourceRs As ADODB.Recordset
     Dim tableName As String
-    Dim dalPbc As Dal_Access, dalData As Dal_Access
-    Let tableName = TB.name
-    Set dalPbc = m_ctx.dalPbc
-    Set dalData = m_ctx.dalData
+    Dim DalPbc As Dal_Access, DalData As Dal_Access
+    Let tableName = tb.name
+    Set DalPbc = m_ctx.DalPbc
+    Set DalData = m_ctx.DalData
     Set sourceRs = PrepareRecordset(filePath)
-    If Not dalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
-    If Not dalData.BulkInsert(sourceRs, tableName) Then Exit Function
+    If Not DalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
+    If Not DalData.BulkInsert(sourceRs, tableName) Then Exit Function
     
     ImportTB = True
     Exit Function
@@ -88,9 +97,9 @@ Public Function ApplyGLMapping(ByVal mapping As Dictionary) As Boolean
     Dim key As Variant
     '擷取表單控制項為欄位映射表
     For Each key In mapping.Keys
-        GL.SetMapping key, mapping(key)
+        gl.SetMapping key, mapping(key)
     Next key
-    GL.debug_test
+    gl.debug_test
     ApplyGLMapping = True
     Exit Function
     
@@ -108,9 +117,9 @@ Public Function ApplyTBMapping(ByVal mapping As Dictionary) As Boolean
     Dim key As Variant
     '擷取表單控制項為欄位映射表
     For Each key In mapping.Keys
-        TB.SetMapping key, mapping(key)
+        tb.SetMapping key, mapping(key)
     Next key
-    TB.debug_test
+    tb.debug_test
     ApplyTBMapping = True
     Exit Function
     
@@ -130,16 +139,16 @@ Public Function AddLineItem() As Boolean
     Dim sql As String
     Dim affected As Long
     Dim dal As Dal_Access
-    Set dal = m_ctx.dalData
+    Set dal = m_ctx.DalData
     
     dal.Connect
     '開始事務
     dal.BeginTransaction
     '新增欄位: ID
-    sql = "ALTER TABLE GL ADD COLUMN ID AUTOINCREMENT PRIMARY KEY;"
+    sql = "ALTER TABLE GL ADD COLUMN [ID] AUTOINCREMENT PRIMARY KEY;"
     affected = dal.ExecuteNonQuery(sql)
     '新增欄位: LineItem
-    sql = "ALTER TABLE GL ADD COLUMN [LineItem] INTEGER;"
+    sql = "ALTER TABLE GL ADD COLUMN [" & gl.LineItem & "] INTEGER;"
     affected = dal.ExecuteNonQuery(sql)
     '計算項次（按傳票號碼分組，依序編號）
     sql = ""
@@ -171,31 +180,31 @@ Private Function ProcessGLAmounts(ByVal method As Integer) As Boolean
     ProcessGLAmounts = False
     Dim sql As String
     Dim dal As Dal_Access
-    Set dal = m_ctx.dalData
+    Set dal = m_ctx.DalData
     If Not dal.IsConnected Then dal.Connect
     
     Select Case method
-        Case 1 '方法1: 直接使用原始金額欄位
-            '處理邏輯: EntryAmount = EntryAmount
-            '適用場景: 當金額欄位已經包含正負號區分借貸時
+        Case 1 '直接使用原始金額欄位
+            '邏輯: EntryAmount = EntryAmount
+            '場景: 當金額欄位已經包含正負號區分借貸時
             
-        Case 2 '方法2: 借方金額減去貸方金額
-            '處理邏輯: EntryAmount = IIF(ISNULL(DebitAmount), 0, DebitAmount) - IIF(ISNULL(CreditAmount), 0, CreditAmount)
-            '適用場景: 當借方金額和貸方金額分別存在不同欄位時
-            sql = "UPDATE [" & GL.name & "] SET [" & GL.EntryAmount & "] =" & _
-                  "IIF(ISNULL([" & GL.DebitAmount & "]), 0, [" & GL.DebitAmount & "])" & _
+        Case 2 '借方金額減去貸方金額
+            '邏輯: EntryAmount = IIF(ISNULL(DebitAmount), 0, DebitAmount) - IIF(ISNULL(CreditAmount), 0, CreditAmount)
+            '場景: 當借方金額和貸方金額分別存在不同欄位時
+            sql = "UPDATE" & gl.name & "SET" & gl.EntryAmount & "=" & _
+                  "IIF(ISNULL(" & gl.DebitAmount & "), 0, " & gl.DebitAmount & ")" & _
                   " - " & _
-                  "IIF(ISNULL([" & GL.CreditAmount & "]), 0, [" & GL.CreditAmount & "])"
+                  "IIF(ISNULL(" & gl.CreditAmount & "), 0, " & gl.CreditAmount & ")"
             dal.ExecuteNonQuery sql
             
-        Case 3 '方法3: 依據借貸別標示決定金額正負號
-            '處理邏輯: EntryAmount = IIF(DrCr = IsDebit, Amount, Amount * -1)
-            '適用場景: 當金額存在單一欄位，另有借貸別標示欄位時
-            sql = "UPDATE [" & GL.name & "] SET [" & GL.EntryAmount & "] = " & _
+        Case 3 '依據借貸別標示決定金額正負號
+            '邏輯: EntryAmount = IIF(DrCr = IsDebit, Amount, Amount * -1)
+            '場景: 當金額存在單一欄位，另有借貸別標示欄位時
+            sql = "UPDATE " & gl.name & "SET" & gl.EntryAmount & "= " & _
                   "IIF(" & _
-                  "  [" & GL.DrCr & "] = [" & GL.IsDebit & "], " & _
-                  "  [" & GL.DebitAmount & "], " & _
-                  "  [" & GL.DebitAmount & "] * -1)"
+                  "" & gl.DrCr & "=" & gl.IsDebit & ", " & _
+                  "" & gl.DebitAmount & ", " & _
+                  "" & gl.DebitAmount & "* -1)"
             dal.ExecuteNonQuery sql
         Case Else
             Err.Raise 5, METHOD_NAME, "不支援的金額處理模式: " & method
@@ -218,15 +227,23 @@ Private Function ProcessTBAmounts(ByVal method As Integer) As Boolean
     Dim tableName As String
     tableName = "TB"
     Dim dal As Dal_Access
-    Set dal = m_ctx.dalData
+    Set dal = m_ctx.DalData
     Select Case method
         Case 1 '直接使用變動金額
+            '邏輯: ChangeAmount = ChangeAmount
+            '場景: 當變動金額已經
             
         Case 2 '期末 - 期初 = 變動金額
+            '邏輯: ChangeAmount = ClosingAmount - OpeningAmount
+            '場景:
             
         Case 3 '借方 - 貸方 = 變動金額
+            '邏輯: DebitAmount - CreditAmount = ChangeAmount
+            '場景:
             
         Case 4 '(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
+            '邏輯: (ClosingDebitAmount - OpeningDebitAmount) - (ClosingCreditAmount - OpeningCreditAmount) = ChangeAmount
+            '場景:
             
         Case Else
             Err.Raise 5, METHOD_NAME, "不支援的金額處理模式: " & method

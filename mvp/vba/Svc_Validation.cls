@@ -19,13 +19,21 @@ Private Const MODULE_NAME = "Svc_Validation"
 
 
 '--類別成員
-Private m_ContextManager As Mgr_Context
-'Private m_tb As Ent_TB
+Private m_ctx As Mgr_Context
+Private dal As Dal_Access
+Private gl As Ent_GL
+Private tb As Ent_TB
+
 
 
 '--Svc_Validation
-Public Sub Initialize()
+Public Sub Initialize(ByRef Context As Mgr_Context)
     Const METHOD_NAME As String = "Initialize"
+    '依賴注入
+    Set m_ctx = Context
+    Set dal = Context.DalData
+    gl = Context.gl
+    tb = Context.tb
 End Sub
 
 Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date) As Boolean
@@ -38,11 +46,19 @@ Public Function TestCompleteness(ByVal startDate As Date, ByVal endDate As Date)
     Dim sStart As String, sEnd As String
     sStart = Format(startDate, "\#yyyy\-MM\-dd\#")
     sEnd = Format(endDate, "\#yyyy\-MM\-dd\#")
-    '修改欄位類型
-    Dim sql As String, affected As Long
-    Dim fieldsArray As Variant, fieldName As Variant
+    '處理欄位資料型別
     
+    'Record Extraction - @BetweenDate()
     
+    'Summarization - AddFieldToSummarize "會計科目編號_JE", AddFieldToTotal "傳票金額_JE"
+    
+    'Join Databases, primary: #GL_Account_Sum.IDM, secondary: #TB#.IDM
+    
+    'Append Field, equation: [試算表變動金額_TB] - [傳票金額_JE_SUM]
+    
+    'EXTRACT FIELDS TO Completeness_Check
+    
+    'Record Extraction TO List_of_accounts_with_variance
     
     
     TestCompleteness = True
