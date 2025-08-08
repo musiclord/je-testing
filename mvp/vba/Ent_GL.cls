@@ -15,28 +15,17 @@ Private Const MODULE_NAME = "Ent_GL"
 ' Layer:    Entity
 ' Domain:   General Ledger
 '===============================================================================
-'EntryAmount        : CURRENCY
-'DebitAmount        : CURRENCY
-'CreditAmount       : CURRENCY
-'DrCr               : TEXT
-'IsDebit            : TEXT
-'AccountNumber      : TEXT
-'AccountName        : TEXT
-'DocumentNumber     : TEXT
-'LineItem           : INT
-'PostDate           : DATE
-'EntryDescription   : LONG TEXT
-'ApprovalDate       : DATE
-'ApprovedBy         : TEXT
-'CreatedBy          : TEXT
-'SourceModule       : TEXT
-'IsManual           : TEXT
-'IsApprovedDateAsLedgerDate: TEXT
 
 '--類別成員
 Private m_Fields As New Dictionary
+Private m_FieldsType As New Dictionary
+
 
 '--Ent_GL
+Public Function GetFieldsType() As Dictionary
+    Set GetFieldsType = m_FieldsType
+End Function
+
 Public Sub SetMapping(ByVal key As String, ByVal value As String)
     If m_Fields.Exists(key) And Len(value) > 0 Then
         m_Fields(key) = value
@@ -46,25 +35,42 @@ End Sub
 Public Sub debug_test()
     Dim key As Variant
     Debug.Print "---------- [ GL ] ----------"
-    For Each key In m_Fields(key)
-        Debug.Print key & ": " & m_Fields(key)
+    For Each key In m_Fields.Keys
+        Debug.Print CStr(key) & ": " & CStr(m_Fields(key))
     Next key
     Debug.Print "----------------------------"
 End Sub
 
 Private Sub Class_Initialize()
+    '使用二維陣列: [[名稱1,型別],[名稱2,型別],...]
     Dim fields As Variant
     Dim i As Long
-    fields = Array("EntryAmount", "DebitAmount", "CreditAmount", _
-                   "DrCr", "IsDebit", "AccountNumber", _
-                   "AccountName", "DocumentNumber", "LineItem", _
-                   "PostDate", "EntryDescription", "ApprovalDate", _
-                   "ApprovedBy", "CreatedBy", "SourceModule", _
-                   "IsManual", "IsApprovedDateAsLedgerDate")
+    fieds = Array( _
+        Array("EntryAmount", "CURRENCY"), _
+        Array("DebitAmount", "CURRENCY"), _
+        Array("CreditAmount", "CURRENCY"), _
+        Array("EntryDescription", "LONG TEXT"), _
+        Array("AccountNumber", "TEXT"), _
+        Array("AccountName", "TEXT"), _
+        Array("DocumentNumber", "TEXT"), _
+        Array("ApprovedBy", "TEXT"), _
+        Array("CreatedBy", "TEXT"), _
+        Array("SourceModule", "TEXT"), _
+        Array("DrCr", "TEXT"), _
+        Array("IsDebit", "TEXT"), _
+        Array("IsManual", "TEXT"), _
+        Array("IsApprovedDateAsLedgerDate", "TEXT"), _
+        Array("PostDate", "DATE"), _
+        Array("ApprovalDate", "DATE"), _
+        Array("LineItem", "INTEGER") _
+    )
     For i = LBound(fields) To UBound(fields)
-        m_Fields.Add fields(i), fields(i) '預設欄位名稱
+        '0: 名稱; 1: 型別
+        m_Fields(fields(i)(0)) = fields(i)(0)
+        m_FieldsType(fields(i)(0)) = fields(i)(1)
     Next i
 End Sub
+
 
 '--屬性
 Public Property Get name() As String

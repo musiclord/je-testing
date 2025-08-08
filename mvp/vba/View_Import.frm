@@ -16,11 +16,22 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Public Event DoExit()
+Public Event OpenGL()
+Public Event OpenTB()
 Public Event ApplyGL()
 Public Event ApplyTB()
 Public Event ImportGL()
 Public Event ImportTB()
 Public Event AddLineItem()
+
+
+Private Sub btnOpenGL_Click()
+
+End Sub
+
+Private Sub btnOpenTB_Click()
+
+End Sub
 
 Private Sub btn_AddLineItem_Click()
     RaiseEvent AddLineItem
@@ -160,4 +171,3 @@ Public Function GetTBMapping() As Dictionary
     mapping("AccountName") = Me.TB_AccountName
     Set GetTBMapping = mapping
 End Function
-

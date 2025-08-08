@@ -43,18 +43,10 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     Dim DalPbc As Dal_Access
     Set DalPbc = m_ctx.DalPbc
     
-    Dim DalData As Dal_Access
-    Set DalData = m_ctx.DalData
-    
     Dim sourceRs As ADODB.Recordset
     
-    Debug.Print "---Svc_Import: dalPbc.BulkInsert---"
     Set sourceRs = PrepareRecordset(filePath)
     If Not DalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
-    
-    Debug.Print "---Svc_Import: dalData.BulkInsert---"
-    Set sourceRs = PrepareRecordset(filePath)
-    If Not DalData.BulkInsert(sourceRs, tableName) Then Exit Function
     
     ImportGL = True
     Exit Function
@@ -70,14 +62,21 @@ Public Function ImportTB(ByVal filePath As String) As Boolean
     On Error GoTo ErrorHandler
     
     ImportTB = False
-    Dim sourceRs As ADODB.Recordset
     Dim tableName As String
-    Dim DalPbc As Dal_Access, DalData As Dal_Access
     Let tableName = tb.name
+    
+    Dim DalPbc As Dal_Access
     Set DalPbc = m_ctx.DalPbc
+    
+    Dim DalData As Dal_Access
     Set DalData = m_ctx.DalData
+    
+    Dim sourceRs As ADODB.Recordset
+    
     Set sourceRs = PrepareRecordset(filePath)
     If Not DalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
+    
+    Set sourceRs = PrepareRecordset(filePath)
     If Not DalData.BulkInsert(sourceRs, tableName) Then Exit Function
     
     ImportTB = True
@@ -92,7 +91,6 @@ End Function
 Public Function ApplyGLMapping(ByVal mapping As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyGLMapping"
     On Error GoTo ErrorHandler
-    
     ApplyGLMapping = False
     Dim key As Variant
     '擷取表單控制項為欄位映射表
@@ -100,6 +98,13 @@ Public Function ApplyGLMapping(ByVal mapping As Dictionary) As Boolean
         gl.SetMapping key, mapping(key)
     Next key
     gl.debug_test
+    '移至 data
+    Dim DalData As Dal_Access
+    Set DalData = m_ctx.DalData
+    'Dim sourceRs As ADODB.Recordset
+    'Set sourceRs = PrepareRecordset(filePath)
+    'If Not DalData.BulkInsert(sourceRs, tableName) Then Exit Function
+    
     ApplyGLMapping = True
     Exit Function
     
@@ -112,7 +117,6 @@ End Function
 Public Function ApplyTBMapping(ByVal mapping As Dictionary) As Boolean
     Const METHOD_NAME As String = "ApplyTBMapping"
     On Error GoTo ErrorHandler
-    
     ApplyTBMapping = False
     Dim key As Variant
     '擷取表單控制項為欄位映射表

@@ -60,23 +60,23 @@ End Property
 Public Sub Connect()
     Const METHOD_NAME As String = "Connect"
     On Error GoTo ErrorHandler
-    ' 檢查是否已連線
+    '檢查是否已連線
     If m_isConnected Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已經連線"
         Exit Sub
-    ' 驗證資料庫路徑
+    '驗證資料庫路徑
     ElseIf Len(m_path) = 0 Then
         Err.Raise vbObjectError + 1001, MODULE_NAME & "." & METHOD_NAME, "資料庫路徑未設定"
-    ' 檢查資料庫檔案
+    '檢查資料庫檔案
     ElseIf Len(Dir(m_path)) = 0 Then
         Err.Raise vbObjectError + 1002, MODULE_NAME & "." & METHOD_NAME, "資料庫檔案不存在: " & m_path
     End If
-    ' 建立私有容器
-    'Dim wsName As String
-    'wsName = "DAL_WS_" & Format(Now(), "yyyymmddhhnnss") & "_" & Rnd()
-    'Set m_ws = DBEngine.CreateWorkspace(wsName, "admin", "", dbUseJet)
-    ' 建立全局容器
-    Set m_ws = DBEngine.Workspaces(0)
+    '建立私有容器
+    Dim wsName As String
+    wsName = "DAL_WS_" & Format(Now(), "yyyymmddhhnnss") & "_" & Rnd()
+    Set m_ws = DBEngine.CreateWorkspace(wsName, "admin", "", dbUseJet)
+    '建立全局容器
+    'Set m_ws = DBEngine.Workspaces(0)
     
     Set m_db = m_ws.OpenDatabase(m_path, False, False)
     m_isConnected = True
@@ -142,10 +142,11 @@ Public Function CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName A
     Dim sql As String, i As Long
     ' HEAD
     sql = "CREATE TABLE [" & tableName & "] ("
-    ' BODY
+    ' BODY with TYPE
     For i = 0 To sourceRs.fields.count - 1
         If i > 0 Then sql = sql & ", "
         sql = sql & "[" & sourceRs.fields(i).name & "] TEXT"
+        'sql = sql & " [" & sourceRs.fields(i).name & "] " & GetFieldType(sourceRs.fields(i).name, fieldType)
     Next i
     ' TAIL
     sql = sql & ")"

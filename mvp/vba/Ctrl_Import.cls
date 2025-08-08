@@ -20,6 +20,8 @@ Private Const MODULE_NAME = "Ctrl_Import"
 Private m_cfg As Mgr_Config
 Private m_ctx As Mgr_Context
 Private m_ImportService As Svc_Import
+Private m_glPath As String
+Private m_tbPath As String
 '--事件表單
 Private WithEvents viewImport As View_Import
 Attribute viewImport.VB_VarHelpID = -1
@@ -99,53 +101,30 @@ Private Sub viewImport_AddLineItem()
     End If
 End Sub
 
-Private Sub viewImport_ImportGL()
-    Const METHOD_NAME As String = "viewImport_ImportGL"
-    
+Private Sub viewImport_OpenGL()
+    Const METHOD_NAME As String = "viewImport_OpenGL"
     '選取CSV路徑
-    Dim filePath As String
-    filePath = Application.GetOpenFilename()
-    If filePath = "False" Then
+    m_glPath = Application.GetOpenFilename()
+    If m_glPath = "False" Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 使用者取消操作。"
         Exit Sub
     End If
-    '匯入資料表
-    If Not m_ImportService.ImportGL(filePath) Then
-        MsgBox "資料匯入失敗", vbCritical, "匯入GL"
-    Else
-        '匯入成功，更新欄位控制項
-        Dim fields As Collection
-        Set fields = m_ctx.DalPbc.GetTableSchema(m_ctx.gl.name)
-        viewImport.UpdatePageGL fields
-    End If
+    
 End Sub
 
-Private Sub viewImport_ImportTB()
-    Const METHOD_NAME As String = "viewImport_ImportTB"
-    
-    Dim filePath As String
+Private Sub viewImport_OpenTB()
+    Const METHOD_NAME As String = "viewImport_OpenTB"
     '選取CSV路徑
-    filePath = Application.GetOpenFilename()
-    If filePath = "False" Then
+    m_tbPath = Application.GetOpenFilename()
+    If m_tbPath = "False" Then
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 使用者取消操作。"
         Exit Sub
     End If
-    '匯入資料表
-    If Not m_ImportService.ImportTB(filePath) Then
-        MsgBox "資料匯入失敗", vbCritical, "匯入TB"
-    Else
-        '匯入成功，更新欄位控制項
-        Dim fields As Variant
-        fields = m_ctx.DalPbc.GetTableSchema(m_ctx.tb.name)
-        If IsArray(fields) Then
-            viewImport.UpdatePageTB fields
-        End If
-    End If
+    
 End Sub
 
 Private Sub viewImport_ApplyGL()
     Const METHOD_NAME As String = "viewImport_ApplyGL"
-    
     Dim mapping As Dictionary
     Set mapping = viewImport.GetGLMapping()
     If Not m_ImportService.ApplyGLMapping(mapping) Then
@@ -157,8 +136,6 @@ End Sub
 
 Private Sub viewImport_ApplyTB()
     Const METHOD_NAME As String = "viewImport_ApplyTB"
-    '標準化欄位名稱至 Ent_FieldsTB
-    
     Dim mapping As Dictionary
     Set mapping = viewImport.GetTBMapping()
     If Not m_ImportService.ApplyTBMapping(mapping) Then
@@ -167,3 +144,31 @@ Private Sub viewImport_ApplyTB()
         '欄位映射成功
     End If
 End Sub
+
+Private Sub viewImport_ImportGL()
+    Const METHOD_NAME As String = "viewImport_ImportGL"
+    '匯入資料表
+    If Not m_ImportService.ImportGL(m_glPath) Then
+        MsgBox "資料匯入失敗", vbCritical, "匯入GL"
+    Else
+        '匯入成功，更新欄位控制項
+        Dim fields As Collection
+        Set fields = m_ctx.DalPbc.GetTableSchema(m_ctx.gl.name)
+        viewImport.UpdatePageGL fields
+    End If
+End Sub
+
+Private Sub viewImport_ImportTB()
+    Const METHOD_NAME As String = "viewImport_ImportTB"
+    '匯入資料表
+    If Not m_ImportService.ImportTB(m_tbPath) Then
+        MsgBox "資料匯入失敗", vbCritical, "匯入TB"
+    Else
+        '匯入成功，更新欄位控制項
+        Dim fields As Variant
+        Set fields = m_ctx.DalPbc.GetTableSchema(m_ctx.tb.name)
+        viewImport.UpdatePageTB fields
+    End If
+End Sub
+
+
