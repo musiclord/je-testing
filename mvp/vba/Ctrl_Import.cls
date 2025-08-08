@@ -109,7 +109,44 @@ Private Sub viewImport_OpenGL()
         Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 使用者取消操作。"
         Exit Sub
     End If
-    
+    '更新欄位名稱
+    Dim rs As ADODB.Recordset
+    Set rs = m_ImportService.PrepareRecordset(m_glPath)
+    Dim headers As New Collection
+    Dim i As Long
+    For i = 0 To rs.fields.count - 1
+        headers.Add rs.fields(i).name
+    Next i
+    rs.Close: Set rs = Nothing
+    viewImport.UpdatePageGL headers
+End Sub
+
+Private Sub viewImport_ApplyGL()
+    Const METHOD_NAME As String = "viewImport_ApplyGL"
+    '處理欄位映射
+    Dim mapping As Dictionary
+    Set mapping = viewImport.GetGLMapping
+    If Not m_ImportService.ApplyGLMapping(mapping) Then
+        MsgBox "GL欄位映射失敗", vbCritical, "GL欄位"
+    Else
+        '欄位映射成功時
+        Dim msg As String
+        msg = "GL 欄位映射完成！"
+        Application.StatusBar = "[JET] " & Replace(msg, vbCrLf, " | ")
+    End If
+End Sub
+
+Private Sub viewImport_ImportGL()
+    Const METHOD_NAME As String = "viewImport_ImportGL"
+    '匯入資料與設定型別
+    If Not m_ImportService.ImportGL(m_glPath) Then
+        MsgBox "GL匯入失敗", vbCritical, "GL匯入"
+    Else
+        '欄位匯入成功時
+        Dim msg As String
+        msg = "GL 資料匯入完成！"
+        Application.StatusBar = "[JET] " & Replace(msg, vbCrLf, " | ")
+    End If
 End Sub
 
 Private Sub viewImport_OpenTB()
@@ -123,17 +160,6 @@ Private Sub viewImport_OpenTB()
     
 End Sub
 
-Private Sub viewImport_ApplyGL()
-    Const METHOD_NAME As String = "viewImport_ApplyGL"
-    Dim mapping As Dictionary
-    Set mapping = viewImport.GetGLMapping()
-    If Not m_ImportService.ApplyGLMapping(mapping) Then
-        MsgBox "GL 欄位映射失敗", vbCritical, "GL欄位"
-    Else
-        '欄位映射成功
-    End If
-End Sub
-
 Private Sub viewImport_ApplyTB()
     Const METHOD_NAME As String = "viewImport_ApplyTB"
     Dim mapping As Dictionary
@@ -142,19 +168,6 @@ Private Sub viewImport_ApplyTB()
         MsgBox "TB 欄位映射失敗", vbCritical, "TB欄位"
     Else
         '欄位映射成功
-    End If
-End Sub
-
-Private Sub viewImport_ImportGL()
-    Const METHOD_NAME As String = "viewImport_ImportGL"
-    '匯入資料表
-    If Not m_ImportService.ImportGL(m_glPath) Then
-        MsgBox "資料匯入失敗", vbCritical, "匯入GL"
-    Else
-        '匯入成功，更新欄位控制項
-        Dim fields As Collection
-        Set fields = m_ctx.DalPbc.GetTableSchema(m_ctx.gl.name)
-        viewImport.UpdatePageGL fields
     End If
 End Sub
 

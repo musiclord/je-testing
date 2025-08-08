@@ -25,16 +25,16 @@ Public Event ImportTB()
 Public Event AddLineItem()
 
 
-Private Sub btnOpenGL_Click()
+Private Sub btn_AddLineItem_Click()
+    RaiseEvent AddLineItem
+End Sub
 
+Private Sub btnOpenGL_Click()
+    RaiseEvent OpenGL
 End Sub
 
 Private Sub btnOpenTB_Click()
-
-End Sub
-
-Private Sub btn_AddLineItem_Click()
-    RaiseEvent AddLineItem
+    RaiseEvent OpenTB
 End Sub
 
 Private Sub btnApplyGL_Click()
@@ -93,6 +93,32 @@ Public Sub UpdatePageGL(ByVal fields As Collection)
     Next ctrl
 End Sub
 
+Public Function GetGLMapping() As Dictionary
+    Const METHOD_NAME As String = "GetGLMapping"
+    Dim mapping As New Dictionary
+    '總帳金額
+    mapping("EntryAmount") = Me.GL_EntryAmount.Text
+    mapping("DebitAmount") = Me.GL_DebitAmount.Text
+    mapping("CreditAmount") = Me.GL_CreditAmount.Text
+    mapping("DrCr") = Me.GL_DrCr.Text
+    mapping("IsDebit") = Me.GL_IsDebit.Text
+    '必要欄位
+    mapping("AccountNumber") = Me.GL_AccountNumber.Text
+    mapping("AccountName") = Me.GL_AccountName.Text
+    mapping("DocumentNumber") = Me.GL_DocumentNumber.Text
+    mapping("LineItem") = Me.GL_LineItem.Text
+    mapping("PostDate") = Me.GL_PostDate.Text
+    mapping("EntryDescription") = Me.GL_EntryDescription.Text
+    '可選欄位
+    mapping("ApprovalDate") = Me.GL_ApprovalDate.Text
+    mapping("ApprovedBy") = Me.GL_ApprovedBy.Text
+    mapping("CreatedBy") = Me.GL_CreatedBy.Text
+    mapping("SourceModule") = Me.GL_SourceModule.Text
+    mapping("IsManual") = Me.GL_IsManual.Text
+    mapping("IsApprovedDateAsLedgerDate") = Me.GL_IsApprovedDateAsLedgerDate.Text
+    Set GetGLMapping = mapping
+End Function
+
 Public Sub UpdatePageTB(ByVal fields As Collection)
     Const METHOD_NAME As String = "UpdatePageTB"
     '更新 TB 頁面控制項
@@ -130,32 +156,6 @@ Public Sub UpdatePageTB(ByVal fields As Collection)
     Next ctrl
 End Sub
 
-Public Function GetGLMapping() As Dictionary
-    Const METHOD_NAME As String = "GetGLMapping"
-    Dim mapping As New Dictionary
-    '總帳金額
-    mapping("EntryAmount") = Me.GL_EntryAmount.Text
-    mapping("DebitAmount") = Me.GL_DebitAmount.Text
-    mapping("CreditAmount") = Me.GL_CreditAmount.Text
-    mapping("DrCr") = Me.GL_DrCr.Text
-    mapping("IsDebit") = Me.GL_IsDebit.Text
-    '必要欄位
-    mapping("AccountNumber") = Me.GL_AccountNumber.Text
-    mapping("AccountName") = Me.GL_AccountName.Text
-    mapping("DocumentNumber") = Me.GL_DocumentNumber.Text
-    mapping("LineItem") = Me.GL_LineItem.Text
-    mapping("PostDate") = Me.GL_PostDate.Text
-    mapping("EntryDescription") = Me.GL_EntryDescription.Text
-    '可選欄位
-    mapping("ApprovalDate") = Me.GL_ApprovalDate.Text
-    mapping("ApprovedBy") = Me.GL_ApprovedBy.Text
-    mapping("CreatedBy") = Me.GL_CreatedBy.Text
-    mapping("SourceModule") = Me.GL_SourceModule.Text
-    mapping("IsManual") = Me.GL_IsManual.Text
-    mapping("IsApprovedDateAsLedgerDate") = Me.GL_IsApprovedDateAsLedgerDate.Text
-    Set GetGLMapping = mapping
-End Function
-
 Public Function GetTBMapping() As Dictionary
     Const METHOD_NAME As String = "GetTBMapping"
     '回傳 TB 欄位映射表
@@ -171,3 +171,5 @@ Public Function GetTBMapping() As Dictionary
     mapping("AccountName") = Me.TB_AccountName
     Set GetTBMapping = mapping
 End Function
+
+

@@ -139,14 +139,17 @@ Public Function CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName A
          DropTable tableName
     End If
     ' 建構 CREATE TABLE
-    Dim sql As String, i As Long
+    Dim field As String
+    Dim sql As String
+    Dim i As Long
     ' HEAD
     sql = "CREATE TABLE [" & tableName & "] ("
     ' BODY with TYPE
     For i = 0 To sourceRs.fields.count - 1
         If i > 0 Then sql = sql & ", "
-        sql = sql & "[" & sourceRs.fields(i).name & "] TEXT"
-        'sql = sql & " [" & sourceRs.fields(i).name & "] " & GetFieldType(sourceRs.fields(i).name, fieldType)
+        field = sourceRs.fields(i).name
+        sql = sql & "[" & field & "] "
+        ' & gl.GetType(field) & " "
     Next i
     ' TAIL
     sql = sql & ")"
@@ -282,7 +285,7 @@ Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As
     Dim targetRs As DAO.Recordset
     Dim dataChunk As Variant
     Dim fetched As Long, total As Long, batchCount As Long
-    Dim i As Long, j As Long
+    Dim i As Long, j As Long, v As Variant
     Dim startTime As Double, lastTime As Double
     
     '初始化
@@ -298,12 +301,12 @@ Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As
     End If
     '開啟資料表
     Set targetRs = m_db.OpenRecordset(tableName, dbOpenTable)
+    sourceRs.MoveFirst
     '分批處理資料
     Do While Not sourceRs.EOF
         batchCount = batchCount + 1
-        '使用 GetRows 快速讀取一批資料
+        '使用 GetRows 快速讀取一批資料：(欄位索引, 記錄索引)
         dataChunk = sourceRs.GetRows(CHUNK_SIZE)
-        '方法 GetRows 回傳: (欄位索引, 記錄索引)
         If IsArray(dataChunk) Then
             '處理單筆記錄
             If UBound(dataChunk, 1) >= 0 Then
@@ -315,7 +318,7 @@ Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As
             Else
                 fetched = 0
             End If
-            '擷取大於零
+            '批次筆數大於零
             If fetched > 0 Then
                 '開始事務
                  BeginTransaction
@@ -330,15 +333,18 @@ Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As
                 Else
                     '多筆記錄 (二維陣列)
                     For i = 0 To (fetched - 1)
+                        '插入資料
                         targetRs.AddNew
+                        '檢查空值
                         For j = 0 To UBound(dataChunk, 1)
-                            '檢查空值
-                            If IsNull(dataChunk(j, i)) Then
-                                targetRs.fields(j).value = ""
+                            v = dataChunk(j, i)
+                            If IsNull(v) Then
+                                targetRs.fields(j).value = Null
                             Else
-                                targetRs.fields(j).value = dataChunk(j, i)
+                                targetRs.fields(j).value = v
                             End If
                         Next j
+                        '更新資料
                         targetRs.Update
                     Next i
                 End If

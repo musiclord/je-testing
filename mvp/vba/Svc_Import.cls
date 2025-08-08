@@ -32,9 +32,31 @@ Public Sub Initialize(ByRef Context As Mgr_Context)
     Set tb = Context.tb
 End Sub
 
+Public Function ApplyGLMapping(ByVal mapping As Dictionary) As Boolean
+    Const METHOD_NAME As String = "ApplyGLMapping"
+    On Error GoTo ErrorHandler
+    ApplyGLMapping = False
+    Dim key As Variant
+    '擷取表單控制項為欄位映射表
+    For Each key In mapping.Keys
+        gl.SetMapping key, mapping(key)
+    Next key
+    gl.debug_test
+    ApplyGLMapping = True
+    Exit Function
+    
+ErrorHandler:
+    ApplyGLMapping = False
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
+                Err.Number & ":" & Err.Description
+End Function
+
 Public Function ImportGL(ByVal filePath As String) As Boolean
     Const METHOD_NAME As String = "ImportGL"
     On Error GoTo ErrorHandler
+    'Create table by gl.name
+    'sql = sql & "[" & field & "] " & gl.GetType(field) & " "
+    'Do BulkInsert
     
     ImportGL = False
     Dim tableName As String
@@ -53,6 +75,25 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     
 ErrorHandler:
     ImportGL = False
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
+                Err.Number & ":" & Err.Description
+End Function
+
+Public Function ApplyTBMapping(ByVal mapping As Dictionary) As Boolean
+    Const METHOD_NAME As String = "ApplyTBMapping"
+    On Error GoTo ErrorHandler
+    ApplyTBMapping = False
+    Dim key As Variant
+    '擷取表單控制項為欄位映射表
+    For Each key In mapping.Keys
+        tb.SetMapping key, mapping(key)
+    Next key
+    tb.debug_test
+    ApplyTBMapping = True
+    Exit Function
+    
+ErrorHandler:
+    ApplyTBMapping = False
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function
@@ -88,52 +129,45 @@ ErrorHandler:
                 Err.Number & ":" & Err.Description
 End Function
 
-Public Function ApplyGLMapping(ByVal mapping As Dictionary) As Boolean
-    Const METHOD_NAME As String = "ApplyGLMapping"
-    On Error GoTo ErrorHandler
-    ApplyGLMapping = False
-    Dim key As Variant
-    '擷取表單控制項為欄位映射表
-    For Each key In mapping.Keys
-        gl.SetMapping key, mapping(key)
-    Next key
-    gl.debug_test
-    '移至 data
-    Dim DalData As Dal_Access
-    Set DalData = m_ctx.DalData
-    'Dim sourceRs As ADODB.Recordset
-    'Set sourceRs = PrepareRecordset(filePath)
-    'If Not DalData.BulkInsert(sourceRs, tableName) Then Exit Function
-    
-    ApplyGLMapping = True
-    Exit Function
-    
-ErrorHandler:
-    ApplyGLMapping = False
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
-End Function
 
-Public Function ApplyTBMapping(ByVal mapping As Dictionary) As Boolean
-    Const METHOD_NAME As String = "ApplyTBMapping"
-    On Error GoTo ErrorHandler
-    ApplyTBMapping = False
-    Dim key As Variant
-    '擷取表單控制項為欄位映射表
-    For Each key In mapping.Keys
-        tb.SetMapping key, mapping(key)
-    Next key
-    tb.debug_test
-    ApplyTBMapping = True
-    Exit Function
-    
-ErrorHandler:
-    ApplyTBMapping = False
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
-End Function
 
 '--Custom
+
+Public Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
+    Const METHOD_NAME As String = "PrepareRecordset"
+    On Error GoTo ErrorHandler
+    Dim conn As ADODB.Connection
+    Dim rs As ADODB.Recordset
+    Dim connString As String
+    Dim folderPath As String
+    Dim fileName As String
+    Dim sql As String, encoding As String
+    Set conn = New ADODB.Connection
+    Set rs = New ADODB.Recordset
+    '設編碼為 utf-8
+    encoding = "65001"
+    '拆解路徑
+    folderPath = Left(filePath, InStrRev(filePath, "\") - 1)
+    fileName = Mid(filePath, InStrRev(filePath, "\") + 1)
+    '連線字串
+    connString = "Provider=Microsoft.ACE.OLEDB.12.0;" & _
+                       "Data Source=" & folderPath & ";" & _
+                       "Extended Properties=""Text;HDR=Yes;FMT=Delimited;IMEX=1;CharacterSet=" & encoding & """"
+    '建立連線
+    conn.Open connString
+    '建立查詢
+    sql = "SELECT * FROM [" & fileName & "]"
+    '開啟查詢
+    rs.Open sql, conn, adOpenStatic, adLockReadOnly, adCmdText
+    Set PrepareRecordset = rs
+    Exit Function
+    
+ErrorHandler:
+    Set PrepareRecordset = Nothing
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
+                Err.Number & ":" & Err.Description
+End Function
+
 Public Function AddLineItem() As Boolean
     '新增項次欄位，區別傳票明細項
     Const METHOD_NAME As String = "AddLineItem"
@@ -257,43 +291,6 @@ Private Function ProcessTBAmounts(ByVal method As Integer) As Boolean
     
 ErrorHandler:
     ProcessTBAmounts = False
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
-End Function
-
-Private Function PrepareRecordset(ByVal filePath As String) As ADODB.Recordset
-    Const METHOD_NAME As String = "PrepareRecordset"
-    On Error GoTo ErrorHandler
-    
-    Dim conn As ADODB.Connection
-    Dim rs As ADODB.Recordset
-    Dim connString As String
-    Dim folderPath As String, fileName As String
-    Dim sql As String, encoding As String
-    
-    Set conn = New ADODB.Connection
-    Set rs = New ADODB.Recordset
-    '設編碼為 utf-8
-    encoding = "65001"
-    '拆解路徑
-    folderPath = Left(filePath, InStrRev(filePath, "\") - 1)
-    fileName = Mid(filePath, InStrRev(filePath, "\") + 1)
-    '連線字串
-    connString = "Provider=Microsoft.ACE.OLEDB.12.0;" & _
-                       "Data Source=" & folderPath & ";" & _
-                       "Extended Properties=""Text;HDR=Yes;FMT=Delimited;IMEX=1;CharacterSet=" & encoding & """"
-    '建立連線
-    conn.Open connString
-    '建立查詢
-    sql = "SELECT * FROM [" & fileName & "]"
-    '開啟查詢
-    rs.Open sql, conn, adOpenStatic, adLockReadOnly, adCmdText
-    
-    Set PrepareRecordset = rs
-    Exit Function
-    
-ErrorHandler:
-    Set PrepareRecordset = Nothing
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Function

@@ -22,8 +22,8 @@ Private m_FieldsType As New Dictionary
 
 
 '--Ent_GL
-Public Function GetFieldsType() As Dictionary
-    Set GetFieldsType = m_FieldsType
+Public Function GetType(ByVal field As String) As String
+    GetType = m_FieldsType(field)
 End Function
 
 Public Sub SetMapping(ByVal key As String, ByVal value As String)
@@ -45,11 +45,11 @@ Private Sub Class_Initialize()
     '使用二維陣列: [[名稱1,型別],[名稱2,型別],...]
     Dim fields As Variant
     Dim i As Long
-    fieds = Array( _
+    fields = Array( _
         Array("EntryAmount", "CURRENCY"), _
         Array("DebitAmount", "CURRENCY"), _
         Array("CreditAmount", "CURRENCY"), _
-        Array("EntryDescription", "LONG TEXT"), _
+        Array("EntryDescription", "LONGTEXT"), _
         Array("AccountNumber", "TEXT"), _
         Array("AccountName", "TEXT"), _
         Array("DocumentNumber", "TEXT"), _
