@@ -63,13 +63,18 @@ Public Function ImportGL(ByVal filePath As String) As Boolean
     Let tableName = gl.name
     
     Dim DalPbc As Dal_Access
+    Dim DalData As Dal_Access
+    
     Set DalPbc = m_ctx.DalPbc
+    Set DalData = m_ctx.DalData
     
     Dim sourceRs As ADODB.Recordset
     
     Set sourceRs = PrepareRecordset(filePath)
     If Not DalPbc.BulkInsert(sourceRs, tableName) Then Exit Function
     
+    Set sourceRs = PrepareRecordset(filePath)
+    If Not DalData.BulkInsert(sourceRs, tableName) Then Exit Function
     ImportGL = True
     Exit Function
     
@@ -107,9 +112,9 @@ Public Function ImportTB(ByVal filePath As String) As Boolean
     Let tableName = tb.name
     
     Dim DalPbc As Dal_Access
-    Set DalPbc = m_ctx.DalPbc
-    
     Dim DalData As Dal_Access
+    
+    Set DalPbc = m_ctx.DalPbc
     Set DalData = m_ctx.DalData
     
     Dim sourceRs As ADODB.Recordset

@@ -140,30 +140,56 @@ Public Function CreateTable(ByVal sourceRs As ADODB.Recordset, ByVal tableName A
     End If
     ' 建構 CREATE TABLE
     Dim field As String
+    Dim logicalField As String
+    Dim fieldType As String
     Dim sql As String
     Dim i As Long
+    Dim gl As Ent_GL
+    Dim tb As Ent_TB
+    ' 根據資料表名稱決定使用哪個實體類別
+    If UCase(tableName) = "GL" Then
+        Set gl = New Ent_GL
+    ElseIf UCase(tableName) = "TB" Then
+        Set tb = New Ent_TB
+    End If
     ' HEAD
     sql = "CREATE TABLE [" & tableName & "] ("
     ' BODY with TYPE
     For i = 0 To sourceRs.fields.count - 1
         If i > 0 Then sql = sql & ", "
         field = sourceRs.fields(i).name
-        sql = sql & "[" & field & "] "
-        ' & gl.GetType(field) & " "
+        ' 進行欄位映射的反向查找，取得邏輯欄位名稱
+        logicalField = GetLogicalFieldName(field, tableName)
+        ' 根據邏輯欄位名稱取得資料型別
+        If Not gl Is Nothing Then
+            fieldType = gl.GetType(logicalField)
+        ElseIf Not tb Is Nothing Then
+            fieldType = tb.GetType(logicalField)
+        Else
+            fieldType = ""
+        End If
+        ' 如果 GetType 返回空值，使用預設類型
+        If Len(Trim(fieldType)) = 0 Then
+            fieldType = "TEXT(255)"
+        End If
+        sql = sql & "[" & field & "] " & fieldType
+        ' 除錯輸出
+        Debug.Print "Field: " & field & " -> " & logicalField & ", Type: " & fieldType
     Next i
     ' TAIL
     sql = sql & ")"
+    ' 輸出完整的 SQL 語句用於除錯
+    Debug.Print "CREATE TABLE SQL: " & sql
     ' 使用 DAO 執行 DDL
     m_db.Execute sql, dbFailOnError
-    
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 資料表已建立 [" & tableName & "], " & sourceRs.fields.count & "欄位"
     CreateTable = True
-    
     Exit Function
-
+    
 ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
+    Debug.Print "Failed SQL: " & sql
 End Function
 
 Public Function DropTable(ByVal tableName As String) As Boolean
@@ -225,37 +251,24 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
     On Error GoTo ErrorHandler
     If Not m_isConnected Then Connect
-    
-    '執行查詢並返回 DAO Recordset
     Set ExecuteQuery = m_db.OpenRecordset(sql, dbOpenSnapshot)
     Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 查詢成功"
     Exit Function
-
 ErrorHandler:
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.Number & ":" & Err.Description
 End Function
 
 Public Function ExecuteNonQuery(ByVal sql As String) As Long
     Const METHOD_NAME As String = "ExecuteNonQuery"
     On Error GoTo ErrorHandler
-    
-    '確保連接
     If Not m_isConnected Then Connect
-    '執行 SQL 命令
-    Dim recordsAffected As Long
     m_db.Execute sql, dbFailOnError
-    
-    '返回受影響的記錄數
-     ExecuteNonQuery = m_db.recordsAffected
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已執行，影響 " & recordsAffected & " 筆記錄"
-    
+    ExecuteNonQuery = m_db.recordsAffected
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已執行，影響 " & ExecuteNonQuery & " 筆記錄"
     Exit Function
-
 ErrorHandler:
-     ExecuteNonQuery = -1
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
-                Err.Number & ":" & Err.Description
+    ExecuteNonQuery = -1
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.Number & ":" & Err.Description
 End Function
 
 Public Function GetScalar(ByVal sql As String) As Variant
@@ -270,7 +283,22 @@ ErrorHandler:
                 Err.Number & ":" & Err.Description
 End Function
 
-
+Public Function GetRecordCount(ByVal tableName As String) As Long
+    Const METHOD_NAME As String = "GetRecordCount"
+    On Error GoTo ErrorHandler
+    GetRecordCount = 0
+    If Not m_isConnected Then Connect
+    If Not TableExists(tableName) Then Exit Function
+    Dim rs As DAO.Recordset
+    Set rs = m_db.OpenRecordset("SELECT COUNT(*) AS C FROM [" & tableName & "];", dbOpenSnapshot)
+    If Not rs.EOF Then GetRecordCount = rs.fields(0).value
+    rs.Close
+    Set rs = Nothing
+    Exit Function
+ErrorHandler:
+    GetRecordCount = -1
+    Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.Number & ":" & Err.Description
+End Function
 
 '--批次操作 (Bulk Operations)
 Public Function BulkInsert(ByVal sourceRs As ADODB.Recordset, ByVal tableName As String) As Boolean
@@ -501,3 +529,50 @@ ErrorHandler:
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & _
                 Err.Number & ":" & Err.Description
 End Sub
+
+' 新增輔助方法：根據實體欄位名稱反向查找邏輯欄位名稱
+Private Function GetLogicalFieldName(ByVal physicalField As String, ByVal tableName As String) As String
+    Dim gl As Ent_GL
+    Dim tb As Ent_TB
+    Dim key As Variant
+    
+    If UCase(tableName) = "GL" Then
+        Set gl = New Ent_GL
+        ' 遍歷 GL 的欄位映射，找到對應的邏輯欄位名稱
+        ' 這需要在 Ent_GL 中公開映射字典或提供反向查找方法
+        GetLogicalFieldName = GetLogicalFieldFromGL(physicalField, gl)
+    ElseIf UCase(tableName) = "TB" Then
+        Set tb = New Ent_TB
+        GetLogicalFieldName = GetLogicalFieldFromTB(physicalField, tb)
+    Else
+        GetLogicalFieldName = physicalField
+    End If
+End Function
+
+Private Function GetLogicalFieldFromGL(ByVal physicalField As String, ByVal gl As Ent_GL) As String
+    ' 根據已知的映射關係進行反向查找
+    Select Case physicalField
+        Case "本幣借方金額": GetLogicalFieldFromGL = "DebitAmount"
+        Case "本幣貸方金額": GetLogicalFieldFromGL = "CreditAmount"
+        Case "摘要": GetLogicalFieldFromGL = "EntryDescription"
+        Case "傳票號碼": GetLogicalFieldFromGL = "DocumentNumber"
+        Case "會計科目": GetLogicalFieldFromGL = "AccountName"
+        Case "借貸": GetLogicalFieldFromGL = "IsDebit"
+        Case "日期": GetLogicalFieldFromGL = "PostDate"
+        Case Else: GetLogicalFieldFromGL = physicalField
+    End Select
+End Function
+
+Private Function GetLogicalFieldFromTB(ByVal physicalField As String, ByVal tb As Ent_TB) As String
+    ' 根據已知的映射關係進行反向查找
+    Select Case physicalField
+        Case "借-貸(本幣)": GetLogicalFieldFromTB = "ChangeAmount"
+        Case "原幣借方金額": GetLogicalFieldFromTB = "DebitAmount"
+        Case "原幣貸方金額": GetLogicalFieldFromTB = "CreditAmount"
+        Case "會計項目": GetLogicalFieldFromTB = "AccountNumber"
+        Case "項目名稱": GetLogicalFieldFromTB = "AccountName"
+        Case "本幣借方金額": GetLogicalFieldFromTB = "OpeningDebitAmount"
+        Case "本幣貸方金額": GetLogicalFieldFromTB = "OpeningCreditAmount"
+        Case Else: GetLogicalFieldFromTB = physicalField
+    End Select
+End Function

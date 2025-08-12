@@ -22,8 +22,14 @@ Private m_Fields As New Dictionary
 Private m_FieldsType As New Dictionary
 
 '--Ent_TB
-Public Function GetFieldsType() As Dictionary
-    Set GetFieldsType = m_FieldsType
+Public Function GetType(ByVal field As String) As String
+    On Error Resume Next
+    GetType = m_FieldsType(field)
+    If Err.Number <> 0 Then
+        GetType = "TEXT(255)"
+        Err.Clear
+    End If
+    On Error GoTo 0
 End Function
 
 Public Sub SetMapping(ByVal key As String, ByVal value As String)
