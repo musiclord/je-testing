@@ -248,13 +248,12 @@ End Function
 '--資料操作 DML (Data Manipulation Language)
 Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Const METHOD_NAME As String = "ExecuteQuery"
-    Debug.Print MODULE_NAME & "."; METHOD_NAME & ": " & sql
     On Error GoTo ErrorHandler
     If Not m_isConnected Then Connect
     Set ExecuteQuery = m_db.OpenRecordset(sql, dbOpenSnapshot)
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 查詢成功"
     Exit Function
 ErrorHandler:
+    Set ExecuteQuery = Nothing
     Debug.Print MODULE_NAME & "." & METHOD_NAME & " --> " & Err.Number & ":" & Err.Description
 End Function
 
@@ -264,7 +263,6 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
     If Not m_isConnected Then Connect
     m_db.Execute sql, dbFailOnError
     ExecuteNonQuery = m_db.recordsAffected
-    Debug.Print MODULE_NAME & "." & METHOD_NAME & ": 已執行，影響 " & ExecuteNonQuery & " 筆記錄"
     Exit Function
 ErrorHandler:
     ExecuteNonQuery = -1

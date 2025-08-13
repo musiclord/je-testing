@@ -29,11 +29,10 @@ Attribute viewValidation.VB_VarHelpID = -1
 '--Ctrl_Validation
 Public Sub Initialize(ByRef Config As Mgr_Config, ByRef Context As Mgr_Context)
     Const METHOD_NAME As String = "Initialize"
-    '依賴注入
     Set m_cfg = Config
     Set m_ctx = Context
-    '實例化
     Set m_ValidationService = New Svc_Validation
+    m_ValidationService.Initialize m_ctx
     Set viewValidation = New View_Validation
 End Sub
 
@@ -60,6 +59,32 @@ End Function
 
 '--View_Validation
 Private Sub viewValidation_DoExit()
-    Const METHOD_NAME As String = "viewValidation_DoExit"
     viewValidation.Hide
+End Sub
+
+Private Sub viewValidation_DoTestCompleteness()
+    Dim minD As Date, maxD As Date, ok As Boolean, passed As Boolean
+    ok = m_ctx.DalData.GetDateRange("GL", "日期", minD, maxD)
+    If Not ok Then
+        MsgBox "無法取得 GL 期間。", vbExclamation
+        Exit Sub
+    End If
+    passed = m_ValidationService.TestCompleteness(minD, maxD)
+    If passed Then
+        MsgBox "完整性測試通過（無差異）。", vbInformation
+    Else
+        Dim n As Long
+        n = m_ctx.DalData.GetRecordCount("List_of_accounts_with_variance")
+        MsgBox "完整性測試未通過，差異筆數：" & n, vbExclamation
+    End If
+End Sub
+
+Private Sub viewValidation_DoTestBalance()
+    If m_ValidationService.TestBalance Then
+        MsgBox "借貸不平測試通過（全部平衡）。", vbInformation
+    Else
+        Dim n As Long
+        n = m_ctx.DalData.GetRecordCount("GL_Doc_not_Balance")
+        MsgBox "借貸不平測試未通過，異常傳票：" & n, vbExclamation
+    End If
 End Sub

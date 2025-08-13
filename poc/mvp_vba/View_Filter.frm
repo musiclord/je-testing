@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} View_Filter
    Caption         =   "Filter"
    ClientHeight    =   3624
    ClientLeft      =   120
-   ClientTop       =   468
-   ClientWidth     =   6576
+   ClientTop       =   465
+   ClientWidth     =   6570
    OleObjectBlob   =   "View_Filter.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End
