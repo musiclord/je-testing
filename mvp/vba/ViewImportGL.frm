@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportGL
    Caption         =   "Import GL"
    ClientHeight    =   9420.001
    ClientLeft      =   120
-   ClientTop       =   465
-   ClientWidth     =   7755
+   ClientTop       =   468
+   ClientWidth     =   7752
    OleObjectBlob   =   "ViewImportGL.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End
@@ -15,6 +15,8 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 Option Explicit
+
+Private m_app As New Application
 
 Public Event ProcessMethod(ByVal method As Long)
 Public Event ApplyFields(ByVal fields As Dictionary)

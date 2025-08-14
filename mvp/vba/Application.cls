@@ -95,15 +95,22 @@ Private Function LoadDb(ByVal dbName As String) As DbAccess
 End Function
 
 '-- vMain
+Private current As Integer
 Private Sub vMain_DoStep1()
-    ' vImportGl -> vImportTb -> vImportHoliday
-    vImportGl.Initialize
-    vImportGl.Show vbModeless
-    
-    vImportTb.Initialize
-    vImportTb.Show vbModeless
+    current = 1
     
 End Sub
+Private Sub ShowForm()
+    Select Case current
+        Case 1
+            vImportGl.Initialize
+            vImportGl.Show vbModeless
+        Case 2
+            vImportTb.Initialize
+            vImportTb.Show vbModeless
+    End Select
+End Sub
+
 Private Sub vMain_DoStep2()
     ' All procedure independent
 End Sub
