@@ -3,7 +3,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewProject
    Caption         =   "Project"
    ClientHeight    =   3015
    ClientLeft      =   120
-   ClientTop       =   468
+   ClientTop       =   465
    ClientWidth     =   4560
    OleObjectBlob   =   "ViewProject.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
@@ -36,6 +36,7 @@ Private Sub btnSelect_Click()
     Dim name As String, path As String
     name = Me.listProjects.value
     path = ThisWorkbook.path & "\" & name
+    Me.Hide
     RaiseEvent SelectProject(name, path)
 End Sub
 

@@ -17,11 +17,14 @@ Private WithEvents vImportGl As ViewImportGL
 Attribute vImportGl.VB_VarHelpID = -1
 Private WithEvents vImportTb As ViewImportTB
 Attribute vImportTb.VB_VarHelpID = -1
+Private WithEvents vImportPeriod As ViewImportPeriod
+Attribute vImportPeriod.VB_VarHelpID = -1
+Private WithEvents vValidation As ViewValidation
+Attribute vValidation.VB_VarHelpID = -1
 
 Private context As ContextManager
-Private db As DbAccess
-Private gl As EntityGl
-Private tb As EntityTb
+Private validator As ValidationService
+Private importer As ImportService
 
 Private m_name As String
 Private m_path As String
@@ -32,11 +35,12 @@ Private Sub Class_Initialize()
     Set vMain = New ViewMain
     Set vImportGl = New ViewImportGL
     Set vImportTb = New ViewImportTB
+    Set vImportPeriod = New ViewImportPeriod
+    Set vValidation = New ViewValidation
     '...
     Set context = New ContextManager
-    Set db = New DbAccess
-    Set gl = New EntityGl
-    Set tb = New EntityTb
+    Set validator = New ValidationService
+    Set importer = New ImportService
     '...
 End Sub
 
@@ -45,7 +49,12 @@ Public Sub Run()
     vProject.Show vbModeless
 End Sub
 
-'-- vProject
+
+
+'=================================================================
+'========================= [ vProject ] ==========================
+'=================================================================
+
 Private Sub vProject_NewProject(ByVal name As String, ByVal path As String)
     m_name = name
     m_path = path
@@ -94,34 +103,98 @@ Private Function LoadDb(ByVal dbName As String) As DbAccess
     Set LoadDb = db
 End Function
 
-'-- vMain
-Private current As Integer
+
+
+'=================================================================
+'======= [ Step1: vMain -> vImportGl -> vImportTb ] ==============
+'=================================================================
+
+' all procedures should be processed, and parameters shoud stores
+' at this class. For example, values should set to context object.
+
 Private Sub vMain_DoStep1()
-    current = 1
-    
+    vImportGl.Initialize
+    vImportTb.Initialize
+    vImportGl.Show vbModeless
 End Sub
-Private Sub ShowForm()
-    Select Case current
-        Case 1
-            vImportGl.Initialize
-            vImportGl.Show vbModeless
-        Case 2
-            vImportTb.Initialize
-            vImportTb.Show vbModeless
-    End Select
+Private Sub vImportGl_ApplyFields(ByVal METHOD As Long, ByVal fields As Dictionary)
+    Dim key As Variant
+    For Each key In fields.Keys
+        context.gl.SetMapping key, fields(key)
+    Next key
+    context.gl.PrintFields
+End Sub
+Private Sub vImportGl_Import(ByVal filepath As String)
+    '--If Not context.dbPbc.BulkInsert()
+    Dim db As DbAccess
+    Set db = context.dbPbc
+    If Not importer.ImportCsv(filepath, db) Then
+        MsgBox "匯入GL失敗", vbExclamation, "匯入GL"
+    Else
+        '匯入GL成功
+    End If
+End Sub
+Private Sub vImportGl_NextStep()
+    vImportGl.Hide
+    vImportTb.Show vbModeless
+End Sub
+Private Sub vImportTb_ApplyFields(ByVal METHOD As Long, ByVal fields As Dictionary)
+    Dim key As Variant
+    For Each key In fields.Keys
+        context.tb.SetMapping key, fields(key)
+    Next key
+    context.tb.PrintFields
+End Sub
+Private Sub vImportTb_Import(ByVal file As String)
+    'db.BulkInsert()
+End Sub
+Private Sub vImportTb_LastStep()
+    vImportTb.Hide
+    vImportGl.Show vbModeless
+End Sub
+Private Sub vImportTb_NextStep()
+    vImportTb.Hide
+    vImportPeriod.Show vbModeless
+End Sub
+Private Sub vImportPeriod_Finish()
+    ' 結算 Step1 的必要參數
+    '...
+    vImportPeriod.Hide
 End Sub
 
+
+'=================================================================
+'============== [ Step2: vValidation ] ===========================
+'=================================================================
 Private Sub vMain_DoStep2()
-    ' All procedure independent
+    vValidation.Initialize
+    vValidation.Show vbModeless
 End Sub
+Private Sub vValidation_TestCompletess()
+    '
+End Sub
+Private Sub vValidation_ExitForm()
+    vValidation.Hide
+End Sub
+
+
+
+'=================================================================
+'=========== [ Step3: vFilter --> vCriteria ] ====================
+'=================================================================
+
 Private Sub vMain_DoStep3()
     ' Not defined.
 End Sub
+
+
+
+'=================================================================
+'=============== [ Step4: vExport ] ==============================
+'=================================================================
+
 Private Sub vMain_DoStep4()
     ' Not defined.
 End Sub
 
-'-- vImportGl
-Private Sub vImportGl_ProcessMethod(ByVal method As Long)
-    '這裡只接收 method 並生成，但不執行；
-End Sub
+
