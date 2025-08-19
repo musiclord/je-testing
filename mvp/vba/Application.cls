@@ -117,7 +117,9 @@ Private Sub vMain_DoStep1()
     vImportTb.Initialize
     vImportGl.Show vbModeless
 End Sub
-Private Sub vImportGl_ApplyFields(ByVal METHOD As Long, ByVal fields As Dictionary)
+Private Sub vImportGl_ApplyFields(ByVal method As Long, ByVal fields As Dictionary)
+    context.gl.method = method
+    
     Dim key As Variant
     For Each key In fields.Keys
         context.gl.SetMapping key, fields(key)
@@ -128,17 +130,23 @@ Private Sub vImportGl_Import(ByVal filepath As String)
     '--If Not context.dbPbc.BulkInsert()
     Dim db As DbAccess
     Set db = context.dbPbc
+    Application.StatusBar = "正在匯入總帳資料..."
     If Not importer.ImportCsv(filepath, db) Then
-        MsgBox "匯入GL失敗", vbExclamation, "匯入GL"
+        MsgBox "總帳資料匯入失敗！", vbExclamation, "匯入GL"
+        Application.StatusBar = "匯入失敗"
     Else
         '匯入GL成功
+        MsgBox "總帳資料匯入完成！", vbInformation, "匯入GL"
+        Application.StatusBar = "匯入成功"
     End If
 End Sub
 Private Sub vImportGl_NextStep()
     vImportGl.Hide
     vImportTb.Show vbModeless
 End Sub
-Private Sub vImportTb_ApplyFields(ByVal METHOD As Long, ByVal fields As Dictionary)
+Private Sub vImportTb_ApplyFields(ByVal method As Long, ByVal fields As Dictionary)
+    context.tb.method = method
+    
     Dim key As Variant
     For Each key In fields.Keys
         context.tb.SetMapping key, fields(key)

@@ -10,6 +10,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Const MODULE_NAME As String = "EntityTB"
+Private m_method As Long
 Private m_fields As New Dictionary
 Private m_Types As New Dictionary
 
@@ -65,6 +66,13 @@ End Sub
 Public Property Get name() As String
     name = "TB"
 End Property
+Public Property Get method() As Long
+    method = m_method
+End Property
+Public Property Let method(ByVal value As Long)
+    m_method = value
+End Property
+'--Äæ¦ì¸É¥þ
 Public Property Get ChangeAmount() As String
     ChangeAmount = " [" & m_fields("ChangeAmount") & "] "
 End Property
