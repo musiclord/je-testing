@@ -17,6 +17,7 @@ Private m_path As String
 Private m_ws As DAO.Workspace
 Private m_db As DAO.Database
 Private m_conn As DAO.Connection
+Private m_isConnected As Boolean
 
 Public Property Get path() As String
     path = m_path
@@ -30,20 +31,65 @@ Public Function PrepareRecordset(ByVal filepath As String) As ADODB.Recordset
     On Error GoTo ErrorHandler
     Dim conn As New ADODB.Connection
     Dim rs As New ADODB.Recordset
-    Dim connStr As String, folderpath As String, filename As String
+    Dim connStr As String, folderpath As String, fileName As String
     Dim sql As String, encoding As String
     encoding = "65001" 'utf-8
     folderpath = Left(filepath, InStrRev(filepath, "\") - 1)
-    filename = Mid(filepath, InStrRev(filepath, "\") + 1)
+    fileName = Mid(filepath, InStrRev(filepath, "\") + 1)
     connStr = "Provider=Microsoft.ACE.OLEDB.12.0;" & _
             "Data Source=" & folderpath & ";" & _
             "Extended Properties=""Text;HDR=Yes;FMT=Delimited;IMEX=1;CharacterSet=" & encoding & """"
     conn.Open connStr
-    sql = "SELECT * FROM [" & filename & "]"
+    sql = "SELECT * FROM [" & fileName & "]"
     rs.Open sql, conn, adOpenStatic, adLockReadOnly, adCmdText
     Set PrepareRecordset = rs
     Exit Function
 ErrorHandler:
+    LogError CLS, PROC, Err
+End Function
+
+Public Sub Connect()
+    Const PROC As String = "Connect"
+    If m_isConnected Then Exit Sub
+    Dim wsName As String
+    wsName = "WS_" & Format(Now(), "yyyymmddhhnnss") & "_" & Rnd()
+    Set m_ws = DBEngine.CreateWorkspace(wsName, "admin", "")
+    Set m_db = m_ws.OpenDatabase(m_path, False, False)
+    m_isConnected = True
+End Sub
+
+Public Sub Disconnect()
+    Const PROC As String = "Disconnect"
+    If Not m_db Is Nothing Then
+        m_db.Close
+        Set m_db = Nothing
+    End If
+    If Not m_ws Is Nothing Then
+        m_ws.Close
+        Set m_ws = Nothing
+    End If
+    m_isConnected = False
+End Sub
+
+Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
+    Const PROC As String = "ExecuteQuery"
+    On Error GoTo ErrorHandler
+    If Not m_isConnected Then Connect
+    Set ExecuteQuery = m_db.OpenRecordset(sql, dbOpenSnapshot)
+    Exit Function
+ErrorHandler:
+    LogError CLS, PROC, Err
+End Function
+
+Public Function ExecuteNonQuery(ByVal sql As String) As Long
+    Const PROC As String = "ExecuteNonQuery"
+    On Error GoTo ErrorHandler
+    If Not m_isConnected Then Connect
+    m_db.Execute sql, dbFailOnError
+    ExecuteNonQuery = m_db.RecordsAffected
+    Exit Function
+ErrorHandler:
+    ExecuteNonQuery = -1
     LogError CLS, PROC, Err
 End Function
 
@@ -63,7 +109,7 @@ Public Function BulkInsert(ByVal tableName As String, ByVal sourceRs As ADODB.Re
     lastTime = Timer
     total = 0
     batch = 0
-    Set targetRs = m_db.OpenRecordset(tableName, dbOpenTable)
+    Set targetRs = m_db.OpenRecordset(Name:=tableName, Type:=dbOpenTable)
     sourceRs.MoveFirst
     Do While Not sourceRs.EOF
         batch = batch + 1
@@ -86,7 +132,7 @@ Public Function BulkInsert(ByVal tableName As String, ByVal sourceRs As ADODB.Re
                     '單筆記錄 (一維陣列)
                     targetRs.AddNew
                     For j = 0 To UBound(dataChunk, 1)
-                        targetRs.fields(j).value = dataChunk(j)
+                        targetRs.Fields(j).value = dataChunk(j)
                     Next j
                     targetRs.Update
                 Else
@@ -97,9 +143,9 @@ Public Function BulkInsert(ByVal tableName As String, ByVal sourceRs As ADODB.Re
                         For j = 0 To UBound(dataChunk, 1)
                             v = dataChunk(j, i)
                             If IsNull(v) Then
-                                targetRs.fields(j).value = Null
+                                targetRs.Fields(j).value = Null
                             Else
-                                targetRs.fields(j).value = v
+                                targetRs.Fields(j).value = v
                             End If
                         Next j
                         targetRs.Update
@@ -123,9 +169,12 @@ Public Function BulkInsert(ByVal tableName As String, ByVal sourceRs As ADODB.Re
     Debug.Print "批次寫入完成，總計: " & total & " 筆"
     Call RestoreExcel
     Application.Wait Now + TimeValue("00:00:01") '等待寫入
+    If m_isConnected Then Disconnect
     Debug.Print "寫入時間: " & Format(Timer - startTime, "0.00") & " 秒"
     BulkInsert = True
     Exit Function
 ErrorHandler:
     LogError CLS, PROC, Err
 End Function
+
+

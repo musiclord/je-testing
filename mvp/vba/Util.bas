@@ -6,10 +6,10 @@ Sub launch()
 End Sub
 
 Sub LogError( _
-    ByVal CLASSNAME As String, _
+    ByVal CLASSName As String, _
     ByVal procName As String, _
     ByVal errObj As ErrObject)
-    Debug.Print CLASSNAME & "." & procName & ": " & _
+    Debug.Print CLASSName & "." & procName & ": " & _
                 errObj.Number & " --> " & errObj.Description
 End Sub
 

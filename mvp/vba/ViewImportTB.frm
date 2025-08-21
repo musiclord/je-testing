@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportTB
    Caption         =   "匯入試算表"
    ClientHeight    =   7920
    ClientLeft      =   120
-   ClientTop       =   468
-   ClientWidth     =   7668
+   ClientTop       =   465
+   ClientWidth     =   7665
    OleObjectBlob   =   "ViewImportTB.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -16,18 +16,18 @@ Attribute VB_Exposed = False
 ' TB
 Option Explicit
 
-Public Event ProcessMethod(ByVal method As Long)
-Public Event ApplyFields(ByVal method As Long, ByVal fields As Dictionary)
+Public Event ProcessMethod(ByVal Method As Long)
+Public Event ApplyFields(ByVal Method As Long, ByVal Fields As Dictionary)
 Public Event Import(ByVal file As String)
 Public Event LastStep()
 Public Event NextStep()
 
-Private m_fields As Dictionary
-Private m_method As Long
+Private m_Fields As Dictionary
+Private m_Method As Long
 Private m_file As String
 
 Public Sub Initialize()
-    Const METHOD_NAME As String = ".Initialize"
+    Const METHOD_Name As String = ".Initialize"
     DisableControls
 End Sub
 
@@ -47,8 +47,8 @@ Private Sub btnSelectFile_Click()
 End Sub
 
 Private Sub btnApply_Click()
-    Set m_fields = GetFields()
-    RaiseEvent ApplyFields(m_method, m_fields)
+    Set m_Fields = GetFields()
+    RaiseEvent ApplyFields(m_Method, m_Fields)
 End Sub
 
 Private Sub btnImport_Click()
@@ -67,7 +67,7 @@ Private Sub btnMethod1_Click()
     Call DisableControls
     Me.lblChangeAmount.ForeColor = RGB(0, 0, 0)
     Me.ChangeAmount.Enabled = True
-    m_method = 1
+    m_Method = 1
 End Sub
 
 Private Sub btnMethod2_Click()
@@ -78,7 +78,7 @@ Private Sub btnMethod2_Click()
         Me.Controls("lbl" & n).ForeColor = RGB(0, 0, 0)
         Me.Controls(n).Enabled = True
     Next n
-    m_method = 2
+    m_Method = 2
 End Sub
 
 Private Sub btnMethod3_Click()
@@ -89,7 +89,7 @@ Private Sub btnMethod3_Click()
         Me.Controls("lbl" & n).ForeColor = RGB(0, 0, 0)
         Me.Controls(n).Enabled = True
     Next n
-    m_method = 3
+    m_Method = 3
 End Sub
 
 Private Sub btnMethod4_Click()
@@ -100,7 +100,7 @@ Private Sub btnMethod4_Click()
         Me.Controls("lbl" & n).ForeColor = RGB(0, 0, 0)
         Me.Controls(n).Enabled = True
     Next n
-    m_method = 4
+    m_Method = 4
 End Sub
 
 
@@ -130,19 +130,19 @@ Private Sub DisableControls()
 End Sub
 
 Private Function GetFields() As Dictionary
-    Dim fields As New Dictionary
-    fields("ChangeAmount") = GetControlValue(Me.ChangeAmount)
-    fields("OpeningBalance") = GetControlValue(Me.OpeningBalance)
-    fields("OpeningDebitBalance") = GetControlValue(Me.OpeningDebitBalance)
-    fields("OpeningCreditBalance") = GetControlValue(Me.OpeningCreditBalance)
-    fields("ClosingBalance") = GetControlValue(Me.ClosingBalance)
-    fields("ClosingDebitBalance") = GetControlValue(Me.ClosingDebitBalance)
-    fields("ClosingCreditBalance") = GetControlValue(Me.ClosingCreditBalance)
-    fields("DebitAmount") = GetControlValue(Me.DebitAmount)
-    fields("CreditAmount") = GetControlValue(Me.CreditAmount)
-    fields("AccountNumber") = GetControlValue(Me.AccountNumber)
-    fields("AccountName") = GetControlValue(Me.AccountName)
-    Set GetFields = fields
+    Dim Fields As New Dictionary
+    Fields("ChangeAmount") = GetControlValue(Me.ChangeAmount)
+    Fields("OpeningBalance") = GetControlValue(Me.OpeningBalance)
+    Fields("OpeningDebitBalance") = GetControlValue(Me.OpeningDebitBalance)
+    Fields("OpeningCreditBalance") = GetControlValue(Me.OpeningCreditBalance)
+    Fields("ClosingBalance") = GetControlValue(Me.ClosingBalance)
+    Fields("ClosingDebitBalance") = GetControlValue(Me.ClosingDebitBalance)
+    Fields("ClosingCreditBalance") = GetControlValue(Me.ClosingCreditBalance)
+    Fields("DebitAmount") = GetControlValue(Me.DebitAmount)
+    Fields("CreditAmount") = GetControlValue(Me.CreditAmount)
+    Fields("AccountNumber") = GetControlValue(Me.AccountNumber)
+    Fields("AccountName") = GetControlValue(Me.AccountName)
+    Set GetFields = Fields
 End Function
 
 
@@ -150,13 +150,13 @@ Private Sub UpdateFields(ByVal filepath As String)
     '讀取CSV欄位
     Dim db As New DbAccess
     Dim rs As ADODB.Recordset
-    Dim fields As New Collection
+    Dim Fields As New Collection
     Dim i As Long
     Set rs = db.PrepareRecordset(filepath)
     If Not rs Is Nothing Then
         If Not (rs.BOF And rs.EOF) Then
-            For i = 0 To rs.fields.Count - 1
-                fields.Add rs.fields(i).name
+            For i = 0 To rs.Fields.Count - 1
+                Fields.Add rs.Fields(i).Name
             Next i
         End If
     End If
@@ -169,8 +169,8 @@ Private Sub UpdateFields(ByVal filepath As String)
             Set cbo = ctrl
             temp = cbo.Text
             cbo.Clear
-            For i = 1 To fields.Count
-                cbo.AddItem fields.item(i)
+            For i = 1 To Fields.Count
+                cbo.AddItem Fields.item(i)
             Next i
         End If
     Next ctrl

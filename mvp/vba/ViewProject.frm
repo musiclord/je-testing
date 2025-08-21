@@ -3,7 +3,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewProject
    Caption         =   "Project"
    ClientHeight    =   3015
    ClientLeft      =   120
-   ClientTop       =   468
+   ClientTop       =   465
    ClientWidth     =   4560
    OleObjectBlob   =   "ViewProject.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
@@ -15,10 +15,10 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 Option Explicit
-Private Const MODULE_NAME As String = "ViewProject"
+Private Const MODULE_Name As String = "ViewProject"
 
-Public Event NewProject(ByVal name As String, ByVal path As String)
-Public Event SelectProject(ByVal name As String, ByVal path As String)
+Public Event NewProject(ByVal Name As String, ByVal path As String)
+Public Event SelectProject(ByVal Name As String, ByVal path As String)
 
 Public Sub Initialize()
     UpdateProjectList
@@ -26,18 +26,18 @@ End Sub
 
 '-- button_click
 Private Sub btnNew_Click()
-    Dim name As String, path As String
-    name = Me.txtbProjectName.value
-    path = ThisWorkbook.path & "\" & name
-    RaiseEvent NewProject(name, path)
+    Dim Name As String, path As String
+    Name = Me.txtbProjectName.value
+    path = ThisWorkbook.path & "\" & Name
+    RaiseEvent NewProject(Name, path)
 End Sub
 
 Private Sub btnSelect_Click()
-    Dim name As String, path As String
-    name = Me.listProjects.value
-    path = ThisWorkbook.path & "\" & name
+    Dim Name As String, path As String
+    Name = Me.listProjects.value
+    path = ThisWorkbook.path & "\" & Name
     Me.Hide
-    RaiseEvent SelectProject(name, path)
+    RaiseEvent SelectProject(Name, path)
 End Sub
 
 Private Sub btnExit_Click()
@@ -46,7 +46,7 @@ End Sub
 
 '-- custom
 Public Sub UpdateProjectList()
-    Const METHOD_NAME As String = ".UpdateProjectList"
+    Const METHOD_Name As String = ".UpdateProjectList"
     Dim projects As New Collection
     Dim item As Variant
     Dim root As String, folder As String, path As String

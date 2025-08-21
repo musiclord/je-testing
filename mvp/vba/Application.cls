@@ -26,7 +26,7 @@ Private context As ContextManager
 Private validator As ValidationService
 Private importer As ImportService
 
-Private m_name As String
+Private m_Name As String
 Private m_path As String
 
 
@@ -55,8 +55,8 @@ End Sub
 '========================= [ vProject ] ==========================
 '=================================================================
 
-Private Sub vProject_NewProject(ByVal name As String, ByVal path As String)
-    m_name = name
+Private Sub vProject_NewProject(ByVal Name As String, ByVal path As String)
+    m_Name = Name
     m_path = path
     If Dir(m_path, vbDirectory) <> "" Then
         MsgBox "專案已存在", vbExclamation, "創建專案"
@@ -69,8 +69,8 @@ Private Sub vProject_NewProject(ByVal name As String, ByVal path As String)
     End If
     vProject.UpdateProjectList
 End Sub
-Private Sub vProject_SelectProject(ByVal name As String, ByVal path As String)
-    m_name = name
+Private Sub vProject_SelectProject(ByVal Name As String, ByVal path As String)
+    m_Name = Name
     m_path = path
     If Dir(m_path, vbDirectory) = "" Then
         MsgBox "專案不存在", vbExclamation, "載入專案"
@@ -117,44 +117,57 @@ Private Sub vMain_DoStep1()
     vImportTb.Initialize
     vImportGl.Show vbModeless
 End Sub
-Private Sub vImportGl_ApplyFields(ByVal method As Long, ByVal fields As Dictionary)
-    context.gl.method = method
-    
+Private Sub vImportGl_ApplyFields(ByVal Method As Long, ByVal Fields As Dictionary)
+    context.gl.Method = Method
     Dim key As Variant
-    For Each key In fields.Keys
-        context.gl.SetMapping key, fields(key)
+    For Each key In Fields.Keys
+        context.gl.SetMapping key, Fields(key)
     Next key
     context.gl.PrintFields
 End Sub
 Private Sub vImportGl_Import(ByVal filepath As String)
-    '--If Not context.dbPbc.BulkInsert()
-    Dim db As DbAccess
-    Set db = context.dbPbc
+    importer.Initialize context
     Application.StatusBar = "正在匯入總帳資料..."
-    If Not importer.ImportCsv(filepath, db) Then
+    If Not importer.ImportCsvGl(filepath) Then
         MsgBox "總帳資料匯入失敗！", vbExclamation, "匯入GL"
         Application.StatusBar = "匯入失敗"
     Else
-        '匯入GL成功
         MsgBox "總帳資料匯入完成！", vbInformation, "匯入GL"
         Application.StatusBar = "匯入成功"
     End If
 End Sub
 Private Sub vImportGl_NextStep()
-    vImportGl.Hide
-    vImportTb.Show vbModeless
+    Dim status As Boolean
+    status = False
+    '若狀態都已處理
+    status = True
+    If Not status Then
+        '有尚未處理的程序
+    Else
+        '都處理完才進入下一個頁面
+        vImportGl.Hide
+        vImportTb.Show vbModeless
+    End If
 End Sub
-Private Sub vImportTb_ApplyFields(ByVal method As Long, ByVal fields As Dictionary)
-    context.tb.method = method
-    
+Private Sub vImportTb_ApplyFields(ByVal Method As Long, ByVal Fields As Dictionary)
+    context.tb.Method = Method
     Dim key As Variant
-    For Each key In fields.Keys
-        context.tb.SetMapping key, fields(key)
+    For Each key In Fields.Keys
+        context.tb.SetMapping key, Fields(key)
     Next key
     context.tb.PrintFields
 End Sub
-Private Sub vImportTb_Import(ByVal file As String)
+Private Sub vImportTb_Import(ByVal filepath As String)
     'db.BulkInsert()
+    importer.Initialize context
+    Application.StatusBar = "正在匯入試算表資料..."
+    If Not importer.ImportCsvTb(filepath) Then
+        MsgBox "試算表資料匯入失敗！", vbExclamation, "匯入TB"
+        Application.StatusBar = "匯入失敗"
+    Else
+        MsgBox "試算表資料匯入完成！", vbInformation, "匯入TB"
+        Application.StatusBar = "匯入成功"
+    End If
 End Sub
 Private Sub vImportTb_LastStep()
     vImportTb.Hide

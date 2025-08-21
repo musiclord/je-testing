@@ -9,15 +9,15 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Const MODULE_NAME As String = "EntityTB"
-Private m_method As Long
-Private m_fields As New Dictionary
+Private Const MODULE_Name As String = "EntityTB"
+Private m_Method As Long
+Private m_Fields As New Dictionary
 Private m_Types As New Dictionary
 
 Private Sub Class_Initialize()
-    Dim fields As Variant
+    Dim Fields As Variant
     Dim i As Long
-    fields = Array( _
+    Fields = Array( _
         Array("ChangeAmount", "CURRENCY"), _
         Array("OpeningBalance", "CURRENCY"), _
         Array("OpeningDebitBalance", "CURRENCY"), _
@@ -30,17 +30,21 @@ Private Sub Class_Initialize()
         Array("AccountNumber", "TEXT"), _
         Array("AccountName", "TEXT") _
     )
-    For i = LBound(fields) To UBound(fields)
+    For i = LBound(Fields) To UBound(Fields)
         ' 0:Name, 1:Type
-        m_fields(fields(i)(0)) = fields(i)(0) 'name:name
-        m_Types(fields(i)(0)) = fields(i)(1)  'name:type
+        m_Fields(Fields(i)(0)) = Fields(i)(0) 'Name:Name
+        m_Types(Fields(i)(0)) = Fields(i)(1)  'Name:type
     Next i
 End Sub
 
 Public Function GetType(ByVal field As String) As String
     On Error Resume Next
+    If Len(Trim(field)) = 0 Then
+        GetType = "TEXT(255)"
+        Exit Function
+    End If
     GetType = m_Types(field)
-    If Err.Number <> 0 Then
+    If Err.Number <> 0 Or Len(GetType) = 0 Then
         GetType = "TEXT(255)"
         Err.Clear
     End If
@@ -48,63 +52,66 @@ Public Function GetType(ByVal field As String) As String
 End Function
 
 Public Sub SetMapping(ByVal key As String, ByVal value As String)
-    If m_fields.Exists(key) And Len(value) > 0 Then
-        m_fields(key) = value
+    If m_Fields.Exists(key) And Len(value) > 0 Then
+        m_Fields(key) = value
     End If
 End Sub
 
 Public Sub PrintFields()
     Dim key As Variant
     Debug.Print "--------- [ TB ] ---------"
-    For Each key In m_fields.Keys
-        Debug.Print CStr(key) & ": " & CStr(m_fields(key))
+    For Each key In m_Fields.Keys
+        Debug.Print CStr(key) & ": " & CStr(m_Fields(key))
     Next key
     Debug.Print "--------------------------"
 End Sub
 
 '--ÄÝ©Ê
-Public Property Get name() As String
-    name = "TB"
+Public Property Get Name() As String
+    Name = "TB"
 End Property
-Public Property Get method() As Long
-    method = m_method
+Public Property Get Method() As Long
+    Method = m_Method
 End Property
-Public Property Let method(ByVal value As Long)
-    m_method = value
+Public Property Let Method(ByVal value As Long)
+    m_Method = value
+End Property
+Public Property Get Fields() As Dictionary
+    Set Fields = m_Fields
 End Property
 '--Äæ¦ì¸É¥þ
 Public Property Get ChangeAmount() As String
-    ChangeAmount = " [" & m_fields("ChangeAmount") & "] "
+    ChangeAmount = " [" & m_Fields("ChangeAmount") & "] "
 End Property
 Public Property Get OpeningAmount() As String
-    OpeningAmount = " [" & m_fields("OpeningAmount") & "] "
+    OpeningAmount = " [" & m_Fields("OpeningAmount") & "] "
 End Property
 Public Property Get OpeningDebitAmount() As String
-    OpeningDebitAmount = " [" & m_fields("OpeningDebitAmount") & "] "
+    OpeningDebitAmount = " [" & m_Fields("OpeningDebitAmount") & "] "
 End Property
 Public Property Get OpeningCreditAmount() As String
-    OpeningCreditAmount = " [" & m_fields("OpeningCreditAmount") & "] "
+    OpeningCreditAmount = " [" & m_Fields("OpeningCreditAmount") & "] "
 End Property
 Public Property Get ClosingAmount() As String
-    ClosingAmount = " [" & m_fields("ClosingAmount") & "] "
+    ClosingAmount = " [" & m_Fields("ClosingAmount") & "] "
 End Property
 Public Property Get ClosingDebitAmount() As String
-    ClosingDebitAmount = " [" & m_fields("ClosingDebitAmount") & "] "
+    ClosingDebitAmount = " [" & m_Fields("ClosingDebitAmount") & "] "
 End Property
 Public Property Get ClosingCreditAmount() As String
-    ClosingCreditAmount = " [" & m_fields("ClosingCreditAmount") & "] "
+    ClosingCreditAmount = " [" & m_Fields("ClosingCreditAmount") & "] "
 End Property
 Public Property Get DebitAmount() As String
-    DebitAmount = " [" & m_fields("DebitAmount") & "] "
+    DebitAmount = " [" & m_Fields("DebitAmount") & "] "
 End Property
 Public Property Get CreditAmount() As String
-    CreditAmount = " [" & m_fields("CreditAmount") & "] "
+    CreditAmount = " [" & m_Fields("CreditAmount") & "] "
 End Property
 Public Property Get AccountNumber() As String
-    AccountNumber = " [" & m_fields("AccountNumber") & "] "
+    AccountNumber = " [" & m_Fields("AccountNumber") & "] "
 End Property
 Public Property Get AccountName() As String
-    AccountName = " [" & m_fields("AccountName") & "] "
+    AccountName = " [" & m_Fields("AccountName") & "] "
 End Property
 
 

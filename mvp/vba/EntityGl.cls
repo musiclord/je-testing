@@ -9,44 +9,48 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Const MODULE_NAME As String = "EntityGl"
-Private m_method As Long
-Private m_fields As New Dictionary
+Private Const MODULE_Name As String = "EntityGl"
+Private m_Method As Long
+Private m_Fields As New Dictionary
 Private m_Types As New Dictionary
 
 Private Sub Class_Initialize()
-    Dim fields As Variant
+    Dim Fields As Variant
     Dim i As Long
-    fields = Array( _
+    Fields = Array( _
         Array("EntryAmount", "CURRENCY"), _
         Array("DebitAmount", "CURRENCY"), _
         Array("CreditAmount", "CURRENCY"), _
         Array("EntryDescription", "LONGTEXT"), _
-        Array("AccountNumber", "TEXT"), _
-        Array("AccountName", "TEXT"), _
-        Array("DocumentNumber", "TEXT"), _
-        Array("ApprovedBy", "TEXT"), _
-        Array("CreatedBy", "TEXT"), _
-        Array("SourceModule", "TEXT"), _
-        Array("DrCr", "TEXT"), _
-        Array("IsDebit", "TEXT"), _
-        Array("IsManual", "TEXT"), _
-        Array("IsApprovedDateAsLedgerDate", "TEXT"), _
+        Array("AccountNumber", "TEXT(50)"), _
+        Array("AccountName", "TEXT(50)"), _
+        Array("DocumentNumber", "TEXT(50)"), _
+        Array("ApprovedBy", "TEXT(50)"), _
+        Array("CreatedBy", "TEXT(50)"), _
+        Array("SourceModule", "TEXT(50)"), _
+        Array("DrCr", "TEXT(50)"), _
+        Array("IsDebit", "TEXT(50)"), _
+        Array("IsManual", "TEXT(50)"), _
+        Array("IsApprovedDateAsLedgerDate", "TEXT(50)"), _
         Array("PostDate", "DATE"), _
         Array("ApprovalDate", "DATE"), _
         Array("LineItem", "INTEGER") _
     )
-    For i = LBound(fields) To UBound(fields)
+    For i = LBound(Fields) To UBound(Fields)
         ' 0:Name, 1:Type
-        m_fields(fields(i)(0)) = fields(i)(0) 'name:name
-        m_Types(fields(i)(0)) = fields(i)(1)  'name:type
+        m_Fields(Fields(i)(0)) = Fields(i)(0) 'Name:Name
+        m_Types(Fields(i)(0)) = Fields(i)(1)  'Name:type
     Next i
 End Sub
 
 Public Function GetType(ByVal field As String) As String
     On Error Resume Next
+    If Len(Trim(field)) = 0 Then
+        GetType = "TEXT(255)"
+        Exit Function
+    End If
     GetType = m_Types(field)
-    If Err.Number <> 0 Then
+    If Err.Number <> 0 Or Len(GetType) = 0 Then
         GetType = "TEXT(255)"
         Err.Clear
     End If
@@ -54,81 +58,84 @@ Public Function GetType(ByVal field As String) As String
 End Function
 
 Public Sub SetMapping(ByVal key As String, ByVal value As String)
-    If m_fields.Exists(key) And Len(value) > 0 Then
-        m_fields(key) = value
+    If m_Fields.Exists(key) And Len(value) > 0 Then
+        m_Fields(key) = value
     End If
 End Sub
 
 Public Sub PrintFields()
     Dim key As Variant
     Debug.Print "--------- [ GL ] ---------"
-    For Each key In m_fields.Keys
-        Debug.Print CStr(key) & ": " & CStr(m_fields(key))
+    For Each key In m_Fields.Keys
+        Debug.Print CStr(key) & ": " & CStr(m_Fields(key))
     Next key
     Debug.Print "--------------------------"
 End Sub
 
 '--ÄÝ©Ê
-Public Property Get name() As String
-    name = "GL"
+Public Property Get Name() As String
+    Name = "GL"
 End Property
-Public Property Get method() As Long
-    method = m_method
+Public Property Get Method() As Long
+    Method = m_Method
 End Property
-Public Property Let method(ByVal value As Long)
-    m_method = value
+Public Property Let Method(ByVal value As Long)
+    m_Method = value
+End Property
+Public Property Get Fields() As Dictionary
+    Set Fields = m_Fields
 End Property
 '--Äæ¦ì¸É¥þ
 Public Property Get EntryAmount() As String
-    EntryAmount = " [" & m_fields("EntryAmount") & "] "
+    EntryAmount = " [" & m_Fields("EntryAmount") & "] "
 End Property
 Public Property Get DebitAmount() As String
-    DebitAmount = " [" & m_fields("DebitAmount") & "] "
+    DebitAmount = " [" & m_Fields("DebitAmount") & "] "
 End Property
 Public Property Get CreditAmount() As String
-    CreditAmount = " [" & m_fields("CreditAmount") & "] "
+    CreditAmount = " [" & m_Fields("CreditAmount") & "] "
 End Property
 Public Property Get DrCr() As String
-    DrCr = " [" & m_fields("DrCr") & "] "
+    DrCr = " [" & m_Fields("DrCr") & "] "
 End Property
 Public Property Get IsDebit() As String
-    IsDebit = " [" & m_fields("IsDebit") & "] "
+    IsDebit = " [" & m_Fields("IsDebit") & "] "
 End Property
 Public Property Get AccountNumber() As String
-    AccountNumber = " [" & m_fields("AccountNumber") & "] "
+    AccountNumber = " [" & m_Fields("AccountNumber") & "] "
 End Property
 Public Property Get AccountName() As String
-    AccountName = " [" & m_fields("AccountName") & "] "
+    AccountName = " [" & m_Fields("AccountName") & "] "
 End Property
 Public Property Get DocumentNumber() As String
-    DocumentNumber = " [" & m_fields("DocumentNumber") & "] "
+    DocumentNumber = " [" & m_Fields("DocumentNumber") & "] "
 End Property
 Public Property Get LineItem() As String
-    LineItem = " [" & m_fields("LineItem") & "] "
+    LineItem = " [" & m_Fields("LineItem") & "] "
 End Property
 Public Property Get PostDate() As String
-    PostDate = " [" & m_fields("PostDate") & "] "
+    PostDate = " [" & m_Fields("PostDate") & "] "
 End Property
 Public Property Get EntryDescription() As String
-    EntryDescription = " [" & m_fields("EntryDescription") & "] "
+    EntryDescription = " [" & m_Fields("EntryDescription") & "] "
 End Property
 Public Property Get ApprovalDate() As String
-    ApprovalDate = " [" & m_fields("ApprovalDate") & "] "
+    ApprovalDate = " [" & m_Fields("ApprovalDate") & "] "
 End Property
 Public Property Get ApprovedBy() As String
-    ApprovedBy = " [" & m_fields("ApprovedBy") & "] "
+    ApprovedBy = " [" & m_Fields("ApprovedBy") & "] "
 End Property
 Public Property Get CreatedBy() As String
-    CreatedBy = " [" & m_fields("CreatedBy") & "] "
+    CreatedBy = " [" & m_Fields("CreatedBy") & "] "
 End Property
 Public Property Get SourceModule() As String
-    SourceModule = " [" & m_fields("SourceModule") & "] "
+    SourceModule = " [" & m_Fields("SourceModule") & "] "
 End Property
 Public Property Get IsManual() As String
-    IsManual = " [" & m_fields("IsManual") & "] "
+    IsManual = " [" & m_Fields("IsManual") & "] "
 End Property
 Public Property Get IsApprovedDateAsLedgerDate() As String
-    IsApprovedDateAsLedgerDate = " [" & m_fields("IsApprovedDateAsLedgerDate") & "] "
+    IsApprovedDateAsLedgerDate = " [" & m_Fields("IsApprovedDateAsLedgerDate") & "] "
 End Property
 
 

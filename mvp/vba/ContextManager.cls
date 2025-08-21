@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-Private Const MODULE_NAME As String = "Context"
+Private Const MODULE_Name As String = "Context"
 
 Private m_dbPbc As DbAccess
 Private m_dbData As DbAccess
@@ -17,14 +17,14 @@ Private m_dbResult As DbAccess
 Private m_gl As EntityGl
 Private m_tb As EntityTb
 
-Private m_name
+Private m_Name
 
 '---
-Public Property Get name() As String
-    name = m_name
+Public Property Get Name() As String
+    Name = m_Name
 End Property
-Public Property Let name(ByVal value As String)
-    m_name = value
+Public Property Let Name(ByVal value As String)
+    m_Name = value
 End Property
 
 '---
