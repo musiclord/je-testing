@@ -29,3 +29,8 @@ Sub RestoreExcel()
     Application.DisplayAlerts = True
     Application.StatusBar = False
 End Sub
+
+'-- SQL Query Container
+Public Function Nz(ByVal expr As String, ByVal def As String) As String
+    Nz = "IIF(" & expr & "Is Null," & def & "," & expr & ")"
+End Function

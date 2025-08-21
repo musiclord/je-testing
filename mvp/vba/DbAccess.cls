@@ -75,6 +75,7 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Const PROC As String = "ExecuteQuery"
     On Error GoTo ErrorHandler
     If Not m_isConnected Then Connect
+    Debug.Print PROC & ": " & sql
     Set ExecuteQuery = m_db.OpenRecordset(sql, dbOpenSnapshot)
     Exit Function
 ErrorHandler:
@@ -85,6 +86,7 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
     Const PROC As String = "ExecuteNonQuery"
     On Error GoTo ErrorHandler
     If Not m_isConnected Then Connect
+    Debug.Print PROC & ": " & sql
     m_db.Execute sql, dbFailOnError
     ExecuteNonQuery = m_db.RecordsAffected
     Exit Function

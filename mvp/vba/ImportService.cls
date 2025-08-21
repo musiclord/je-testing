@@ -12,15 +12,15 @@ Option Explicit
 Private Const CLS As String = "ImportService"
 
 Private m_ctx As ContextManager
-Private m_gl As EntityGl
-Private m_tb As EntityTb
+Private gl As EntityGl
+Private tb As EntityTb
 Private m_db As DbAccess
 
 Public Sub Initialize(ByRef context As ContextManager)
     Set m_ctx = context
     Set m_db = context.dbPbc
-    Set m_gl = context.gl
-    Set m_tb = context.tb
+    Set gl = context.gl
+    Set tb = context.tb
 End Sub
 
 Public Function AddLineItem() As Boolean
@@ -41,12 +41,12 @@ Public Function ImportCsvGl(ByVal filepath As String) As Boolean
     Dim field As String, fieldType As String
     Dim sql As String, temp As String
     Dim i As Long, affected As Long
-    sql = "CREATE TABLE " & m_gl.Name & " (" & vbCrLf
+    sql = "CREATE TABLE " & gl.Name & " (" & vbCrLf
     For i = 0 To sourceRs.Fields.Count - 1
         sql = sql & Space(4) '擴排
         field = sourceRs.Fields(i).Name
-        temp = ReverseLookup(field, m_gl.Fields)
-        fieldType = m_gl.GetType(temp)
+        temp = ReverseLookup(field, gl.Fields)
+        fieldType = gl.GetType(temp)
         sql = sql & "[" & field & "] " & fieldType
         If i < sourceRs.Fields.Count - 1 Then
             sql = sql & Chr(44) '逗號
@@ -56,27 +56,48 @@ Public Function ImportCsvGl(ByVal filepath As String) As Boolean
     sql = sql & ")"
     Debug.Print "CREATE SQL: " & sql
     affected = m_db.ExecuteNonQuery(sql)
-    Call m_db.BulkInsert(tableName:=m_gl.Name, sourceRs:=sourceRs)
-    'If ProcessGlAmount() Then
+    Call m_db.BulkInsert(tableName:=gl.Name, sourceRs:=sourceRs)
+    'Call ProcessGlAmount
     ImportCsvGl = True
     Exit Function
 ErrorHandler:
     LogError CLS, PROC, Err
 End Function
 
-Private Function ProcessGlAmount() As Boolean
+Private Sub ProcessGlAmount()
     Const PROC As String = "ProcessGlAmount"
-    ProcessGlAmount = False
-    Select Case m_gl.Method
+    
+    Dim sql As String
+    Dim f_EntryAmount As String
+    Dim affected As Long
+    
+    Select Case gl.Method
         Case 1 '直接使用原始金額欄位
+            f_EntryAmount = "[金額JE]"
+            affected = m_db.ExecuteNonQuery( _
+                "UPDATE " & gl.Name & " " & _
+                "SET " & f_EntryAmount & " = Nz(" & gl.EntryAmount & ", 0);" _
+            )
+            Call gl.SetMapping(key:="EntryAmount", value:=f_EntryAmount)
+        Case 2 '借方金額 - 貸方金額
+            f_EntryAmount = "[金額JE]"
+            '新增欄位
+            affected = m_db.ExecuteNonQuery( _
+                "ALTER TABLE " & gl.Name & " " & _
+                "ADD COLUMN " & f_EntryAmount & " CURRENCY;" _
+            )
+            '計算欄位
+            affected = m_db.ExecuteNonQuery( _
+                "UPDATE " & gl.Name & " " & _
+                "SET " & f_EntryAmount & " = " & _
+                Nz(gl.DebitAmount, 0) & " - " & Nz(gl.CreditAmount, 0) & ";" _
+            )
             
-        Case 2 '借方金額減去貸方金額
         Case 3 '依據借貸別標誌決定金額正負號
         Case Else
             Err.Raise 5, PROC, "不支援的金額處理模式"
     End Select
-    ProcessGlAmount = True
-End Function
+End Sub
 
 Public Function ImportCsvTb(ByVal filepath As String) As Boolean
     Const PROC As String = "ImportCsvTb"
@@ -89,12 +110,12 @@ Public Function ImportCsvTb(ByVal filepath As String) As Boolean
     Dim field As String, fieldType As String
     Dim sql As String, temp As String
     Dim i As Long, affected As Long
-    sql = "CREATE TABLE " & m_tb.Name & " (" & vbCrLf
+    sql = "CREATE TABLE " & tb.Name & " (" & vbCrLf
     For i = 0 To sourceRs.Fields.Count - 1
         sql = sql & Space(4) '擴排
         field = sourceRs.Fields(i).Name
-        temp = ReverseLookup(value:=field, dict:=m_tb.Fields)
-        fieldType = m_tb.GetType(temp)
+        temp = ReverseLookup(value:=field, dict:=tb.Fields)
+        fieldType = tb.GetType(temp)
         sql = sql & "[" & field & "]" & fieldType
         If i < sourceRs.Fields.Count - 1 Then
             sql = sql & Chr(44) '逗號
@@ -104,7 +125,7 @@ Public Function ImportCsvTb(ByVal filepath As String) As Boolean
     sql = sql & ")"
     Debug.Print "CREATE SQL: " & sql
     affected = m_db.ExecuteNonQuery(sql)
-    Call m_db.BulkInsert(tableName:=m_tb.Name, sourceRs:=sourceRs)
+    Call m_db.BulkInsert(tableName:=tb.Name, sourceRs:=sourceRs)
     'If ProcessTbAmount() Then
     ImportCsvTb = True
     Exit Function
@@ -115,7 +136,7 @@ End Function
 Private Function ProcessTbAmount() As Boolean
     Const PROC As String = "ProcessTbAmount"
     ProcessTbAmount = False
-    Select Case m_tb.Method
+    Select Case tb.Method
         Case 1 '直接使用變動金額
         Case 2 '期末 - 期初 = 變動金額
         Case 3 '借方 - 貸方 = 變動金額
