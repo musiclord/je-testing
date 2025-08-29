@@ -42,7 +42,7 @@ End Sub
 
 Private Sub UpdateProjectList()
     Dim projects As New Collection
-    Dim item As Variant
+    Dim Item As Variant
     Dim fso As New FileSystemObject
     Dim rootFolder As folder
     Dim subFolder As folder
@@ -54,8 +54,8 @@ Private Sub UpdateProjectList()
     Next subFolder
     '更新目錄清單
     Me.lstProjectList.Clear
-    For Each item In projects
-        Me.lstProjectList.AddItem item
-    Next item
+    For Each Item In projects
+        Me.lstProjectList.AddItem Item
+    Next Item
 End Sub
 

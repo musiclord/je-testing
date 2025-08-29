@@ -9,6 +9,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 'Class:EntityGl
+Private m_Name As String
 Private m_Method As Long
 Private m_Fields As New Dictionary
 
@@ -57,7 +58,10 @@ End Sub
 
 '--ÄÝ©Ê¡A¦s¨úª¬ºA
 Public Property Get Name() As String
-    Name = "GL"
+    Name = m_Name
+End Property
+Public Property Let Name(ByVal Value As String)
+    m_Name = Value
 End Property
 Public Property Get method() As Long
     method = m_Method

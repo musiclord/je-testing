@@ -110,7 +110,7 @@ Private Sub UpdateFields(ByVal fields As Collection)
             Set cbo = ctrl
             cbo.Clear
             For i = 1 To fields.Count
-                cbo.AddItem fields.item(i)
+                cbo.AddItem fields.Item(i)
             Next i
         End If
     Next ctrl

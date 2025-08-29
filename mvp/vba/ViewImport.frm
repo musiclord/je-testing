@@ -19,6 +19,7 @@ Public Event ImportGl()
 Public Event ImportTb()
 Public Event MapGl()
 Public Event MapTb()
+Public Event Complete()
 
 Public Sub Initialize()
     '...
@@ -46,12 +47,13 @@ End Sub
 
 Private Sub btnExit_Click()
     Me.Hide
+    RaiseEvent Complete
 End Sub
 
 Private Sub btnTestDefault_Click()
     'THIS METHOD IS FOR DEBUG TESTING
-    Me.PeriodStart.Text = "2024/01/01"
-    Me.PeriodEnd.Text = "2024/12/31"
+    Me.PeriodStart.text = "2024/01/01"
+    Me.PeriodEnd.text = "2024/12/31"
     Me.chkSaturday.Value = True
     Me.chkSunday.Value = True
 End Sub

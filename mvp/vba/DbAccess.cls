@@ -19,6 +19,12 @@ Private m_IsConnected As Boolean
 Private m_Tx As Boolean
 
 '--ÄÝ©Ê
+Public Property Get Database() As DAO.Database
+    Set Database = m_Db
+End Property
+Public Property Get Workspace() As DAO.Workspace
+    Set Workspace = m_Ws
+End Property
 Public Property Get path() As String
     path = m_Path
 End Property

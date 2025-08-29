@@ -97,7 +97,6 @@ End Sub
 
 '-- vImport
 Private Sub vImport_ImportGl()
-    ' >>>這裡後續需要明確定義匯入檔案的格式<<<
     importer.OpenWizard "csv"
 End Sub
 Private Sub vImport_ImportTb()
