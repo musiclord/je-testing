@@ -38,7 +38,7 @@ Public Sub Connect()
         Exit Sub
     Else
         Dim wsName As String
-        wsName = "WS_" & Format(Now(), "yyyymmddnnss") & "_" & Rnd()
+        wsName = "WS_" & format(Now(), "yyyymmddnnss") & "_" & Rnd()
         Set m_Ws = DAO.DBEngine.CreateWorkspace(wsName, "admin", "")
         Set m_Db = m_Ws.OpenDatabase(m_Path, False, False)
         m_IsConnected = True
@@ -90,13 +90,35 @@ Public Sub RollbackTx()
     m_Tx = False
 End Sub
 
-
 Public Function CreateTable() As Boolean
     
 End Function
 
-Public Function DropTable() As Boolean
-    
+Public Function DropTable(ByVal tableName As String) As Boolean
+    If Not m_IsConnected Then Connect
+    If Not TableExists(tableName) Then
+        DropTable = False
+        Exit Function
+    End If
+    Dim sql As String
+    sql = "DROP TABLE [" & tableName & "]"
+    Debug.Print "Sql:" & sql
+    m_Db.Execute sql, dbFailOnError
+    DropTable = True
+End Function
+
+Public Function TableExists(ByVal tableName As String) As Boolean
+    '檢查資料表是否存在
+    Dim tdf As DAO.TableDef
+    For Each tdf In m_Db.TableDefs
+        '遍歷並尋找符合名稱的資料表
+        If tdf.Name = tableName And (tdf.Attributes And dbSystemObject) = 0 Then
+            TableExists = True
+            Exit Function
+        End If
+    Next tdf
+    TableExists = False
+    Exit Function
 End Function
 
 Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
@@ -113,18 +135,17 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
 End Function
 
 Public Function GetTableFields(ByVal tableName As String) As Collection
+    '取得指定資料表的欄位
     If Not m_IsConnected Then Connect
     Dim fields As New Collection
     Dim fld As DAO.Field
     Dim rs As DAO.Recordset
     Set rs = m_Db.OpenRecordset(Name:=tableName, Type:=dbOpenDynaset)
-    
+    '遍歷 RS 的欄位
     For Each fld In rs.fields
         fields.Add fld.Name
     Next fld
-    
     rs.Close
     Set rs = Nothing
-    
     Set GetTableFields = fields
 End Function

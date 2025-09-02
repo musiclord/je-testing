@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewMain 
    Caption         =   "UserForm1"
    ClientHeight    =   5385
-   ClientLeft      =   105
-   ClientTop       =   405
-   ClientWidth     =   9585.001
+   ClientLeft      =   108
+   ClientTop       =   408
+   ClientWidth     =   9588.001
    OleObjectBlob   =   "ViewMain.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End

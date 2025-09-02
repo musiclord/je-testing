@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapTb 
    Caption         =   "UserForm1"
    ClientHeight    =   7020
-   ClientLeft      =   105
-   ClientTop       =   405
-   ClientWidth     =   7635
+   ClientLeft      =   108
+   ClientTop       =   408
+   ClientWidth     =   7632
    OleObjectBlob   =   "ViewImportMapTb.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -22,6 +22,7 @@ Public Sub Initialize(ByRef db As DbAccess)
     Dim fields As Collection
     Set fields = db.GetTableFields("TB")
     UpdateFields fields
+    DisableControls
 End Sub
 
 Private Sub btnApplyField_Click()
@@ -85,13 +86,12 @@ Private Sub btnMethod4_Click()
 End Sub
 
 Private Sub btnTestDefault_Click()
-    'THIS METHOD IS FOR DEBUG TESTING
+    '### THIS METHOD IS FOR DEBUG TESTING ###
     Call btnMethod3_Click
     Me.AccountName.Value = "項目名稱"
     Me.AccountNumber.Value = "會計項目"
-    Me.ChangeAmount.Value = "借-貸(本幣)"
-    Me.DebitAmount.Value = "原幣借方金額"
-    Me.CreditAmount.Value = "原幣貸方金額"
+    Me.DebitAmount.Value = "借方金額"
+    Me.CreditAmount.Value = "貸方金額"
 End Sub
 
 Private Sub btnExit_Click()

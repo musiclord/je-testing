@@ -31,9 +31,10 @@ Attribute vExport.VB_VarHelpID = -1
 '--
 Private fso As FileSystemObject
 Private context As ContextManager
-Private projector As ProjectService
-Private validator As ValidationService
-Private importer As ImportService
+Private projector As ServiceProject
+Private importer As ServiceImport
+Private validator As ServiceValidation
+Private filter As ServiceFilter
 
 '-- Application
 Public Sub Initialize()
@@ -49,9 +50,10 @@ Public Sub Initialize()
     '--
     Set fso = New FileSystemObject
     Set context = New ContextManager
-    Set projector = New ProjectService
-    Set validator = New ValidationService
-    Set importer = New ImportService
+    Set projector = New ServiceProject
+    Set importer = New ServiceImport
+    Set validator = New ServiceValidation
+    Set filter = New ServiceFilter
     '--
     context.Initialize
 End Sub
@@ -61,6 +63,7 @@ Public Sub Run()
     vProject.Initialize
     vProject.Show vbModeless
 End Sub
+
 
 '-- vProject
 Private Sub vProject_NewProject(ByVal path As String)
@@ -76,31 +79,38 @@ End Sub
 
 '-- vMain
 Private Sub vMain_DoStep1()
-    Set vImport = New ViewImport
-    Set vMapGl = New ViewImportMapGl
-    Set vMapTb = New ViewImportMapTb
-    '--
     importer.Initialize context
+    '--
     vImport.Initialize
     vImport.Show vbModeless
 End Sub
 Private Sub vMain_DoStep2()
-    Set vValidation = New ViewValidation
+    validator.Initialize context
+    '--
+    vValidation.Initialize
+    vValidation.Show vbModeless
 End Sub
 Private Sub vMain_DoStep3()
-    Set vFilter = New ViewFilter
-    Set vAddCriteria = New ViewFilterAddCriteria
+    filter.Initialize context
+    '--
+    vFilter.Initialize
+    vFilter.Show vbModeless
 End Sub
 Private Sub vMain_DoStep4()
-    Set vExport = New ViewExport
+    'exporter.Initialize context
+    '--
+    'vExport.Initialize
+    'vExport.Show vbModeless
 End Sub
 
 '-- vImport
 Private Sub vImport_ImportGl()
-    importer.OpenWizard "csv"
+    importer.OpenWizard "gl"
+    vImport.lblGlStatus.Caption = "匯入資料表: " & context.gl.Name
 End Sub
 Private Sub vImport_ImportTb()
-    importer.OpenWizard "csv"
+    importer.OpenWizard "tb"
+    vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.Name
 End Sub
 Private Sub vImport_MapGl()
     vMapGl.Initialize context.DbInput
@@ -110,14 +120,31 @@ Private Sub vImport_MapTb()
     vMapTb.Initialize context.DbInput
     vMapTb.Show vbModeless
 End Sub
+Private Sub vImport_FormatGl(ByVal format As String)
+    importer.dType = format
+End Sub
+Private Sub vImport_FormatTb(ByVal format As String)
+    importer.dType = format
+End Sub
+Private Sub vImport_Complete()
+    '結算所有處理步驟的結果
+End Sub
 
 '-- vMapGl
 Private Sub vMapGl_ApplyField(ByVal dict As Dictionary)
-    importer.ApplyGl dict
+    If Not importer.ApplyGl(dict) Then
+        'error
+    Else
+        'pass
+    End If
 End Sub
 
 '-- vMapTb
 Private Sub vMapTb_ApplyField(ByVal dict As Dictionary)
-    importer.ApplyTb dict
+    If Not importer.ApplyTb(dict) Then
+        'error
+    Else
+        'pass
+    End If
 End Sub
 

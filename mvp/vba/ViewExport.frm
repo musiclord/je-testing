@@ -3,7 +3,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewExport
    Caption         =   "輸出結果"
    ClientHeight    =   2760
    ClientLeft      =   120
-   ClientTop       =   465
+   ClientTop       =   468
    ClientWidth     =   1920
    OleObjectBlob   =   "ViewExport.frx":0000
    StartUpPosition =   1  '所屬視窗中央

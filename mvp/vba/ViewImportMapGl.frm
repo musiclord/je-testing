@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapGl 
    Caption         =   "UserForm1"
    ClientHeight    =   8820.001
-   ClientLeft      =   105
-   ClientTop       =   405
-   ClientWidth     =   7650
+   ClientLeft      =   108
+   ClientTop       =   408
+   ClientWidth     =   7644
    OleObjectBlob   =   "ViewImportMapGl.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -22,6 +22,7 @@ Public Sub Initialize(ByRef db As DbAccess)
     Dim fields As Collection
     Set fields = db.GetTableFields("GL")
     UpdateFields fields
+    DisableControls
 End Sub
 
 Private Sub btnApplyField_Click()
@@ -81,16 +82,15 @@ Private Sub btnMethod3_Click()
 End Sub
 
 Private Sub btnTestDefault_Click()
-    'THIS METHOD IS FOR DEBUG TESTING
+    '### THIS METHOD IS FOR DEBUG TESTING ###
     Call btnMethod2_Click
-    Me.AccountName.Value = "會計科目"
-    Me.AccountNumber.Value = "科目代碼"
+    Me.AccountName.Value = "項目名稱"
+    Me.AccountNumber.Value = "會計項目"
     Me.DocumentNumber.Value = "傳票號碼"
-    Me.DebitAmount.Value = "本幣借方金額"
-    Me.CreditAmount.Value = "本幣貸方金額"
     Me.EntryDescription.Value = "摘要"
-    Me.IsDebit.Value = "借貸"
     Me.PostDate.Value = "日期"
+    Me.DebitAmount.Value = "借方金額"
+    Me.CreditAmount.Value = "貸方金額"
 End Sub
 
 Private Sub btnExit_Click()
