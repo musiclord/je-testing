@@ -13,11 +13,12 @@ Private m_Name As String
 Private m_Method As Long
 Private m_Fields As New Dictionary
 
-'--方法
+'***** 方法
 Private Sub Class_Initialize()
-    Dim fields As Variant
+    m_Name = "GL"
+    Dim Fields As Variant
     Dim i As Long
-    fields = Array( _
+    Fields = Array( _
         "EntryAmount", _
         "DebitAmount", _
         "CreditAmount", _
@@ -34,10 +35,11 @@ Private Sub Class_Initialize()
         "IsApprovedDateAsLedgerDate", _
         "PostDate", _
         "ApprovalDate", _
-        "LineItem" _
+        "LineItem", _
+        "K_Amount" _
     )
-    For i = LBound(fields) To UBound(fields)
-        m_Fields(fields(i)) = ""
+    For i = LBound(Fields) To UBound(Fields)
+        m_Fields(Fields(i)) = Fields(i)
     Next i
 End Sub
 
@@ -56,73 +58,76 @@ Public Sub PrintFields()
     Debug.Print "--------------------------"
 End Sub
 
-'--屬性，存取狀態
+'***** 屬性，存取狀態
 Public Property Get Name() As String
     Name = m_Name
 End Property
 Public Property Let Name(ByVal Value As String)
     m_Name = Value
 End Property
-Public Property Get method() As Long
-    method = m_Method
+Public Property Get Method() As Long
+    Method = m_Method
 End Property
-Public Property Let method(ByVal Value As Long)
+Public Property Let Method(ByVal Value As Long)
     m_Method = Value
 End Property
-Public Property Get fields() As Dictionary
-    Set fields = m_Fields
+Public Property Get Fields() As Dictionary
+    Set Fields = m_Fields
 End Property
 
-'--屬性，快速補全
+'***** 屬性，快速補全
 Public Property Get EntryAmount() As String
-    EntryAmount = " [" & m_Fields("EntryAmount") & "] "
+    EntryAmount = m_Fields("EntryAmount")
 End Property
 Public Property Get DebitAmount() As String
-    DebitAmount = " [" & m_Fields("DebitAmount") & "] "
+    DebitAmount = m_Fields("DebitAmount")
 End Property
 Public Property Get CreditAmount() As String
-    CreditAmount = " [" & m_Fields("CreditAmount") & "] "
+    CreditAmount = m_Fields("CreditAmount")
 End Property
 Public Property Get EntryDescription() As String
-    EntryDescription = " [" & m_Fields("EntryDescription") & "] "
+    EntryDescription = m_Fields("EntryDescription")
 End Property
 Public Property Get AccountNumber() As String
-    AccountNumber = " [" & m_Fields("AccountNumber") & "] "
+    AccountNumber = m_Fields("AccountNumber")
 End Property
 Public Property Get AccountName() As String
-    AccountName = " [" & m_Fields("AccountName") & "] "
+    AccountName = m_Fields("AccountName")
 End Property
 Public Property Get DocumentNumber() As String
-    DocumentNumber = " [" & m_Fields("DocumentNumber") & "] "
+    DocumentNumber = m_Fields("DocumentNumber")
 End Property
 Public Property Get ApprovedBy() As String
-    ApprovedBy = " [" & m_Fields("ApprovedBy") & "] "
+    ApprovedBy = m_Fields("ApprovedBy")
 End Property
 Public Property Get CreatedBy() As String
-    CreatedBy = " [" & m_Fields("CreatedBy") & "] "
+    CreatedBy = m_Fields("CreatedBy")
 End Property
 Public Property Get SourceModule() As String
-    SourceModule = " [" & m_Fields("SourceModule") & "] "
+    SourceModule = m_Fields("SourceModule")
 End Property
 Public Property Get DrCr() As String
-    DrCr = " [" & m_Fields("DrCr") & "] "
+    DrCr = m_Fields("DrCr")
 End Property
 Public Property Get IsDebit() As String
-    IsDebit = " [" & m_Fields("IsDebit") & "] "
+    IsDebit = m_Fields("IsDebit")
 End Property
 Public Property Get IsManual() As String
-    IsManual = " [" & m_Fields("IsManual") & "] "
+    IsManual = m_Fields("IsManual")
 End Property
 Public Property Get IsApprovedDateAsLedgerDate() As String
-    IsApprovedDateAsLedgerDate = " [" & m_Fields("IsApprovedDateAsLedgerDate") & "] "
+    IsApprovedDateAsLedgerDate = m_Fields("IsApprovedDateAsLedgerDate")
 End Property
 Public Property Get PostDate() As String
-    PostDate = " [" & m_Fields("PostDate") & "] "
+    PostDate = m_Fields("PostDate")
 End Property
 Public Property Get ApprovalDate() As String
-    ApprovalDate = " [" & m_Fields("ApprovalDate") & "] "
+    ApprovalDate = m_Fields("ApprovalDate")
 End Property
 Public Property Get LineItem() As String
-    LineItem = " [" & m_Fields("LineItem") & "] "
+    LineItem = m_Fields("LineItem")
 End Property
-
+'***** 自訂欄位
+Public Property Get K_Amount() As String
+    K_Amount = m_Fields("K_Amount")
+End Property

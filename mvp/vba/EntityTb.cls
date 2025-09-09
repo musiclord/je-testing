@@ -9,14 +9,16 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 'Class:EntityTb
+Private m_Name As String
 Private m_Method As Long
 Private m_Fields As New Dictionary
 
-'--方法
+'***** 方法
 Private Sub Class_Initialize()
-    Dim fields As Variant
+    m_Name = "TB"
+    Dim Fields As Variant
     Dim i As Long
-    fields = Array( _
+    Fields = Array( _
         "ChangeAmount", _
         "OpeningBalance", _
         "OpeningDebitBalance", _
@@ -27,10 +29,11 @@ Private Sub Class_Initialize()
         "DebitAmount", _
         "CreditAmount", _
         "AccountNumber", _
-        "AccountName" _
+        "AccountName", _
+        "K_Amount" _
     )
-    For i = LBound(fields) To UBound(fields)
-        m_Fields(fields(i)) = ""
+    For i = LBound(Fields) To UBound(Fields)
+        m_Fields(Fields(i)) = Fields(i)
     Next i
 End Sub
 
@@ -49,61 +52,59 @@ Public Sub PrintFields()
     Debug.Print "--------------------------"
 End Sub
 
-'--屬性，存取狀態
+'***** 屬性，存取狀態
 Public Property Get Name() As String
-    Name = "GL"
+    Name = m_Name
 End Property
-Public Property Get method() As Long
-    method = m_Method
+Public Property Let Name(ByVal Value As String)
+    m_Name = Value
 End Property
-Public Property Let method(ByVal Value As Long)
+Public Property Get Method() As Long
+    Method = m_Method
+End Property
+Public Property Let Method(ByVal Value As Long)
     m_Method = Value
 End Property
-Public Property Get fields() As Dictionary
-    Set fields = m_Fields
+Public Property Get Fields() As Dictionary
+    Set Fields = m_Fields
 End Property
 
-'--屬性，快速補全
+'***** 屬性，快速補全預設欄位
 Public Property Get ChangeAmount() As String
-    ChangeAmount = " [" & m_Fields("ChangeAmount") & "] "
+    ChangeAmount = m_Fields("ChangeAmount")
 End Property
-
 Public Property Get OpeningBalance() As String
-    OpeningBalance = " [" & m_Fields("OpeningBalance") & "] "
+    OpeningBalance = m_Fields("OpeningBalance")
 End Property
-
 Public Property Get OpeningDebitBalance() As String
-    OpeningDebitBalance = " [" & m_Fields("OpeningDebitBalance") & "] "
+    OpeningDebitBalance = m_Fields("OpeningDebitBalance")
 End Property
-
 Public Property Get OpeningCreditBalance() As String
-    OpeningCreditBalance = " [" & m_Fields("OpeningCreditBalance") & "] "
+    OpeningCreditBalance = m_Fields("OpeningCreditBalance")
 End Property
-
 Public Property Get ClosingBalance() As String
-    ClosingBalance = " [" & m_Fields("ClosingBalance") & "] "
+    ClosingBalance = m_Fields("ClosingBalance")
 End Property
-
 Public Property Get ClosingDebitBalance() As String
-    ClosingDebitBalance = " [" & m_Fields("ClosingDebitBalance") & "] "
+    ClosingDebitBalance = m_Fields("ClosingDebitBalance")
 End Property
-
 Public Property Get ClosingCreditBalance() As String
-    ClosingCreditBalance = " [" & m_Fields("ClosingCreditBalance") & "] "
+    ClosingCreditBalance = m_Fields("ClosingCreditBalance")
 End Property
-
 Public Property Get DebitAmount() As String
-    DebitAmount = " [" & m_Fields("DebitAmount") & "] "
+    DebitAmount = m_Fields("DebitAmount")
 End Property
-
 Public Property Get CreditAmount() As String
-    CreditAmount = " [" & m_Fields("CreditAmount") & "] "
+    CreditAmount = m_Fields("CreditAmount")
 End Property
-
 Public Property Get AccountNumber() As String
-    AccountNumber = " [" & m_Fields("AccountNumber") & "] "
+    AccountNumber = m_Fields("AccountNumber")
+End Property
+Public Property Get AccountName() As String
+    AccountName = m_Fields("AccountName")
 End Property
 
-Public Property Get AccountName() As String
-    AccountName = " [" & m_Fields("AccountName") & "] "
+'***** 屬性，快速補全自訂欄位
+Public Property Get K_Amount() As String
+    K_Amount = m_Fields("K_Amount")
 End Property

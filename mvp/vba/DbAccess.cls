@@ -18,7 +18,7 @@ Private m_Path As String
 Private m_IsConnected As Boolean
 Private m_Tx As Boolean
 
-'--屬性
+'***** 屬性
 Public Property Get Database() As DAO.Database
     Set Database = m_Db
 End Property
@@ -32,7 +32,7 @@ Public Property Let path(ByVal Value As String)
     m_Path = Value
 End Property
 
-'--方法
+'***** 方法
 Public Sub Connect()
     If m_IsConnected Then
         Exit Sub
@@ -108,17 +108,28 @@ Public Function DropTable(ByVal tableName As String) As Boolean
 End Function
 
 Public Function TableExists(ByVal tableName As String) As Boolean
+    If Not m_IsConnected Then Connect
     '檢查資料表是否存在
-    Dim tdf As DAO.TableDef
-    For Each tdf In m_Db.TableDefs
-        '遍歷並尋找符合名稱的資料表
-        If tdf.Name = tableName And (tdf.Attributes And dbSystemObject) = 0 Then
-            TableExists = True
-            Exit Function
-        End If
-    Next tdf
-    TableExists = False
-    Exit Function
+    Dim dummyTdf As DAO.TableDef
+    On Error Resume Next
+    Set dummyTdf = m_Db.TableDefs(tableName)
+    If Err.Number = 0 Then
+        TableExists = ((dummyTdf.Attributes And dbSystemObject) = 0)
+    Else
+        TableExists = False
+    End If
+    Err.Clear
+    On Error GoTo 0
+End Function
+
+Public Function FieldExists(ByVal tdf As DAO.TableDef, ByVal fieldName As String) As Boolean
+    '檢查欄位是否存在
+    Dim dummyFld As DAO.Field
+    On Error Resume Next
+    Set dummyFld = tdf.Fields(fieldName)
+    FieldExists = (Err.Number = 0)
+    Err.Clear
+    On Error GoTo 0
 End Function
 
 Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
@@ -134,18 +145,21 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
     ExecuteNonQuery = m_Db.RecordsAffected
 End Function
 
+Public Function Summarization()
+
+End Function
 Public Function GetTableFields(ByVal tableName As String) As Collection
     '取得指定資料表的欄位
     If Not m_IsConnected Then Connect
-    Dim fields As New Collection
+    Dim Fields As New Collection
     Dim fld As DAO.Field
     Dim rs As DAO.Recordset
     Set rs = m_Db.OpenRecordset(Name:=tableName, Type:=dbOpenDynaset)
     '遍歷 RS 的欄位
-    For Each fld In rs.fields
-        fields.Add fld.Name
+    For Each fld In rs.Fields
+        Fields.Add fld.Name
     Next fld
     rs.Close
     Set rs = Nothing
-    Set GetTableFields = fields
+    Set GetTableFields = Fields
 End Function

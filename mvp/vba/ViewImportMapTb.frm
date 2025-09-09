@@ -15,14 +15,15 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 'Userform:ViewImportMapTb
-Public Event ApplyField(ByVal dict As Dictionary)
+Public Event ApplyField(ByVal dict As Dictionary, ByVal Method As Long)
 Private m_Method As Long
 
 Public Sub Initialize(ByRef db As DbAccess)
-    Dim fields As Collection
-    Set fields = db.GetTableFields("TB")
-    UpdateFields fields
+    Dim Fields As Collection
+    Set Fields = db.GetTableFields("TB")
+    UpdateFields Fields
     DisableControls
+    btnMethod1_Click
 End Sub
 
 Private Sub btnApplyField_Click()
@@ -41,7 +42,7 @@ Private Sub btnApplyField_Click()
     dict("AccountNumber") = Me.AccountNumber.Value
     dict("AccountName") = Me.AccountName.Value
     '傳回
-    RaiseEvent ApplyField(dict)
+    RaiseEvent ApplyField(dict, m_Method)
 End Sub
 
 Private Sub btnMethod1_Click()
@@ -86,7 +87,7 @@ Private Sub btnMethod4_Click()
 End Sub
 
 Private Sub btnTestDefault_Click()
-    '### THIS METHOD IS FOR DEBUG TESTING ###
+    '### THIS Method IS FOR DEBUG TESTING ###
     Call btnMethod3_Click
     Me.AccountName.Value = "項目名稱"
     Me.AccountNumber.Value = "會計項目"
@@ -99,19 +100,19 @@ Private Sub btnExit_Click()
 End Sub
 
 '--自訂方法
-Private Sub UpdateFields(ByVal fields As Collection)
+Private Sub UpdateFields(ByVal Fields As Collection)
     '更新欄位
     Dim ctrl As MSForms.Control
     Dim cbo As MSForms.ComboBox
     Dim i As Long
-    If fields Is Nothing Then Exit Sub
+    If Fields Is Nothing Then Exit Sub
     '遍歷控制項
     For Each ctrl In Me.Controls
         If TypeOf ctrl Is MSForms.ComboBox Then
             Set cbo = ctrl
             cbo.Clear
-            For i = 1 To fields.Count
-                cbo.AddItem fields.Item(i)
+            For i = 1 To Fields.Count
+                cbo.AddItem Fields.Item(i)
             Next i
         End If
     Next ctrl

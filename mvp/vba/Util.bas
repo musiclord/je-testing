@@ -12,8 +12,6 @@ Public Function Nz(ByVal fieldName As String, Optional ByVal defaultValue As Str
     ' 將欄位名稱轉換成 IIF(ISNULL(...),defaultValue,...) SQL 語法
     fieldName = Trim$(fieldName)
     ' 如果 fieldName 包含空格或特殊字元，用方括號包圍
-    If InStr(fieldName, " ") > 0 Or InStr(fieldName, "-") > 0 Then
-        fieldName = "[" & fieldName & "]"
-    End If
+    fieldName = "[" & fieldName & "]"
     Nz = "IIF(ISNULL(" & fieldName & ")," & defaultValue & "," & fieldName & ")"
 End Function

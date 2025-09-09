@@ -56,7 +56,7 @@ Private Sub btnExit_Click()
 End Sub
 
 Private Sub btnTestDefault_Click()
-    'THIS METHOD IS FOR DEBUG TESTING
+    'THIS Method IS FOR DEBUG TESTING
     Me.PeriodStart.text = "2024/01/01"
     Me.PeriodEnd.text = "2024/12/31"
     Me.chkSaturday.Value = True

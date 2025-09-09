@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewFilterAddCriteria 
    Caption         =   "新增條件"
-   ClientHeight    =   2424
+   ClientHeight    =   3765
    ClientLeft      =   108
    ClientTop       =   408
-   ClientWidth     =   5484
+   ClientWidth     =   5268
    OleObjectBlob   =   "ViewFilterAddCriteria.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -16,6 +16,7 @@ Attribute VB_Exposed = False
 Option Explicit
 'Userform:ViewFilterAddCriteria
 Public Event AddCriteria()
+Private m_S As String
 
 Public Sub Initialize()
     '...

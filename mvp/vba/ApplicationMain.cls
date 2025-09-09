@@ -36,7 +36,7 @@ Private importer As ServiceImport
 Private validator As ServiceValidation
 Private filter As ServiceFilter
 
-'-- Application
+'***** Application
 Public Sub Initialize()
     Set vProject = New ViewProject
     Set vMain = New ViewMain
@@ -64,8 +64,7 @@ Public Sub Run()
     vProject.Show vbModeless
 End Sub
 
-
-'-- vProject
+'***** vProject
 Private Sub vProject_NewProject(ByVal path As String)
     projector.NewProject path
 End Sub
@@ -77,7 +76,7 @@ Private Sub vProject_SelectProject(ByVal path As String)
     vMain.Show vbModeless
 End Sub
 
-'-- vMain
+'***** vMain
 Private Sub vMain_DoStep1()
     importer.Initialize context
     '--
@@ -103,7 +102,23 @@ Private Sub vMain_DoStep4()
     'vExport.Show vbModeless
 End Sub
 
-'-- vImport
+Private Sub vMain_ExitApplication()
+    '釋放資源
+    If Not context Is Nothing Then
+        If Not context.DbInput Is Nothing Then
+            context.DbInput.Disconnect
+            Set context.DbInput = Nothing
+        End If
+        If Not context.DbValid Is Nothing Then
+            context.DbValid.Disconnect
+            Set context.DbValid = Nothing
+        End If
+        Set context = Nothing
+    End If
+    Application.Quit
+End Sub
+
+'***** vImport
 Private Sub vImport_ImportGl()
     importer.OpenWizard "gl"
     vImport.lblGlStatus.Caption = "匯入資料表: " & context.gl.Name
@@ -113,10 +128,12 @@ Private Sub vImport_ImportTb()
     vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.Name
 End Sub
 Private Sub vImport_MapGl()
+    '@TODO:檢查是否有匯入GL資料表
     vMapGl.Initialize context.DbInput
     vMapGl.Show vbModeless
 End Sub
 Private Sub vImport_MapTb()
+    '@TODO:檢查是否有匯入GL資料表
     vMapTb.Initialize context.DbInput
     vMapTb.Show vbModeless
 End Sub
@@ -130,21 +147,27 @@ Private Sub vImport_Complete()
     '結算所有處理步驟的結果
 End Sub
 
-'-- vMapGl
-Private Sub vMapGl_ApplyField(ByVal dict As Dictionary)
+'***** vMapGl
+Private Sub vMapGl_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
+    context.gl.Method = amountMethod
     If Not importer.ApplyGl(dict) Then
-        'error
+        MsgBox "GL套用欄位失敗", vbExclamation, "GL套用欄位"
     Else
         'pass
     End If
 End Sub
 
-'-- vMapTb
-Private Sub vMapTb_ApplyField(ByVal dict As Dictionary)
+'***** vMapTb
+Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
+    context.tb.Method = amountMethod
     If Not importer.ApplyTb(dict) Then
-        'error
+        MsgBox "TB套用欄位失敗", vbExclamation, "TB套用欄位"
     Else
         'pass
     End If
 End Sub
 
+'***** vExport
+Private Sub vExport_ExportWp()
+
+End Sub

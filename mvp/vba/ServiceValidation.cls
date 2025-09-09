@@ -15,15 +15,15 @@ Public Sub Initialize(ByRef context As ContextManager)
     Set db = context.DbValid
 End Sub
 Public Function Completeness() As Boolean
-
+    
 End Function
-
+    
 Public Function DocumentBalance() As Boolean
 
 End Function
 
 Public Function RDE() As Boolean
-
+    
 End Function
 
 

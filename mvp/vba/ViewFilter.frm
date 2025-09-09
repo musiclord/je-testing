@@ -16,8 +16,17 @@ Attribute VB_Exposed = False
 Option Explicit
 'Userform:ViewFilter
 Public Event OverviewCriteria()
+Private m_Sql As String
 
 Public Sub Initialize()
+    '...
+End Sub
+
+Private Sub btnCustomSQL_Click()
+    m_Sql = ""
+End Sub
+
+Private Sub btnExecute_Click()
     '...
 End Sub
 
@@ -26,7 +35,25 @@ Private Sub btnOverview_Click()
     RaiseEvent OverviewCriteria
 End Sub
 
+Private Sub btnAddCriteria_Click()
+    '...
+End Sub
+
+Private Sub btnAddPreset_Click()
+    '...
+End Sub
+
+Private Sub btnRemoveCondition_Click()
+    '...
+End Sub
+
+Private Sub btnRemovePreset_Click()
+    '...
+End Sub
+
+
 Private Sub btnExit_Click()
     Me.Hide
     Unload Me
 End Sub
+

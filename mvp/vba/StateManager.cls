@@ -10,4 +10,5 @@ Attribute VB_Exposed = False
 Option Explicit
 'Class:StateManager
 
-'@TODO:用於儲存/讀取專案狀態的元件，
+'@TODO:用於儲存/讀取專案狀態的元件
+

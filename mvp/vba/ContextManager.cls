@@ -14,7 +14,7 @@ Private m_DbValid As DbAccess
 Private m_Gl As EntityGl
 Private m_Tb As EntityTb
 
-'--屬性
+'***** 屬性
 Public Property Get DbInput() As DbAccess
     Set DbInput = m_DbInput
 End Property
@@ -37,7 +37,7 @@ Public Property Get tb() As EntityTb
     Set tb = m_Tb
 End Property
 
-'--方法
+'***** 方法
 Public Sub Initialize()
     Set m_DbInput = New DbAccess
     Set m_DbValid = New DbAccess

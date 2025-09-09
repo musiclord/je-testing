@@ -23,10 +23,12 @@ Public Sub Initialize()
 End Sub
 
 Private Sub btnPreviewWp_Click()
+    '預覽底稿於工作表
     RaiseEvent PreviewWp
 End Sub
 
 Private Sub btnExportWp_Click()
+    '輸出底稿於本機目錄
     RaiseEvent ExportWp
 End Sub
 

@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewMain 
    Caption         =   "UserForm1"
-   ClientHeight    =   5385
+   ClientHeight    =   5388
    ClientLeft      =   108
    ClientTop       =   408
    ClientWidth     =   9588.001
@@ -19,6 +19,7 @@ Public Event DoStep1()
 Public Event DoStep2()
 Public Event DoStep3()
 Public Event DoStep4()
+Public Event ExitApplication()
 
 Public Sub Initialize(ByVal title As String)
     Me.Caption = title
@@ -47,4 +48,5 @@ End Sub
 Private Sub btnExit_Click()
     Me.Hide
     Unload Me
+    RaiseEvent ExitApplication
 End Sub
