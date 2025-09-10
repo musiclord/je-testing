@@ -11,7 +11,7 @@ Option Explicit
 'Class:ContextManager
 Private m_DbInput As DbAccess
 Private m_DbValid As DbAccess
-Private m_Gl As EntityGl
+Private m_Je As EntityJe
 Private m_Tb As EntityTb
 
 '***** ÄÝ©Ê
@@ -29,8 +29,8 @@ Public Property Set DbValid(ByVal db As DbAccess)
     Set m_DbValid = db
 End Property
 
-Public Property Get gl() As EntityGl
-    Set gl = m_Gl
+Public Property Get je() As EntityJe
+    Set je = m_Je
 End Property
 
 Public Property Get tb() As EntityTb
@@ -41,6 +41,6 @@ End Property
 Public Sub Initialize()
     Set m_DbInput = New DbAccess
     Set m_DbValid = New DbAccess
-    Set m_Gl = New EntityGl
+    Set m_Je = New EntityJe
     Set m_Tb = New EntityTb
 End Sub

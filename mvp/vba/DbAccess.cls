@@ -28,8 +28,8 @@ End Property
 Public Property Get path() As String
     path = m_Path
 End Property
-Public Property Let path(ByVal Value As String)
-    m_Path = Value
+Public Property Let path(ByVal value As String)
+    m_Path = value
 End Property
 
 '***** ¤èªk

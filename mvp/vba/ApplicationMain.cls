@@ -16,8 +16,8 @@ Private WithEvents vMain As ViewMain
 Attribute vMain.VB_VarHelpID = -1
 Private WithEvents vImport As ViewImport
 Attribute vImport.VB_VarHelpID = -1
-Private WithEvents vMapGl As ViewImportMapGl
-Attribute vMapGl.VB_VarHelpID = -1
+Private WithEvents vMapJe As ViewImportMapJe
+Attribute vMapJe.VB_VarHelpID = -1
 Private WithEvents vMapTb As ViewImportMapTb
 Attribute vMapTb.VB_VarHelpID = -1
 Private WithEvents vValidation As ViewValidation
@@ -41,7 +41,7 @@ Public Sub Initialize()
     Set vProject = New ViewProject
     Set vMain = New ViewMain
     Set vImport = New ViewImport
-    Set vMapGl = New ViewImportMapGl
+    Set vMapJe = New ViewImportMapJe
     Set vMapTb = New ViewImportMapTb
     Set vValidation = New ViewValidation
     Set vFilter = New ViewFilter
@@ -119,25 +119,25 @@ Private Sub vMain_ExitApplication()
 End Sub
 
 '***** vImport
-Private Sub vImport_ImportGl()
-    importer.OpenWizard "gl"
-    vImport.lblGlStatus.Caption = "匯入資料表: " & context.gl.Name
+Private Sub vImport_ImportJe()
+    importer.OpenWizard "je"
+    vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.Name
 End Sub
 Private Sub vImport_ImportTb()
     importer.OpenWizard "tb"
     vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.Name
 End Sub
-Private Sub vImport_MapGl()
-    '@TODO:檢查是否有匯入GL資料表
-    vMapGl.Initialize context.DbInput
-    vMapGl.Show vbModeless
+Private Sub vImport_MapJe()
+    '@TODO:檢查是否有匯入 JE 資料表
+    vMapJe.Initialize context.DbInput
+    vMapJe.Show vbModeless
 End Sub
 Private Sub vImport_MapTb()
-    '@TODO:檢查是否有匯入GL資料表
+    '@TODO:檢查是否有匯入 TB 資料表
     vMapTb.Initialize context.DbInput
     vMapTb.Show vbModeless
 End Sub
-Private Sub vImport_FormatGl(ByVal format As String)
+Private Sub vImport_FormatJe(ByVal format As String)
     importer.dType = format
 End Sub
 Private Sub vImport_FormatTb(ByVal format As String)
@@ -147,11 +147,11 @@ Private Sub vImport_Complete()
     '結算所有處理步驟的結果
 End Sub
 
-'***** vMapGl
-Private Sub vMapGl_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
-    context.gl.Method = amountMethod
-    If Not importer.ApplyGl(dict) Then
-        MsgBox "GL套用欄位失敗", vbExclamation, "GL套用欄位"
+'***** vMapJe
+Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
+    context.je.Method = amountMethod
+    If Not importer.ApplyJe(dict) Then
+        MsgBox "JE 套用欄位失敗", vbExclamation, "JE 套用欄位"
     Else
         'pass
     End If
@@ -167,7 +167,22 @@ Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Lo
     End If
 End Sub
 
+'***** vValidation
+Private Sub vValidation_Completeness()
+    validator.Completeness
+End Sub
+
+Private Sub vValidation_DocumentBalance()
+    validator.DocumentBalance
+End Sub
+
+Private Sub vValidation_INF()
+    validator.INF
+End Sub
+
 '***** vExport
 Private Sub vExport_ExportWp()
 
 End Sub
+
+

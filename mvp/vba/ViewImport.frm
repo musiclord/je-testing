@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImport 
    Caption         =   "Import"
-   ClientHeight    =   5652
-   ClientLeft      =   108
-   ClientTop       =   408
-   ClientWidth     =   8148
+   ClientHeight    =   5655
+   ClientLeft      =   105
+   ClientTop       =   405
+   ClientWidth     =   8145
    OleObjectBlob   =   "ViewImport.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End
@@ -15,24 +15,24 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 'Userform:ViewImport
-Public Event ImportGl()
+Public Event ImportJe()
 Public Event ImportTb()
-Public Event MapGl()
+Public Event MapJe()
 Public Event MapTb()
 Public Event Complete()
-Public Event FormatGl(ByVal format As String)
+Public Event FormatJe(ByVal format As String)
 Public Event FormatTb(ByVal format As String)
 
 Public Sub Initialize()
-    Me.optGlXlsx.Value = True
-    Call optGlXlsx_Click
-    Me.optTbXlsx.Value = True
+    Me.optJeXlsx.value = True
+    Call optJeXlsx_Click
+    Me.optTbXlsx.value = True
     Call optTbXlsx_Click
 End Sub
 
-Private Sub btnImportGl_Click()
+Private Sub btnImportJe_Click()
     '...
-    RaiseEvent ImportGl
+    RaiseEvent ImportJe
 End Sub
 
 Private Sub btnImportTb_Click()
@@ -40,9 +40,9 @@ Private Sub btnImportTb_Click()
     RaiseEvent ImportTb
 End Sub
 
-Private Sub btnMapGl_Click()
+Private Sub btnMapJe_Click()
     '...
-    RaiseEvent MapGl
+    RaiseEvent MapJe
 End Sub
 
 Private Sub btnMapTb_Click()
@@ -59,17 +59,17 @@ Private Sub btnTestDefault_Click()
     'THIS Method IS FOR DEBUG TESTING
     Me.PeriodStart.text = "2024/01/01"
     Me.PeriodEnd.text = "2024/12/31"
-    Me.chkSaturday.Value = True
-    Me.chkSunday.Value = True
+    Me.chkSaturday.value = True
+    Me.chkSunday.value = True
 End Sub
 
 
-Private Sub optGlXlsx_Click()
-    RaiseEvent FormatGl("excel")
+Private Sub optJeXlsx_Click()
+    RaiseEvent FormatJe("excel")
 End Sub
 
-Private Sub optGlCsv_Click()
-    RaiseEvent FormatGl("csv")
+Private Sub optJeCsv_Click()
+    RaiseEvent FormatJe("csv")
 End Sub
 
 Private Sub optTbXlsx_Click()

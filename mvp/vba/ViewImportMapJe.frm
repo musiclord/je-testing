@@ -1,26 +1,26 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapTb 
-   Caption         =   "UserForm1"
-   ClientHeight    =   7020
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapJe 
+   Caption         =   "映射 JE"
+   ClientHeight    =   8820.001
    ClientLeft      =   105
    ClientTop       =   405
-   ClientWidth     =   7635
-   OleObjectBlob   =   "ViewImportMapTb.frx":0000
+   ClientWidth     =   7650
+   OleObjectBlob   =   "ViewImportMapJe.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
-Attribute VB_Name = "ViewImportMapTb"
+Attribute VB_Name = "ViewImportMapJe"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'Userform:ViewImportMapTb
+'Userform:ViewImportMapJe
 Public Event ApplyField(ByVal dict As Dictionary, ByVal Method As Long)
 Private m_Method As Long
 
 Public Sub Initialize(ByRef db As DbAccess)
     Dim Fields As Collection
-    Set Fields = db.GetTableFields("TB")
+    Set Fields = db.GetTableFields("JE")
     UpdateFields Fields
     DisableControls
     btnMethod1_Click
@@ -29,35 +29,42 @@ End Sub
 Private Sub btnApplyField_Click()
     Dim dict As New Dictionary
     '金額欄位
-    dict("ChangeAmount") = Me.ChangeAmount.value
-    dict("OpeningBalance") = Me.OpeningBalance.value
-    dict("OpeningDebitBalance") = Me.OpeningDebitBalance.value
-    dict("OpeningCreditBalance") = Me.OpeningCreditBalance.value
-    dict("ClosingBalance") = Me.ClosingBalance.value
-    dict("ClosingDebitBalance") = Me.ClosingDebitBalance.value
-    dict("ClosingCreditBalance") = Me.ClosingCreditBalance.value
+    dict("EntryAmount") = Me.EntryAmount.value
     dict("DebitAmount") = Me.DebitAmount.value
     dict("CreditAmount") = Me.CreditAmount.value
+    dict("DrCr") = Me.DrCr.value
+    dict("IsDebit") = Me.IsDebit.value
     '必選欄位
     dict("AccountNumber") = Me.AccountNumber.value
     dict("AccountName") = Me.AccountName.value
+    dict("DocumentNumber") = Me.DocumentNumber.value
+    dict("LineItem") = Me.LineItem.value
+    dict("PostDate") = Me.PostDate.value
+    dict("EntryDescription") = Me.EntryDescription.value
+    '可選欄位
+    dict("ApprovalDate") = Me.ApprovalDate.value
+    dict("ApprovedBy") = Me.ApprovedBy.value
+    dict("CreatedBy") = Me.CreatedBy.value
+    dict("SourceModule") = Me.SourceModule.value
+    dict("IsManual") = Me.IsManual.value
+    dict("IsApprovedDateAsLedgerDate") = Me.IsApprovedDateAsLedgerDate.value
     '傳回
     RaiseEvent ApplyField(dict, m_Method)
 End Sub
 
 Private Sub btnMethod1_Click()
-    '設年度變動金額
+    '僅傳票金額
     Call DisableControls
-    Me.lblChangeAmount.ForeColor = RGB(0, 0, 0)
-    Me.ChangeAmount.Enabled = True
+    Me.lblEntryAmount.ForeColor = RGB(0, 0, 0)
+    Me.EntryAmount.Enabled = True
     m_Method = 1
 End Sub
 
 Private Sub btnMethod2_Click()
-    '期初期末金額
+    '分別借貸金額
     Call DisableControls
     Dim n As Variant
-    For Each n In Array("OpeningBalance", "ClosingBalance")
+    For Each n In Array("DebitAmount", "CreditAmount")
         Me.Controls("lbl" & n).ForeColor = RGB(0, 0, 0)
         Me.Controls(n).Enabled = True
     Next n
@@ -65,32 +72,24 @@ Private Sub btnMethod2_Click()
 End Sub
 
 Private Sub btnMethod3_Click()
-    '借方貸方金額
+    '分借貸別
     Call DisableControls
     Dim n As Variant
-    For Each n In Array("DebitAmount", "CreditAmount")
+    For Each n In Array("EntryAmount", "DrCr", "IsDebit")
         Me.Controls("lbl" & n).ForeColor = RGB(0, 0, 0)
         Me.Controls(n).Enabled = True
     Next n
     m_Method = 3
 End Sub
 
-Private Sub btnMethod4_Click()
-    '借貸之期初期末金額
-    Call DisableControls
-    Dim n As Variant
-    For Each n In Array("OpeningDebitBalance", "ClosingDebitBalance", "OpeningCreditBalance", "ClosingCreditBalance")
-        Me.Controls("lbl" & n).ForeColor = RGB(0, 0, 0)
-        Me.Controls(n).Enabled = True
-    Next n
-    m_Method = 4
-End Sub
-
 Private Sub btnTestDefault_Click()
     '### THIS Method IS FOR DEBUG TESTING ###
-    Call btnMethod3_Click
+    Call btnMethod2_Click
     Me.AccountName.value = "項目名稱"
     Me.AccountNumber.value = "會計項目"
+    Me.DocumentNumber.value = "傳票號碼"
+    Me.EntryDescription.value = "摘要"
+    Me.PostDate.value = "日期"
     Me.DebitAmount.value = "借方金額"
     Me.CreditAmount.value = "貸方金額"
 End Sub
@@ -122,12 +121,12 @@ Private Sub DisableControls()
     '關閉金額欄位處理之控制項
     Dim ctrls As Variant, n As Variant
     ctrls = Array( _
-            "ChangeAmount", "OpeningBalance", "ClosingBalance", _
-            "DebitAmount", "OpeningDebitBalance", "ClosingDebitBalance", _
-            "CreditAmount", "OpeningCreditBalance", "ClosingCreditBalance")
+            "EntryAmount", "DrCr", "IsDebit", _
+            "DebitAmount", "CreditAmount")
     For Each n In ctrls
         Me.Controls("lbl" & n).ForeColor = RGB(128, 128, 128)
         Me.Controls(n).Enabled = False
     Next n
 End Sub
+
 
