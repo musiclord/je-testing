@@ -29,14 +29,14 @@ End Sub
 
 Private Sub btnNew_Click()
     Dim path As String
-    path = ThisWorkbook.path & "\" & Trim$(CStr(Me.txtbInputName.value))
+    path = ThisWorkbook.path & "\" & Trim$(CStr(Me.txtbInputName.Value))
     RaiseEvent NewProject(path)
     Call UpdateProjectList 'Refresh
 End Sub
 
 Private Sub btnSelect_Click()
     Dim path As String
-    path = ThisWorkbook.path & "\" & Trim$(CStr(Me.lstProjectList.value))
+    path = ThisWorkbook.path & "\" & Trim$(CStr(Me.lstProjectList.Value))
     RaiseEvent SelectProject(path)
 End Sub
 

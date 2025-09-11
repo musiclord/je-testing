@@ -37,17 +37,16 @@ Private Sub Class_Initialize()
         "ApprovalDate", _
         "LineItem", _
         "K_Amount", _
-        "K_Diff", _
-        "" _
+        "K_Diff" _
     )
     For i = LBound(Fields) To UBound(Fields)
         m_Fields(Fields(i)) = Fields(i)
     Next i
 End Sub
 
-Public Sub SetField(ByVal key As String, ByVal value As String)
-    If m_Fields.Exists(key) And Len(value) > 0 Then
-        m_Fields(key) = value
+Public Sub SetField(ByVal key As String, ByVal Value As String)
+    If m_Fields.Exists(key) And Len(Value) > 0 Then
+        m_Fields(key) = Value
     End If
 End Sub
 
@@ -64,14 +63,14 @@ End Sub
 Public Property Get Name() As String
     Name = m_Name
 End Property
-Public Property Let Name(ByVal value As String)
-    m_Name = value
+Public Property Let Name(ByVal Value As String)
+    m_Name = Value
 End Property
 Public Property Get Method() As Long
     Method = m_Method
 End Property
-Public Property Let Method(ByVal value As Long)
-    m_Method = value
+Public Property Let Method(ByVal Value As Long)
+    m_Method = Value
 End Property
 Public Property Get Fields() As Dictionary
     Set Fields = m_Fields

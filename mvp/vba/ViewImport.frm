@@ -24,9 +24,9 @@ Public Event FormatJe(ByVal format As String)
 Public Event FormatTb(ByVal format As String)
 
 Public Sub Initialize()
-    Me.optJeXlsx.value = True
+    Me.optJeXlsx.Value = True
     Call optJeXlsx_Click
-    Me.optTbXlsx.value = True
+    Me.optTbXlsx.Value = True
     Call optTbXlsx_Click
 End Sub
 
@@ -59,8 +59,8 @@ Private Sub btnTestDefault_Click()
     'THIS Method IS FOR DEBUG TESTING
     Me.PeriodStart.text = "2024/01/01"
     Me.PeriodEnd.text = "2024/12/31"
-    Me.chkSaturday.value = True
-    Me.chkSunday.value = True
+    Me.chkSaturday.Value = True
+    Me.chkSunday.Value = True
 End Sub
 
 

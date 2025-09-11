@@ -29,25 +29,25 @@ End Sub
 Private Sub btnApplyField_Click()
     Dim dict As New Dictionary
     '金額欄位
-    dict("EntryAmount") = Me.EntryAmount.value
-    dict("DebitAmount") = Me.DebitAmount.value
-    dict("CreditAmount") = Me.CreditAmount.value
-    dict("DrCr") = Me.DrCr.value
-    dict("IsDebit") = Me.IsDebit.value
+    dict("EntryAmount") = Me.EntryAmount.Value
+    dict("DebitAmount") = Me.DebitAmount.Value
+    dict("CreditAmount") = Me.CreditAmount.Value
+    dict("DrCr") = Me.DrCr.Value
+    dict("IsDebit") = Me.IsDebit.Value
     '必選欄位
-    dict("AccountNumber") = Me.AccountNumber.value
-    dict("AccountName") = Me.AccountName.value
-    dict("DocumentNumber") = Me.DocumentNumber.value
-    dict("LineItem") = Me.LineItem.value
-    dict("PostDate") = Me.PostDate.value
-    dict("EntryDescription") = Me.EntryDescription.value
+    dict("AccountNumber") = Me.AccountNumber.Value
+    dict("AccountName") = Me.AccountName.Value
+    dict("DocumentNumber") = Me.DocumentNumber.Value
+    dict("LineItem") = Me.LineItem.Value
+    dict("PostDate") = Me.PostDate.Value
+    dict("EntryDescription") = Me.EntryDescription.Value
     '可選欄位
-    dict("ApprovalDate") = Me.ApprovalDate.value
-    dict("ApprovedBy") = Me.ApprovedBy.value
-    dict("CreatedBy") = Me.CreatedBy.value
-    dict("SourceModule") = Me.SourceModule.value
-    dict("IsManual") = Me.IsManual.value
-    dict("IsApprovedDateAsLedgerDate") = Me.IsApprovedDateAsLedgerDate.value
+    dict("ApprovalDate") = Me.ApprovalDate.Value
+    dict("ApprovedBy") = Me.ApprovedBy.Value
+    dict("CreatedBy") = Me.CreatedBy.Value
+    dict("SourceModule") = Me.SourceModule.Value
+    dict("IsManual") = Me.IsManual.Value
+    dict("IsApprovedDateAsLedgerDate") = Me.IsApprovedDateAsLedgerDate.Value
     '傳回
     RaiseEvent ApplyField(dict, m_Method)
 End Sub
@@ -85,13 +85,13 @@ End Sub
 Private Sub btnTestDefault_Click()
     '### THIS Method IS FOR DEBUG TESTING ###
     Call btnMethod2_Click
-    Me.AccountName.value = "項目名稱"
-    Me.AccountNumber.value = "會計項目"
-    Me.DocumentNumber.value = "傳票號碼"
-    Me.EntryDescription.value = "摘要"
-    Me.PostDate.value = "日期"
-    Me.DebitAmount.value = "借方金額"
-    Me.CreditAmount.value = "貸方金額"
+    Me.AccountName.Value = FindField(Me.AccountName, "項目名稱")
+    Me.AccountNumber.Value = FindField(Me.AccountNumber, "會計項目")
+    Me.DocumentNumber.Value = FindField(Me.DocumentNumber, "傳票號碼")
+    Me.EntryDescription.Value = FindField(Me.EntryDescription, "摘要")
+    Me.PostDate.Value = FindField(Me.PostDate, "日期")
+    Me.DebitAmount.Value = FindField(Me.DebitAmount, "借方金額")
+    Me.CreditAmount.Value = FindField(Me.CreditAmount, "貸方金額")
 End Sub
 
 Private Sub btnExit_Click()
@@ -129,4 +129,15 @@ Private Sub DisableControls()
     Next n
 End Sub
 
-
+Private Function FindField(ByVal cbo As MSForms.ComboBox, ByVal keyword As String) As String
+    '在 ComboBox 中尋找包含關鍵字的項目
+    Dim i As Long
+    For i = 0 To cbo.ListCount - 1
+        If InStr(1, cbo.List(i), keyword, vbTextCompare) > 0 Then
+            FindField = cbo.List(i)
+            Exit Function
+        End If
+    Next i
+    '如果找不到，回傳空字串
+    FindField = ""
+End Function

@@ -28,8 +28,8 @@ End Property
 Public Property Get path() As String
     path = m_Path
 End Property
-Public Property Let path(ByVal value As String)
-    m_Path = value
+Public Property Let path(ByVal Value As String)
+    m_Path = Value
 End Property
 
 '***** ¤èªk
@@ -136,6 +136,7 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     If Not m_IsConnected Then Connect
     Debug.Print "Sql: " & sql
     Set ExecuteQuery = m_Db.OpenRecordset(sql, dbOpenSnapshot)
+    Application.Wait Now + TimeValue("00:00:01")
 End Function
 
 Public Function ExecuteNonQuery(ByVal sql As String) As Long
@@ -143,6 +144,7 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
     Debug.Print "Sql: " & sql
     m_Db.Execute sql, dbFailOnError
     ExecuteNonQuery = m_Db.RecordsAffected
+    Application.Wait Now + TimeValue("00:00:01")
 End Function
 
 Public Function Summarization()

@@ -17,8 +17,8 @@ Private m_Ace As New Access.Application
 Private m_DataType As String
 Private m_Method As Long
 
-Public Property Let dType(ByVal value As String)
-    m_DataType = value
+Public Property Let dType(ByVal Value As String)
+    m_DataType = Value
 End Property
 
 Public Sub Initialize(context As ContextManager)
@@ -82,6 +82,8 @@ Public Sub OpenWizard(ByVal target As String)
                 tb.Name = newTables.Item(1)
                 Debug.Print "匯入/更新 TB 表：" & tb.Name
         End Select
+        '對匯入的資料表加入後綴
+        Call AddFieldSuffix(newTables.Item(1), target)
     ElseIf newTables.Count = 0 Then
         Debug.Print "沒有偵測到新表或更新，可能是使用者取消操作"
     Else
@@ -96,17 +98,12 @@ End Sub
 Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
     On Error GoTo ErrorHandler
     ApplyJe = False
-    
     '將 JE 欄位設給資料實體
     Dim key As Variant
     For Each key In dict.Keys
         je.SetField key, dict(key)
     Next key
     je.PrintFields
-    
-    '對欄位名稱添加後綴，避免欄位同名
-    Call AddFieldSuffix(je.Name, "_JE")
-    
     '@TODO: 檢查欄位型別
     If Not ProcessJeAmount(je.Method) Then
         'error
@@ -125,17 +122,12 @@ End Function
 
 Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
     ApplyTb = False
-    
     '將TB欄位設給資料實體
     Dim key As Variant
     For Each key In dict.Keys
         tb.SetField key, dict(key)
     Next key
     tb.PrintFields
-    
-    '對欄位名稱添加後綴，避免欄位同名
-    Call AddFieldSuffix(tb.Name, "_TB")
-    
     '如果要避免欄位混淆，語法可以寫為
     'SELECT
     '  A.[Date]
@@ -146,7 +138,6 @@ Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
     '另外，目前在 IDEA 中需要分別欄位的有: 科目名稱, 科目編號, 傳票號碼, 傳票金額, 變動金額
     '並且還需要考量新產生的欄位例如 _SUM 或 _DIFF 等
     '對此他們需要標準化ETL流程，統一所有需要計算的欄位名稱與型別
-    
     '@TODO: 檢查欄位型別
     If Not ProcessTbAmount(tb.Method) Then
         'error
@@ -284,12 +275,12 @@ Private Sub AddFieldSuffix(ByVal tableName As String, suffix As String)
     Dim fld As DAO.Field
     Dim oldName As String
     Dim newName As String
-    Set dbs = db.Database
+    Set dbs = m_Ace.CurrentDb
     Set tdf = dbs.TableDefs(tableName)
     '逐一重新命名欄位
     For Each fld In tdf.Fields
         oldName = fld.Name
-        newName = oldName & suffix
+        newName = oldName & "_" & UCase(suffix)
         fld.Name = newName
     Next fld
 End Sub

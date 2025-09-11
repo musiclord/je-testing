@@ -29,18 +29,18 @@ End Sub
 Private Sub btnApplyField_Click()
     Dim dict As New Dictionary
     '金額欄位
-    dict("ChangeAmount") = Me.ChangeAmount.value
-    dict("OpeningBalance") = Me.OpeningBalance.value
-    dict("OpeningDebitBalance") = Me.OpeningDebitBalance.value
-    dict("OpeningCreditBalance") = Me.OpeningCreditBalance.value
-    dict("ClosingBalance") = Me.ClosingBalance.value
-    dict("ClosingDebitBalance") = Me.ClosingDebitBalance.value
-    dict("ClosingCreditBalance") = Me.ClosingCreditBalance.value
-    dict("DebitAmount") = Me.DebitAmount.value
-    dict("CreditAmount") = Me.CreditAmount.value
+    dict("ChangeAmount") = Me.ChangeAmount.Value
+    dict("OpeningBalance") = Me.OpeningBalance.Value
+    dict("OpeningDebitBalance") = Me.OpeningDebitBalance.Value
+    dict("OpeningCreditBalance") = Me.OpeningCreditBalance.Value
+    dict("ClosingBalance") = Me.ClosingBalance.Value
+    dict("ClosingDebitBalance") = Me.ClosingDebitBalance.Value
+    dict("ClosingCreditBalance") = Me.ClosingCreditBalance.Value
+    dict("DebitAmount") = Me.DebitAmount.Value
+    dict("CreditAmount") = Me.CreditAmount.Value
     '必選欄位
-    dict("AccountNumber") = Me.AccountNumber.value
-    dict("AccountName") = Me.AccountName.value
+    dict("AccountNumber") = Me.AccountNumber.Value
+    dict("AccountName") = Me.AccountName.Value
     '傳回
     RaiseEvent ApplyField(dict, m_Method)
 End Sub
@@ -89,10 +89,10 @@ End Sub
 Private Sub btnTestDefault_Click()
     '### THIS Method IS FOR DEBUG TESTING ###
     Call btnMethod3_Click
-    Me.AccountName.value = "項目名稱"
-    Me.AccountNumber.value = "會計項目"
-    Me.DebitAmount.value = "借方金額"
-    Me.CreditAmount.value = "貸方金額"
+    Me.AccountName.Value = FindField(Me.AccountName, "項目名稱")
+    Me.AccountNumber.Value = FindField(Me.AccountNumber, "會計項目")
+    Me.DebitAmount.Value = FindField(Me.DebitAmount, "借方金額")
+    Me.CreditAmount.Value = FindField(Me.CreditAmount, "貸方金額")
 End Sub
 
 Private Sub btnExit_Click()
@@ -131,3 +131,15 @@ Private Sub DisableControls()
     Next n
 End Sub
 
+Private Function FindField(ByVal cbo As MSForms.ComboBox, ByVal keyword As String) As String
+    '在 ComboBox 中尋找包含關鍵字的項目
+    Dim i As Long
+    For i = 0 To cbo.ListCount - 1
+        If InStr(1, cbo.List(i), keyword, vbTextCompare) > 0 Then
+            FindField = cbo.List(i)
+            Exit Function
+        End If
+    Next i
+    '如果找不到，回傳空字串
+    FindField = ""
+End Function

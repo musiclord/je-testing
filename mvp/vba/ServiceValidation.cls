@@ -35,7 +35,6 @@ Public Function Completeness() As Boolean
           "FROM " & je.Name & _
           "WHERE " & je.PostDate & _
           "BETWEEN " & dtStart & " AND " & dtEnd & ";"
-    
     '依 JE 傳票編號彙總金額
     JE_Account_Sum = "JE_Account_Sum"
     sql = "SELECT " & _
@@ -44,7 +43,6 @@ Public Function Completeness() As Boolean
           "INTO " & JE_Account_Sum & " " & _
           "FROM " & JE_In_Period & " " & _
           "GROUP BY [科目編號_JE];"
-    
     '以科目編號為鍵值，將 JE 彙總結果與 TB 做 LEFT JOIN
     Completeness_Calculate = "Completeness_Calculate"
     sql = "SELECT " & _
@@ -93,7 +91,10 @@ Public Function DocumentBalance() As Boolean
 End Function
 
 Public Function INF() As Boolean
-    
+    Duxd
 End Function
 
 
+Private Function Duxd() As Boolean
+
+End Function
