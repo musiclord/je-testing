@@ -62,6 +62,21 @@ Public Sub Disconnect()
     m_IsConnected = False
 End Sub
 
+Public Sub RefreshSchema()
+    On Error Resume Next
+    If Not m_IsConnected Then Exit Sub
+    '刷新 Jet/ACE 引擎快取
+    DAO.DBEngine.Idle dbRefreshCache
+    '刷新連線的結構快取
+    m_Db.TableDefs.Refresh
+    '刷新所有資料表的欄位快取
+    Dim tdf As DAO.TableDef
+    For Each tdf In m_Db.TableDefs
+        tdf.Fields.Refresh
+    Next
+    On Error GoTo 0
+End Sub
+
 Public Sub BeginTx()
     If Not m_IsConnected Then Connect
     If m_Tx Then
@@ -91,25 +106,25 @@ Public Sub RollbackTx()
 End Sub
 
 Public Function CreateTable() As Boolean
+    '創建資料表
+    If Not m_IsConnected Then Connect
     
 End Function
 
 Public Function DropTable(ByVal tableName As String) As Boolean
+    '刪除資料表
     If Not m_IsConnected Then Connect
     If Not TableExists(tableName) Then
         DropTable = False
         Exit Function
     End If
-    Dim sql As String
-    sql = "DROP TABLE [" & tableName & "]"
-    Debug.Print "Sql:" & sql
-    m_Db.Execute sql, dbFailOnError
+    Call ExecuteNonQuery("DROP TABLE [" & tableName & "]")
     DropTable = True
 End Function
 
 Public Function TableExists(ByVal tableName As String) As Boolean
+    '檢查資料表
     If Not m_IsConnected Then Connect
-    '檢查資料表是否存在
     Dim dummyTdf As DAO.TableDef
     On Error Resume Next
     Set dummyTdf = m_Db.TableDefs(tableName)
@@ -122,6 +137,11 @@ Public Function TableExists(ByVal tableName As String) As Boolean
     On Error GoTo 0
 End Function
 
+Public Function CreateField(ByVal fieldName As String) As Boolean
+
+End Function
+
+
 Public Function FieldExists(ByVal tdf As DAO.TableDef, ByVal fieldName As String) As Boolean
     '檢查欄位是否存在
     Dim dummyFld As DAO.Field
@@ -132,24 +152,49 @@ Public Function FieldExists(ByVal tdf As DAO.TableDef, ByVal fieldName As String
     On Error GoTo 0
 End Function
 
-Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
+Public Function ExecuteQuery(ByVal sql As String, Optional pause As Integer = 1) As DAO.Recordset
     If Not m_IsConnected Then Connect
-    Debug.Print "Sql: " & sql
+    Debug.Print "********** SQL **********" & vbCrLf & sql
+    '靜候
+    If pause > 0 Then
+        Application.wait Now + TimeSerial(0, 0, pause)
+    End If
+    '回傳記錄集
     Set ExecuteQuery = m_Db.OpenRecordset(sql, dbOpenSnapshot)
-    Application.Wait Now + TimeValue("00:00:01")
 End Function
 
-Public Function ExecuteNonQuery(ByVal sql As String) As Long
+Public Function ExecuteNonQuery(ByVal sql As String, Optional pause As Integer = 1) As Long
     If Not m_IsConnected Then Connect
-    Debug.Print "Sql: " & sql
+    Debug.Print "********** SQL **********" & vbCrLf & sql
     m_Db.Execute sql, dbFailOnError
+    '靜候
+    If pause > 0 Then
+        Application.wait Now + TimeSerial(0, 0, pause)
+    End If
+    '回傳受影響筆數
     ExecuteNonQuery = m_Db.RecordsAffected
-    Application.Wait Now + TimeValue("00:00:01")
 End Function
 
-Public Function Summarization()
-
+Public Function Summarization(ByVal tableName As String, fieldToSum As String, fieldToGroup As String)
+    '負責資料彙總的功能，對資料按某些維度進行分組，並加總指定的數值欄位。
+    'tableName:     要彙總的資料表
+    'fieldToSum:    要加總的數值欄位
+    'fieldToGroup:  要分組的屬性欄位
+    '...
+    Dim sql As String
+    Dim newTable As String
+    Dim newField As String
+    newTable = tableName & "_SUM"
+    newField = fieldToSum & "_SUM"
+    sql = "SELECT " & _
+          "  [" & fieldToGroup & "]," & _
+          "  SUM([" & fieldToSum & "]) AS [" & newField & "]" & _
+          "INTO " & newTable & " " & _
+          "FROM " & tableName & " " & _
+          "GROUP BY [" & fieldToGroup & "];"
+    Call ExecuteNonQuery(sql, 1)
 End Function
+
 Public Function GetTableFields(ByVal tableName As String) As Collection
     '取得指定資料表的欄位
     If Not m_IsConnected Then Connect

@@ -29,7 +29,7 @@ End Sub
 Private Sub btnApplyField_Click()
     Dim dict As New Dictionary
     '金額欄位
-    dict("EntryAmount") = Me.EntryAmount.Value
+    dict("Amount") = Me.Amount.Value
     dict("DebitAmount") = Me.DebitAmount.Value
     dict("CreditAmount") = Me.CreditAmount.Value
     dict("DrCr") = Me.DrCr.Value
@@ -55,8 +55,8 @@ End Sub
 Private Sub btnMethod1_Click()
     '僅傳票金額
     Call DisableControls
-    Me.lblEntryAmount.ForeColor = RGB(0, 0, 0)
-    Me.EntryAmount.Enabled = True
+    Me.lblAmount.ForeColor = RGB(0, 0, 0)
+    Me.Amount.Enabled = True
     m_Method = 1
 End Sub
 
@@ -75,7 +75,7 @@ Private Sub btnMethod3_Click()
     '分借貸別
     Call DisableControls
     Dim n As Variant
-    For Each n In Array("EntryAmount", "DrCr", "IsDebit")
+    For Each n In Array("Amount", "DrCr", "IsDebit")
         Me.Controls("lbl" & n).ForeColor = RGB(0, 0, 0)
         Me.Controls(n).Enabled = True
     Next n
@@ -121,7 +121,7 @@ Private Sub DisableControls()
     '關閉金額欄位處理之控制項
     Dim ctrls As Variant, n As Variant
     ctrls = Array( _
-            "EntryAmount", "DrCr", "IsDebit", _
+            "Amount", "DrCr", "IsDebit", _
             "DebitAmount", "CreditAmount")
     For Each n In ctrls
         Me.Controls("lbl" & n).ForeColor = RGB(128, 128, 128)

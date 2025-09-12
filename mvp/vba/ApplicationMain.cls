@@ -119,11 +119,13 @@ Private Sub vMain_ExitApplication()
 End Sub
 
 '***** vImport
-Private Sub vImport_ImportJe()
+Private Sub vImport_ImportJe(ByVal format As String)
+    importer.dType = format
     importer.OpenWizard "je"
     vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.Name
 End Sub
-Private Sub vImport_ImportTb()
+Private Sub vImport_ImportTb(ByVal format As String)
+    importer.dType = format
     importer.OpenWizard "tb"
     vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.Name
 End Sub
@@ -137,14 +139,12 @@ Private Sub vImport_MapTb()
     vMapTb.Initialize context.DbInput
     vMapTb.Show vbModeless
 End Sub
-Private Sub vImport_FormatJe(ByVal format As String)
-    importer.dType = format
-End Sub
-Private Sub vImport_FormatTb(ByVal format As String)
-    importer.dType = format
-End Sub
-Private Sub vImport_Complete()
+Private Sub vImport_Complete(ByVal dtStart As Date, dtEnd As Date)
     '結算所有處理步驟的結果
+    context.info.PeriodStart = dtStart
+    Debug.Print context.info.PeriodStart, TypeName(context.info.PeriodStart)
+    context.info.PeriodEnd = dtEnd
+    Debug.Print context.info.PeriodEnd, TypeName(context.info.PeriodEnd)
 End Sub
 
 '***** vMapJe

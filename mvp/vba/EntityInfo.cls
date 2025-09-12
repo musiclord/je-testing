@@ -14,6 +14,15 @@ Private m_UserName As String
 Private m_UserDomain As String
 Private m_UserFullName As String
 Private m_UserObject As Object
+Private m_PeriodStart As Date
+Private m_PeriodEnd As Date
+Private m_Monday As Boolean
+Private m_Tuesday As Boolean
+Private m_Wednesday As Boolean
+Private m_Thursday As Boolean
+Private m_Friday As Boolean
+Private m_Saturday As Boolean
+Private m_Sunday As Boolean
 
 
 Public Sub Initialize()
@@ -35,3 +44,18 @@ End Property
 Public Property Get UserFullName() As String
     Let UserFullName = m_UserFullName
 End Property
+
+Public Property Get PeriodStart() As Date
+    Let PeriodStart = m_PeriodStart
+End Property
+Public Property Let PeriodStart(ByVal Value As Date)
+    Let m_PeriodStart = Value
+End Property
+
+Public Property Get PeriodEnd() As Date
+    Let PeriodEnd = m_PeriodEnd
+End Property
+Public Property Let PeriodEnd(ByVal Value As Date)
+    Let m_PeriodEnd = Value
+End Property
+

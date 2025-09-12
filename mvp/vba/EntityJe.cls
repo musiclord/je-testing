@@ -19,7 +19,7 @@ Private Sub Class_Initialize()
     Dim Fields As Variant
     Dim i As Long
     Fields = Array( _
-        "EntryAmount", _
+        "Amount", _
         "DebitAmount", _
         "CreditAmount", _
         "EntryDescription", _
@@ -37,6 +37,7 @@ Private Sub Class_Initialize()
         "ApprovalDate", _
         "LineItem", _
         "K_Amount", _
+        "K_Amount_Sum", _
         "K_Diff" _
     )
     For i = LBound(Fields) To UBound(Fields)
@@ -76,10 +77,21 @@ Public Property Get Fields() As Dictionary
     Set Fields = m_Fields
 End Property
 
+'***** 屬性自訂欄位
+Public Property Get K_Amount() As String
+    '計算用的金額欄位
+    K_Amount = m_Fields("K_Amount")
+End Property
+Public Property Get K_Amount_Sum() As String
+    '依科目彙總後的總金額
+    K_Amount_Sum = m_Fields("K_Amount_Sum")
+End Property
+
+
 '***** 屬性快速補全
-Public Property Get EntryAmount() As String
+Public Property Get Amount() As String
     '傳票金額
-    EntryAmount = m_Fields("EntryAmount")
+    Amount = m_Fields("Amount")
 End Property
 Public Property Get DebitAmount() As String
     '借方金額
@@ -144,8 +156,4 @@ End Property
 Public Property Get LineItem() As String
     '項次
     LineItem = m_Fields("LineItem")
-End Property
-'***** 自訂欄位
-Public Property Get K_Amount() As String
-    K_Amount = m_Fields("K_Amount")
 End Property

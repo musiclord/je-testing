@@ -15,29 +15,27 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 'Userform:ViewImport
-Public Event ImportJe()
-Public Event ImportTb()
+Public Event ImportJe(ByVal format As String)
+Public Event ImportTb(ByVal format As String)
 Public Event MapJe()
 Public Event MapTb()
-Public Event Complete()
-Public Event FormatJe(ByVal format As String)
-Public Event FormatTb(ByVal format As String)
+Public Event Complete(ByVal dtStart As Date, dtEnd As Date)
+
+Private m_format As String
 
 Public Sub Initialize()
-    Me.optJeXlsx.Value = True
-    Call optJeXlsx_Click
-    Me.optTbXlsx.Value = True
-    Call optTbXlsx_Click
+    Me.optXlsx.Value = True
+    Call optXlsx_Click
 End Sub
 
 Private Sub btnImportJe_Click()
     '...
-    RaiseEvent ImportJe
+    RaiseEvent ImportJe(m_format)
 End Sub
 
 Private Sub btnImportTb_Click()
     '...
-    RaiseEvent ImportTb
+    RaiseEvent ImportTb(m_format)
 End Sub
 
 Private Sub btnMapJe_Click()
@@ -51,8 +49,11 @@ Private Sub btnMapTb_Click()
 End Sub
 
 Private Sub btnExit_Click()
+    Dim dtStart As Date, dtEnd As Date
+    dtStart = CDate(Me.PeriodStart.Value)
+    dtEnd = CDate(Me.PeriodEnd.Value)
     Me.Hide
-    RaiseEvent Complete
+    RaiseEvent Complete(dtStart, dtEnd)
 End Sub
 
 Private Sub btnTestDefault_Click()
@@ -63,20 +64,10 @@ Private Sub btnTestDefault_Click()
     Me.chkSunday.Value = True
 End Sub
 
-
-Private Sub optJeXlsx_Click()
-    RaiseEvent FormatJe("excel")
+Private Sub optCsv_Click()
+    m_format = "csv"
 End Sub
 
-Private Sub optJeCsv_Click()
-    RaiseEvent FormatJe("csv")
+Private Sub optXlsx_Click()
+    m_format = "xlsx"
 End Sub
-
-Private Sub optTbXlsx_Click()
-    RaiseEvent FormatTb("excel")
-End Sub
-
-Private Sub optTbCsv_Click()
-    RaiseEvent FormatTb("csv")
-End Sub
-

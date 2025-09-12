@@ -19,6 +19,7 @@ Private m_Method As Long
 
 Public Property Let dType(ByVal Value As String)
     m_DataType = Value
+    Debug.Print "Type: " & m_DataType
 End Property
 
 Public Sub Initialize(context As ContextManager)
@@ -43,7 +44,7 @@ Public Sub OpenWizard(ByVal target As String)
     Next tdf
     '依資料類型開啟匯入精靈
     Select Case LCase$(m_DataType)
-        Case "excel"
+        Case "xlsx"
             m_Ace.DoCmd.RunCommand acCmdImportAttachExcel
         Case "csv"
             m_Ace.DoCmd.RunCommand acCmdImportAttachText
@@ -89,7 +90,10 @@ Public Sub OpenWizard(ByVal target As String)
     Else
         Debug.Print "偵測到多個新表或更新：" & newTables.Count
     End If
-    Application.Wait Now + TimeValue("00:00:01")
+    '等待並刷新資料庫狀態
+    Application.wait Now + TimeValue("00:00:01")
+    db.RefreshSchema
+    '退出 Access 程式
     m_Ace.CloseCurrentDatabase
     m_Ace.Quit
     Set m_Ace = Nothing
@@ -107,10 +111,10 @@ Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
     '@TODO: 檢查欄位型別
     If Not ProcessJeAmount(je.Method) Then
         'error
-        Debug.Print "ProcessJeAmount = False"
+        Debug.Print "JE 欄位映射及金額處理失敗"
     Else
         'pass
-        Debug.Print "ProcessJeAMount = True"
+        Debug.Print "JE 欄位映射及金額處理成功"
     End If
     ApplyJe = True
     Exit Function
@@ -128,23 +132,13 @@ Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
         tb.SetField key, dict(key)
     Next key
     tb.PrintFields
-    '如果要避免欄位混淆，語法可以寫為
-    'SELECT
-    '  A.[Date]
-    'FROM
-    '  TableA AS A
-    'LEFT JOIN TableB AS B
-    '  ON A.[Date] = B.[Date]
-    '另外，目前在 IDEA 中需要分別欄位的有: 科目名稱, 科目編號, 傳票號碼, 傳票金額, 變動金額
-    '並且還需要考量新產生的欄位例如 _SUM 或 _DIFF 等
-    '對此他們需要標準化ETL流程，統一所有需要計算的欄位名稱與型別
     '@TODO: 檢查欄位型別
     If Not ProcessTbAmount(tb.Method) Then
         'error
-        Debug.Print "ProcessTbAmount = False"
+        Debug.Print "TB 欄位映射及金額處理失敗"
     Else
         'pass
-        Debug.Print "ProcessTbAmount = True"
+        Debug.Print "TB 欄位映射及金額處理成功"
     End If
     ApplyTb = True
 End Function
@@ -153,48 +147,53 @@ End Function
 Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     On Error GoTo ErrorHandler
     ProcessJeAmount = False
-    Dim expr As String
+    Dim sql As String
     Dim dbs As DAO.Database
     Dim tdf As DAO.TableDef
     Dim fld As DAO.Field
     Set dbs = db.Database
+    Debug.Print "  - 資料庫名稱: " & dbs.Name
+    Debug.Print "  - 資料表名稱: " & je.Name
     Set tdf = dbs.TableDefs(je.Name)
     Debug.Print "  - 資料表定義: " & tdf.Name
     
     Select Case amountMethod
         Case 1 '直接使用原始金額欄位
             Set fld = CreateOrReplace(tdf, je.K_Amount)
-            expr = "CDbl(" & Nz(je.EntryAmount) & ")"
-            Debug.Print "  - 設定 Expression: " & expr
-            Debug.Print "直接使用原始金額欄位"
-            fld.Expression = expr
             tdf.Fields.Append fld
+            sql = "UPDATE " & tdf.Name & " " & _
+                  "SET [" & je.K_Amount & "] = " & vbCrLf & _
+                  "CDbl(" & Nz(je.Amount) & ");"
+            db.ExecuteNonQuery sql
+            Debug.Print "直接使用原始金額欄位"
             
         Case 2 '傳票金額 = 借方金額 - 貸方金額
             Set fld = CreateOrReplace(tdf, je.K_Amount)
-            expr = "CDbl(" & Nz(je.DebitAmount) & ") - CDbl(" & Nz(je.CreditAmount) & ")"
-            Debug.Print "  - 設定 Expression: " & expr
-            Debug.Print "傳票金額 = 借方金額 - 貸方金額"
-            fld.Expression = expr
             tdf.Fields.Append fld
+            sql = "UPDATE " & tdf.Name & " " & _
+                  "SET [" & je.K_Amount & "] = " & vbCrLf & _
+                  "CDbl(" & Nz(je.DebitAmount) & ") - CDbl(" & Nz(je.CreditAmount) & ");"
+            db.ExecuteNonQuery sql
+            Debug.Print "傳票金額 = 借方金額 - 貸方金額"
             
         Case 3 '依借貸別決定金額正負號
             Set fld = CreateOrReplace(tdf, je.K_Amount)
-            expr = "IIF(" & _
-                   "    [" & je.DrCr & "] = """ & je.IsDebit & """, " & _
-                   "    CDbl(" & Nz(je.EntryAmount) & ")," & _
-                   "    CDbl(" & Nz(je.EntryAmount) & ") * -1" & _
-                   ")"
-            Debug.Print "  - 設定 Expression: " & expr
-            Debug.Print "依借貸別決定金額正負號"
-            fld.Expression = expr
             tdf.Fields.Append fld
+            sql = "UPDATE [" & tdf.Name & "] " & _
+                  "SET [" & je.K_Amount & "] = " & vbCrLf & _
+                  "IIF(" & vbCrLf & _
+                  "  [" & je.DrCr & "] = """ & je.IsDebit & """, " & vbCrLf & _
+                  "  CDbl(" & Nz(je.Amount) & ")," & vbCrLf & _
+                  "  CDbl(" & Nz(je.Amount) & ") * -1" & vbCrLf & _
+                  ");"
+            db.ExecuteNonQuery sql
+            Debug.Print "依借貸別決定金額正負號"
             
         Case Else
             Debug.Print "不支援的金額處理方式: " & CStr(amountMethod)
             Exit Function
     End Select
-    Application.Wait Now + TimeValue("00:00:01")
+    Application.wait Now + TimeValue("00:00:01")
     ProcessJeAmount = True
     Exit Function
     
@@ -208,11 +207,13 @@ End Function
 Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
     On Error GoTo ErrorHandler
     ProcessTbAmount = False
-    Dim expr As String
+    Dim sql As String
     Dim dbs As DAO.Database
     Dim tdf As DAO.TableDef
     Dim fld As DAO.Field
     Set dbs = db.Database
+    Debug.Print "  - 資料庫名稱: " & dbs.Name
+    Debug.Print "  - 資料表名稱: " & tb.Name
     Set tdf = dbs.TableDefs(tb.Name)
     Debug.Print "  - 資料表定義: " & tdf.Name
     
@@ -220,46 +221,51 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
         Case 1
             '直接使用變動金額
             Set fld = CreateOrReplace(tdf, tb.K_Amount)
-            expr = "CDbl(" & Nz(tb.ChangeAmount) & ")"
-            Debug.Print "  - 設定 Expression: " & expr
-            Debug.Print "直接使用變動金額"
-            fld.Expression = expr
             tdf.Fields.Append fld
+            sql = "UPDATE " & tdf.Name & " " & _
+                  "SET [" & tb.K_Amount & "] = " & vbCrLf & _
+                  "CDbl(" & Nz(tb.ChangeAmount) & ");"
+            db.ExecuteNonQuery sql
+            Debug.Print "直接使用變動金額"
             
         Case 2
             '期末 - 期初 = 變動金額
             Set fld = CreateOrReplace(tdf, tb.K_Amount)
-            expr = "CDbl(" & Nz(tb.ClosingBalance) & ") - CDbl(" & Nz(tb.OpeningBalance) & ")"
-            Debug.Print "  - 設定 Expression: " & expr
-            Debug.Print "期末 - 期初 = 變動金額"
-            fld.Expression = expr
             tdf.Fields.Append fld
+            sql = "UPDATE " & tdf.Name & " " & _
+                  "SET [" & tb.K_Amount & "] = " & vbCrLf & _
+                  "CDbl(" & Nz(tb.ClosingBalance) & ") - CDbl(" & Nz(tb.OpeningBalance) & ");"
+            db.ExecuteNonQuery sql
+            Debug.Print "期末 - 期初 = 變動金額"
             
         Case 3
             '借方 - 貸方 = 變動金額
             Set fld = CreateOrReplace(tdf, tb.K_Amount)
-            expr = "" & Nz(tb.DebitAmount) & " - " & Nz(tb.CreditAmount) & ""
-            Debug.Print "  - 設定 Expression: " & expr
-            Debug.Print "借方 - 貸方 = 變動金額"
-            fld.Expression = expr
             tdf.Fields.Append fld
+            sql = "UPDATE " & tdf.Name & " " & _
+                  "SET [" & tb.K_Amount & "] = " & vbCrLf & _
+                  "CDbl(" & Nz(tb.DebitAmount) & ") - CDbl(" & Nz(tb.CreditAmount) & ");"
+            db.ExecuteNonQuery sql
+            Debug.Print "借方 - 貸方 = 變動金額"
             
         Case 4
             '(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
             Set fld = CreateOrReplace(tdf, tb.K_Amount)
-            expr = "(CDbl(" & Nz(tb.ClosingDebitBalance) & ") - CDbl(" & Nz(tb.OpeningCreditBalance) & ")) - " & _
-                   "(CDbl(" & Nz(tb.OpeningDebitBalance) & ") - CDbl(" & Nz(tb.OpeningCreditBalance) & "))"
-            Debug.Print "  - 設定 Expression: " & expr
-            Debug.Print "(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額"
-            fld.Expression = expr
             tdf.Fields.Append fld
+            sql = "UPDATE " & tdf.Name & " " & _
+                  "SET [" & tb.K_Amount & "] = " & vbCrLf & _
+                  "(CDbl(" & Nz(tb.ClosingDebitBalance) & ") - CDbl(" & Nz(tb.OpeningCreditBalance) & ")) - " & vbCrLf & _
+                  "(CDbl(" & Nz(tb.OpeningDebitBalance) & ") - CDbl(" & Nz(tb.OpeningCreditBalance) & "));"
+            db.ExecuteNonQuery sql
+            Debug.Print "(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額"
             
         Case Else
             Debug.Print "不支援的金額處理方式:" & CStr(amountMethod)
             Exit Function
     End Select
-    Application.Wait Now + TimeValue("00:00:01")
+    Application.wait Now + TimeValue("00:00:01")
     ProcessTbAmount = True
+    
     Exit Function
     
 ErrorHandler:
@@ -295,9 +301,11 @@ Private Function IsUserTable(ByVal tableName As String) As Boolean
 End Function
 
 Private Function CreateOrReplace(tdf As DAO.TableDef, fieldName As String) As DAO.Field
+    '若欄位存在則刪除
     If db.FieldExists(tdf, fieldName) Then
         tdf.Fields.Delete fieldName
     End If
+    '建立欄位且型別為 CURRENCY
     Set CreateOrReplace = tdf.CreateField(fieldName, dbCurrency)
 End Function
 
