@@ -30,7 +30,7 @@ Private Sub Class_Initialize()
         "CreditAmount", _
         "AccountNumber", _
         "AccountName", _
-        "K_Amount" _
+        "AMOUNT_TB" _
     )
     For i = LBound(Fields) To UBound(Fields)
         m_Fields(Fields(i)) = Fields(i)
@@ -72,7 +72,7 @@ End Property
 '***** 屬性自訂欄位
 Public Property Get K_Amount() As String
     '計算用的的金額欄位
-    K_Amount = m_Fields("K_Amount")
+    K_Amount = m_Fields("AMOUNT_TB")
 End Property
 
 '***** 屬性快速補全

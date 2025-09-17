@@ -154,7 +154,9 @@ End Function
 
 Public Function ExecuteQuery(ByVal sql As String, Optional pause As Integer = 1) As DAO.Recordset
     If Not m_IsConnected Then Connect
-    Debug.Print "********** SQL **********" & vbCrLf & sql
+    Debug.Print String(60, "-")
+    Debug.Print sql
+    Debug.Print String(60, "-")
     'ÀR­Ô
     If pause > 0 Then
         Application.wait Now + TimeSerial(0, 0, pause)
@@ -165,7 +167,9 @@ End Function
 
 Public Function ExecuteNonQuery(ByVal sql As String, Optional pause As Integer = 1) As Long
     If Not m_IsConnected Then Connect
-    Debug.Print "********** SQL **********" & vbCrLf & sql
+    Debug.Print String(60, "-")
+    Debug.Print sql
+    Debug.Print String(60, "-")
     m_Db.Execute sql, dbFailOnError
     'ÀR­Ô
     If pause > 0 Then

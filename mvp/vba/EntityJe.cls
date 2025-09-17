@@ -36,9 +36,8 @@ Private Sub Class_Initialize()
         "PostDate", _
         "ApprovalDate", _
         "LineItem", _
-        "K_Amount", _
-        "K_Amount_Sum", _
-        "K_Diff" _
+        "AMOUNT_JE", _
+        "AMOUNT_SUM_JE" _
     )
     For i = LBound(Fields) To UBound(Fields)
         m_Fields(Fields(i)) = Fields(i)
@@ -80,13 +79,12 @@ End Property
 '***** 屬性自訂欄位
 Public Property Get K_Amount() As String
     '計算用的金額欄位
-    K_Amount = m_Fields("K_Amount")
+    K_Amount = m_Fields("AMOUNT_JE")
 End Property
 Public Property Get K_Amount_Sum() As String
     '依科目彙總後的總金額
-    K_Amount_Sum = m_Fields("K_Amount_Sum")
+    K_Amount_Sum = m_Fields("AMOUNT_SUM_JE")
 End Property
-
 
 '***** 屬性快速補全
 Public Property Get Amount() As String

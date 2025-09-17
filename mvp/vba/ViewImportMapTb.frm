@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapTb 
    Caption         =   "UserForm1"
    ClientHeight    =   7020
-   ClientLeft      =   108
-   ClientTop       =   408
-   ClientWidth     =   7632
+   ClientLeft      =   105
+   ClientTop       =   405
+   ClientWidth     =   7635
    OleObjectBlob   =   "ViewImportMapTb.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -89,8 +89,8 @@ End Sub
 Private Sub btnTestDefault_Click()
     '### THIS Method IS FOR DEBUG TESTING ###
     Call btnMethod3_Click
-    Me.AccountName.Value = FindField(Me.AccountName, "項目名稱")
-    Me.AccountNumber.Value = FindField(Me.AccountNumber, "會計項目")
+    Me.AccountName.Value = FindField(Me.AccountName, "會計科目名稱")
+    Me.AccountNumber.Value = FindField(Me.AccountNumber, "會計科目編號")
     Me.DebitAmount.Value = FindField(Me.DebitAmount, "借方金額")
     Me.CreditAmount.Value = FindField(Me.CreditAmount, "貸方金額")
 End Sub
