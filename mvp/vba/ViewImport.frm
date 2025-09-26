@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImport 
    Caption         =   "Import"
-   ClientHeight    =   5655
+   ClientHeight    =   6735
    ClientLeft      =   105
    ClientTop       =   405
    ClientWidth     =   8145
@@ -58,8 +58,9 @@ End Sub
 
 Private Sub btnTestDefault_Click()
     'THIS Method IS FOR DEBUG TESTING
-    Me.PeriodStart.text = "2024/01/01"
-    Me.PeriodEnd.text = "2024/12/31"
+    Me.txtbCompanyName.Text = "¥x¶ì¹çªi"
+    Me.PeriodStart.Text = "2024/01/01"
+    Me.PeriodEnd.Text = "2024/12/31"
     Me.chkSaturday.Value = True
     Me.chkSunday.Value = True
 End Sub

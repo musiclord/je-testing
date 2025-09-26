@@ -50,7 +50,7 @@ Public Sub Disconnect()
         Call RollbackTx
     End If
     Dim wsName As String
-    If Not m_Ws Is Nothing Then wsName = m_Ws.Name
+    If Not m_Ws Is Nothing Then wsName = m_Ws.name
     If Not m_Db Is Nothing Then
         m_Db.Close
         Set m_Db = Nothing
@@ -205,12 +205,55 @@ Public Function GetTableFields(ByVal tableName As String) As Collection
     Dim Fields As New Collection
     Dim fld As DAO.Field
     Dim rs As DAO.Recordset
-    Set rs = m_Db.OpenRecordset(Name:=tableName, Type:=dbOpenDynaset)
+    Set rs = m_Db.OpenRecordset(name:=tableName, Type:=dbOpenDynaset)
     '遍歷 RS 的欄位
     For Each fld In rs.Fields
-        Fields.Add fld.Name
+        Fields.Add fld.name
     Next fld
     rs.Close
     Set rs = Nothing
     Set GetTableFields = Fields
+End Function
+
+Public Function GetNulls(ByVal tableName As String, ByVal fieldName As String, Optional ByVal newTableName As String) As Boolean
+    '提取指定欄位資料為空的記錄，並存到新資料表。
+    On Error GoTo ErrorHandler
+    If Not m_IsConnected Then Connect
+    If Not TableExists(tableName) Then Exit Function
+    
+    '取得資料表定義，檢查指定欄位是否存在
+    Dim tdf As DAO.TableDef: Set tdf = m_Db.TableDefs(tableName)
+    If Not FieldExists(tdf, fieldName) Then Exit Function
+    '取得欄位物件，準備分析欄位型別
+    Dim fld As DAO.Field: Set fld = tdf.Fields(fieldName)
+    '判斷欄位是否為數值型別（影響空值檢查邏輯）
+    Dim isNumeric As Boolean
+    isNumeric = (fld.Type = dbByte Or fld.Type = dbInteger Or fld.Type = dbLong Or _
+                 fld.Type = dbSingle Or fld.Type = dbDouble Or fld.Type = dbCurrency Or _
+                 fld.Type = dbDecimal)
+    
+    '設定目標資料表名稱
+    If newTableName = "" Then
+        newTableName = tableName & "_Nulls"
+    End If
+    
+    '根據欄位型別建構不同的空值檢查條件
+    Dim Condition As String
+    If isNumeric Then
+        '數值欄位：只檢查 NULL 值
+        Condition = "[" & fieldName & "] IS NULL"
+    Else
+        '文字欄位：檢查 NULL 或去除空白後的空字串
+        Condition = "[" & fieldName & "] IS NULL OR TRIM([" & fieldName & "]) = ''"
+    End If
+    
+    '執行 SQL 查詢，將空值記錄匯出到新資料表
+    Dim sql As String
+    sql = "SELECT * INTO [" & newTableName & "] FROM [" & tableName & "] WHERE " & Condition & ";"
+    Call ExecuteNonQuery(sql, 1)
+    GetNulls = True
+    Exit Function
+ErrorHandler:
+    Debug.Print "GetNullRecords 發生錯誤: " & Err.Number & " - " & Err.Description
+    GetNulls = False
 End Function

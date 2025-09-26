@@ -33,6 +33,7 @@ Private fso As FileSystemObject
 Private context As ContextManager
 Private projector As ServiceProject
 Private importer As ServiceImport
+Private exporter As ServiceExport
 Private validator As ServiceValidation
 Private filter As ServiceFilter
 
@@ -52,6 +53,7 @@ Public Sub Initialize()
     Set context = New ContextManager
     Set projector = New ServiceProject
     Set importer = New ServiceImport
+    Set exporter = New ServiceExport
     Set validator = New ServiceValidation
     Set filter = New ServiceFilter
     '--
@@ -72,7 +74,7 @@ End Sub
 Private Sub vProject_SelectProject(ByVal path As String)
     projector.SelectProject path
     vProject.Hide
-    vMain.Initialize fso.GetFolder(path).Name
+    vMain.Initialize fso.GetFolder(path).name
     vMain.Show vbModeless
 End Sub
 
@@ -96,7 +98,7 @@ Private Sub vMain_DoStep3()
     vFilter.Show vbModeless
 End Sub
 Private Sub vMain_DoStep4()
-    'exporter.Initialize context
+    exporter.Initialize context
     '--
     'vExport.Initialize
     'vExport.Show vbModeless
@@ -122,12 +124,12 @@ End Sub
 Private Sub vImport_ImportJe(ByVal format As String)
     importer.dType = format
     importer.OpenWizard "je"
-    vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.Name
+    vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.name
 End Sub
 Private Sub vImport_ImportTb(ByVal format As String)
     importer.dType = format
     importer.OpenWizard "tb"
-    vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.Name
+    vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.name
 End Sub
 Private Sub vImport_MapJe()
     '@TODO:檢查是否有匯入 JE 資料表
@@ -142,9 +144,7 @@ End Sub
 Private Sub vImport_Complete(ByVal dtStart As Date, dtEnd As Date)
     '結算所有處理步驟的結果
     context.info.PeriodStart = dtStart
-    Debug.Print context.info.PeriodStart, TypeName(context.info.PeriodStart)
     context.info.PeriodEnd = dtEnd
-    Debug.Print context.info.PeriodEnd, TypeName(context.info.PeriodEnd)
 End Sub
 
 '***** vMapJe
@@ -169,20 +169,30 @@ End Sub
 
 '***** vValidation
 Private Sub vValidation_Completeness()
-    validator.Completeness
+    '完整性測試
+    validator.CheckCompleteness
 End Sub
 
 Private Sub vValidation_DocumentBalance()
-    validator.DocumentBalance
+    '借貸不平測試
+    validator.CheckDocumentBalance
+End Sub
+
+Private Sub vValidation_NullRecords()
+    '檢查空值分錄
+    validator.CheckNullRecords
 End Sub
 
 Private Sub vValidation_INF()
-    validator.INF
+    '可靠性測試
+    validator.CheckINF
 End Sub
 
 '***** vExport
-Private Sub vExport_ExportWp()
-
+Private Sub vExport_PreviewWp()
+    exporter.PreviewWp
 End Sub
 
-
+Private Sub vExport_ExportWp()
+    exporter.ExportWp
+End Sub

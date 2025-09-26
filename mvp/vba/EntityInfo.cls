@@ -9,13 +9,18 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 'Class:EntityInfo
+
+'--使用者資訊
 Private m_WSHnet As WshNetwork
 Private m_UserName As String
 Private m_UserDomain As String
 Private m_UserFullName As String
 Private m_UserObject As Object
+'-- 專案資訊
+Private m_CompanyName As String
 Private m_PeriodStart As Date
 Private m_PeriodEnd As Date
+'--工作日設定
 Private m_Monday As Boolean
 Private m_Tuesday As Boolean
 Private m_Wednesday As Boolean
@@ -59,3 +64,9 @@ Public Property Let PeriodEnd(ByVal Value As Date)
     Let m_PeriodEnd = Value
 End Property
 
+Public Property Get CompanyName() As String
+    Let CompanyName = m_CompanyName
+End Property
+Public Property Let CompanyName(ByVal Value As String)
+    Let m_CompanyName = Value
+End Property

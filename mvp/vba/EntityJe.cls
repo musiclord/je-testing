@@ -36,6 +36,7 @@ Private Sub Class_Initialize()
         "PostDate", _
         "ApprovalDate", _
         "LineItem", _
+        "UID", _
         "AMOUNT_JE", _
         "AMOUNT_SUM_JE" _
     )
@@ -60,10 +61,10 @@ Public Sub PrintFields()
 End Sub
 
 '***** 屬性訪問
-Public Property Get Name() As String
-    Name = m_Name
+Public Property Get name() As String
+    name = m_Name
 End Property
-Public Property Let Name(ByVal Value As String)
+Public Property Let name(ByVal Value As String)
     m_Name = Value
 End Property
 Public Property Get Method() As Long
@@ -84,6 +85,10 @@ End Property
 Public Property Get K_Amount_Sum() As String
     '依科目彙總後的總金額
     K_Amount_Sum = m_Fields("AMOUNT_SUM_JE")
+End Property
+Public Property Get K_UID() As String
+    '主鍵
+    K_UID = m_Fields("UID")
 End Property
 
 '***** 屬性快速補全

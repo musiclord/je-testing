@@ -53,10 +53,10 @@ Public Sub PrintFields()
 End Sub
 
 '***** ÄÝ©Ê³X°Ý
-Public Property Get Name() As String
-    Name = m_Name
+Public Property Get name() As String
+    name = m_Name
 End Property
-Public Property Let Name(ByVal Value As String)
+Public Property Let name(ByVal Value As String)
     m_Name = Value
 End Property
 Public Property Get Method() As Long
