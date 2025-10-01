@@ -29,7 +29,11 @@ Public Sub Initialize(context As ContextManager)
 End Sub
 
 Public Sub OpenWizard(ByVal target As String)
-    '使用 Access 的匯入精靈來處理
+    ' ============================================================================
+    '方法: 使用 Access 的操作精靈來匯入資料
+    '參數:
+    '   - target: 定義匯入的目標是 JE 還是 TB
+    ' ============================================================================
     Dim oldTables As New Collection
     Dim oldTimes As New Collection
     Dim newTables As New Collection
@@ -91,7 +95,7 @@ Public Sub OpenWizard(ByVal target As String)
         Debug.Print "偵測到多個新表或更新：" & newTables.Count
     End If
     '等待並刷新資料庫狀態
-    Application.wait Now + TimeValue("00:00:01")
+    Application.Wait Now + TimeValue("00:00:01")
     db.RefreshSchema
     '退出 Access 程式
     m_Ace.CloseCurrentDatabase
@@ -100,9 +104,13 @@ Public Sub OpenWizard(ByVal target As String)
 End Sub
 
 Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
+    ' ============================================================================
+    '方法: 將 JE 欄位設給資料實體
+    '參數:
+    '   - dict: 將表單傳入的參數設給資料實體
+    ' ============================================================================
     On Error GoTo ErrorHandler
     ApplyJe = False
-    '將 JE 欄位設給資料實體
     Dim key As Variant
     For Each key In dict.Keys
         je.SetField key, dict(key)
@@ -115,10 +123,10 @@ Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
     '@TODO: 檢查欄位型別
     If Not ProcessJeAmount(je.Method) Then
         'error
-        Debug.Print "JE 欄位映射及金額處理失敗"
+        Debug.Print "********** JE 欄位映射及金額處理失敗 **********"
     Else
         'pass
-        Debug.Print "JE 欄位映射及金額處理成功"
+        Debug.Print "********** JE 欄位映射及金額處理成功 **********"
     End If
     ApplyJe = True
     Exit Function
@@ -129,6 +137,11 @@ ErrorHandler:
 End Function
 
 Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
+    ' ============================================================================
+    '方法: 將 TB 欄位設給資料實體
+    '參數:
+    '   - dict: 將表單傳入的參數設給資料實體
+    ' ============================================================================
     ApplyTb = False
     '將TB欄位設給資料實體
     Dim key As Variant
@@ -139,16 +152,21 @@ Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
     '@TODO: 檢查欄位型別
     If Not ProcessTbAmount(tb.Method) Then
         'error
-        Debug.Print "TB 欄位映射及金額處理失敗"
+        Debug.Print "********** TB 欄位映射及金額處理失敗 **********"
     Else
         'pass
-        Debug.Print "TB 欄位映射及金額處理成功"
+        Debug.Print "********** TB 欄位映射及金額處理成功 **********"
     End If
     ApplyTb = True
 End Function
 
 '***** 自訂
 Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
+    ' ============================================================================
+    '方法: 金額處理邏輯
+    '參數:
+    '   - amountMethod: 金額處理的方法，以數字區別四種模式
+    ' ============================================================================
     On Error GoTo ErrorHandler
     ProcessJeAmount = False
     Dim sql As String
@@ -156,11 +174,8 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     Dim tdf As DAO.TableDef
     Dim fld As DAO.Field
     Set dbs = db.Database
-    Debug.Print "  - 資料庫名稱: " & dbs.name
-    Debug.Print "  - 資料表名稱: " & je.name
     Set tdf = dbs.TableDefs(je.name)
-    Debug.Print "  - 資料表定義: " & tdf.name
-    
+    Debug.Print "********** 開始 JE 金額處理 **********"
     Select Case amountMethod
         Case 1 '直接使用原始金額欄位
             Set fld = CreateOrReplace(tdf, je.K_Amount)
@@ -169,7 +184,6 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
                   "SET [" & je.K_Amount & "] = " & vbCrLf & _
                   "CDbl(" & Nz(je.Amount) & ");"
             db.ExecuteNonQuery sql
-            Debug.Print "直接使用原始金額欄位"
             
         Case 2 '傳票金額 = 借方金額 - 貸方金額
             Set fld = CreateOrReplace(tdf, je.K_Amount)
@@ -178,7 +192,6 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
                   "SET [" & je.K_Amount & "] = " & vbCrLf & _
                   "CDbl(" & Nz(je.DebitAmount) & ") - CDbl(" & Nz(je.CreditAmount) & ");"
             db.ExecuteNonQuery sql
-            Debug.Print "傳票金額 = 借方金額 - 貸方金額"
             
         Case 3 '依借貸別決定金額正負號
             Set fld = CreateOrReplace(tdf, je.K_Amount)
@@ -191,13 +204,12 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
                   "  CDbl(" & Nz(je.Amount) & ") * -1" & vbCrLf & _
                   ");"
             db.ExecuteNonQuery sql
-            Debug.Print "依借貸別決定金額正負號"
             
         Case Else
             Debug.Print "不支援的金額處理方式: " & CStr(amountMethod)
             Exit Function
     End Select
-    Application.wait Now + TimeValue("00:00:01")
+    Application.Wait Now + TimeValue("00:00:01")
     ProcessJeAmount = True
     Exit Function
     
@@ -216,11 +228,8 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
     Dim tdf As DAO.TableDef
     Dim fld As DAO.Field
     Set dbs = db.Database
-    Debug.Print "  - 資料庫名稱: " & dbs.name
-    Debug.Print "  - 資料表名稱: " & tb.name
     Set tdf = dbs.TableDefs(tb.name)
-    Debug.Print "  - 資料表定義: " & tdf.name
-    
+    Debug.Print "********** 開始 TB 金額處理 **********"
     Select Case amountMethod
         Case 1
             '直接使用變動金額
@@ -230,7 +239,6 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
                   "SET [" & tb.K_Amount & "] = " & vbCrLf & _
                   "CDbl(" & Nz(tb.ChangeAmount) & ");"
             db.ExecuteNonQuery sql
-            Debug.Print "直接使用變動金額"
             
         Case 2
             '期末 - 期初 = 變動金額
@@ -240,7 +248,6 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
                   "SET [" & tb.K_Amount & "] = " & vbCrLf & _
                   "CDbl(" & Nz(tb.ClosingBalance) & ") - CDbl(" & Nz(tb.OpeningBalance) & ");"
             db.ExecuteNonQuery sql
-            Debug.Print "期末 - 期初 = 變動金額"
             
         Case 3
             '借方 - 貸方 = 變動金額
@@ -250,7 +257,6 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
                   "SET [" & tb.K_Amount & "] = " & vbCrLf & _
                   "CDbl(" & Nz(tb.DebitAmount) & ") - CDbl(" & Nz(tb.CreditAmount) & ");"
             db.ExecuteNonQuery sql
-            Debug.Print "借方 - 貸方 = 變動金額"
             
         Case 4
             '(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
@@ -261,13 +267,12 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
                   "(CDbl(" & Nz(tb.ClosingDebitBalance) & ") - CDbl(" & Nz(tb.OpeningCreditBalance) & ")) - " & vbCrLf & _
                   "(CDbl(" & Nz(tb.OpeningDebitBalance) & ") - CDbl(" & Nz(tb.OpeningCreditBalance) & "));"
             db.ExecuteNonQuery sql
-            Debug.Print "(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額"
             
         Case Else
             Debug.Print "不支援的金額處理方式:" & CStr(amountMethod)
             Exit Function
     End Select
-    Application.wait Now + TimeValue("00:00:01")
+    Application.Wait Now + TimeValue("00:00:01")
     ProcessTbAmount = True
     
     Exit Function

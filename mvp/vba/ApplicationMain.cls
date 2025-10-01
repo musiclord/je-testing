@@ -8,7 +8,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-'Class:ApplicationMain
+'===============================================================================
+' Class: ApplicationMain
+' Purpose: 主要程式，作為表單和類別的溝通主體
+'===============================================================================
 '--
 Private WithEvents vProject As ViewProject
 Attribute vProject.VB_VarHelpID = -1
@@ -100,8 +103,8 @@ End Sub
 Private Sub vMain_DoStep4()
     exporter.Initialize context
     '--
-    'vExport.Initialize
-    'vExport.Show vbModeless
+    vExport.Initialize
+    vExport.Show vbModeless
 End Sub
 
 Private Sub vMain_ExitApplication()
@@ -141,8 +144,17 @@ Private Sub vImport_MapTb()
     vMapTb.Initialize context.DbInput
     vMapTb.Show vbModeless
 End Sub
+Private Sub vImport_TestDefaultRequested()
+    '### FOR DEBUG TESTING ###
+    Debug.Print "========== DEFAULT DEBUG PARAMETER =========="
+    vMapJe.Initialize context.DbInput
+    vMapJe.TriggerTestDefault
+    vMapTb.Initialize context.DbInput
+    vMapTb.TriggerTestDefault
+End Sub
 Private Sub vImport_Complete(ByVal dtStart As Date, dtEnd As Date)
     '結算所有處理步驟的結果
+    'TODO: 最後需要檢查所有必填資料，若有缺失，則跳出錯誤視窗並忽略剩下步驟。
     context.info.PeriodStart = dtStart
     context.info.PeriodEnd = dtEnd
 End Sub
@@ -170,7 +182,9 @@ End Sub
 '***** vValidation
 Private Sub vValidation_Completeness()
     '完整性測試
-    validator.CheckCompleteness
+    If validator.CheckCompleteness() Then
+        'exporter.PreviewTable
+    End If
 End Sub
 
 Private Sub vValidation_DocumentBalance()

@@ -19,6 +19,7 @@ Public Event ImportJe(ByVal format As String)
 Public Event ImportTb(ByVal format As String)
 Public Event MapJe()
 Public Event MapTb()
+Public Event TestDefaultRequested() '僅作測試用途
 Public Event Complete(ByVal dtStart As Date, dtEnd As Date)
 
 Private m_format As String
@@ -57,12 +58,13 @@ Private Sub btnExit_Click()
 End Sub
 
 Private Sub btnTestDefault_Click()
-    'THIS Method IS FOR DEBUG TESTING
+    '##### FOR DEBUG TESTING #####
     Me.txtbCompanyName.Text = "台塑寧波"
     Me.PeriodStart.Text = "2024/01/01"
     Me.PeriodEnd.Text = "2024/12/31"
     Me.chkSaturday.Value = True
     Me.chkSunday.Value = True
+    RaiseEvent TestDefaultRequested
 End Sub
 
 Private Sub optCsv_Click()

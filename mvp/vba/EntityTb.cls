@@ -8,7 +8,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-'Class:EntityTb
+'===============================================================================
+' Class: EntityTb
+' Purpose: 用來處理 TB (Trial Balance) 的資料實體
+'===============================================================================
 Private m_Name As String
 Private m_Method As Long
 Private m_Fields As New Dictionary
@@ -45,11 +48,12 @@ End Sub
 
 Public Sub PrintFields()
     Dim key As Variant
-    Debug.Print "--------- [ TB ] ---------"
+    Debug.Print "********** [ TB 欄位映射 ] **********"
+    Debug.Print String(60, "-")
     For Each key In m_Fields.Keys
         Debug.Print CStr(key) & ": " & CStr(m_Fields(key))
     Next key
-    Debug.Print "--------------------------"
+    Debug.Print String(60, "-")
 End Sub
 
 '***** 屬性訪問

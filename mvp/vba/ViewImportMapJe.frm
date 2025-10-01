@@ -26,6 +26,23 @@ Public Sub Initialize(ByRef db As DbAccess)
     btnMethod1_Click
 End Sub
 
+'--公開方法供外部調用(用於測試)
+Public Sub TriggerTestDefault()
+    Call btnTestDefault_Click
+    Call btnApplyField_Click
+End Sub
+Private Sub btnTestDefault_Click()
+    '### FOR DEBUG TESTING ###
+    Call btnMethod2_Click
+    Me.AccountName.Value = FindField(Me.AccountName, "項目名稱")
+    Me.AccountNumber.Value = FindField(Me.AccountNumber, "會計項目")
+    Me.DocumentNumber.Value = FindField(Me.DocumentNumber, "傳票號碼")
+    Me.EntryDescription.Value = FindField(Me.EntryDescription, "摘要")
+    Me.PostDate.Value = FindField(Me.PostDate, "日期")
+    Me.DebitAmount.Value = FindField(Me.DebitAmount, "借方金額")
+    Me.CreditAmount.Value = FindField(Me.CreditAmount, "貸方金額")
+End Sub
+
 Private Sub btnApplyField_Click()
     Dim dict As New Dictionary
     '金額欄位
@@ -80,18 +97,6 @@ Private Sub btnMethod3_Click()
         Me.Controls(n).Enabled = True
     Next n
     m_Method = 3
-End Sub
-
-Private Sub btnTestDefault_Click()
-    '### THIS Method IS FOR DEBUG TESTING ###
-    Call btnMethod2_Click
-    Me.AccountName.Value = FindField(Me.AccountName, "項目名稱")
-    Me.AccountNumber.Value = FindField(Me.AccountNumber, "會計項目")
-    Me.DocumentNumber.Value = FindField(Me.DocumentNumber, "傳票號碼")
-    Me.EntryDescription.Value = FindField(Me.EntryDescription, "摘要")
-    Me.PostDate.Value = FindField(Me.PostDate, "日期")
-    Me.DebitAmount.Value = FindField(Me.DebitAmount, "借方金額")
-    Me.CreditAmount.Value = FindField(Me.CreditAmount, "貸方金額")
 End Sub
 
 Private Sub btnExit_Click()

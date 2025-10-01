@@ -8,8 +8,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-'Class:EntityInfo
-
+'===============================================================================
+' Class: EntityInfo
+' Purpose: 用來處理專案所需各類資訊的資料實體
+'===============================================================================
 '--使用者資訊
 Private m_WSHnet As WshNetwork
 Private m_UserName As String

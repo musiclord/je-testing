@@ -24,6 +24,7 @@ Public Function NewProject(ByVal path As String) As Boolean
         MkDir m_Path
         Set m_Context.DbInput = CreateDb("input")
         Set m_Context.DbValid = CreateDb("valid")
+        Set m_Context.DbCriteria = CreateDb("criteria")
     End If
 End Function
 
@@ -35,6 +36,7 @@ Public Function SelectProject(ByVal path As String) As Boolean
     Else
         Set m_Context.DbInput = LoadDb("input")
         Set m_Context.DbValid = LoadDb("valid")
+        Set m_Context.DbCriteria = LoadDb("criteria")
     End If
 End Function
 

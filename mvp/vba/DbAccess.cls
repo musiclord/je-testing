@@ -8,7 +8,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-'Class:DbAccess
+'===============================================================================
+' Class: DbAccess
+' Purpose: 統一所有資料庫操作介面
+'===============================================================================
 Private Const CHUNK_SIZE As Long = 100000
 Private Const DO_EVENTS_INTERVAL As Double = 2#
 Private m_Ws As DAO.Workspace
@@ -65,15 +68,22 @@ End Sub
 Public Sub RefreshSchema()
     On Error Resume Next
     If Not m_IsConnected Then Exit Sub
-    '刷新 Jet/ACE 引擎快取
+    '刷新 JET/ACE 引擎快取
     DAO.DBEngine.Idle dbRefreshCache
-    '刷新連線的結構快取
+    '刷新資料表結構集合
     m_Db.TableDefs.Refresh
     '刷新所有資料表的欄位快取
     Dim tdf As DAO.TableDef
     For Each tdf In m_Db.TableDefs
-        tdf.Fields.Refresh
-    Next
+        If Not (tdf.name Like "MSys*" Or tdf.name Like "~TMPCLP*") Then
+            On Error Resume Next
+            tdf.Fields.Refresh
+            If Err.Number <> 0 Then
+                Debug.Print "警告: 無法刷新資料表欄位: " & tdf.name & " (錯誤: " & Err.Number & ")"
+                Err.Clear
+            End If
+        End If
+    Next tdf
     On Error GoTo 0
 End Sub
 
@@ -159,7 +169,7 @@ Public Function ExecuteQuery(ByVal sql As String, Optional pause As Integer = 1)
     Debug.Print String(60, "-")
     '靜候
     If pause > 0 Then
-        Application.wait Now + TimeSerial(0, 0, pause)
+        Application.Wait Now + TimeSerial(0, 0, pause)
     End If
     '回傳記錄集
     Set ExecuteQuery = m_Db.OpenRecordset(sql, dbOpenSnapshot)
@@ -173,18 +183,20 @@ Public Function ExecuteNonQuery(ByVal sql As String, Optional pause As Integer =
     m_Db.Execute sql, dbFailOnError
     '靜候
     If pause > 0 Then
-        Application.wait Now + TimeSerial(0, 0, pause)
+        Application.Wait Now + TimeSerial(0, 0, pause)
     End If
     '回傳受影響筆數
     ExecuteNonQuery = m_Db.RecordsAffected
 End Function
 
 Public Function Summarization(ByVal tableName As String, fieldToSum As String, fieldToGroup As String)
+    ' ============================================================================
     '負責資料彙總的功能，對資料按某些維度進行分組，並加總指定的數值欄位。
-    'tableName:     要彙總的資料表
-    'fieldToSum:    要加總的數值欄位
-    'fieldToGroup:  要分組的屬性欄位
-    '...
+    '參數:
+    '   - tableName:     要彙總的資料表
+    '   - fieldToSum:    要加總的數值欄位
+    '   - fieldToGroup:  要分組的屬性欄位
+    ' ============================================================================
     Dim sql As String
     Dim newTable As String
     Dim newField As String
@@ -215,12 +227,21 @@ Public Function GetTableFields(ByVal tableName As String) As Collection
     Set GetTableFields = Fields
 End Function
 
-Public Function GetNulls(ByVal tableName As String, ByVal fieldName As String, Optional ByVal newTableName As String) As Boolean
-    '提取指定欄位資料為空的記錄，並存到新資料表。
+
+'***** 額外定義封裝的方法
+Public Function GetNulls(ByVal tableName As String, _
+                         ByVal fieldName As String, _
+                         Optional ByVal newTableName As String) As Boolean
+    ' ============================================================================
+    '方法: 提取指定欄位資料為空的記錄，並存為新資料表。
+    '參數:
+    '   - tableName:    來源資料表名稱
+    '   - fieldName:    要檢查是否為空值的欄位名稱
+    '   - newTableName: 新資料表名稱，預設加上後綴 "_Nulls"
+    ' ============================================================================
     On Error GoTo ErrorHandler
     If Not m_IsConnected Then Connect
     If Not TableExists(tableName) Then Exit Function
-    
     '取得資料表定義，檢查指定欄位是否存在
     Dim tdf As DAO.TableDef: Set tdf = m_Db.TableDefs(tableName)
     If Not FieldExists(tdf, fieldName) Then Exit Function
@@ -231,12 +252,10 @@ Public Function GetNulls(ByVal tableName As String, ByVal fieldName As String, O
     isNumeric = (fld.Type = dbByte Or fld.Type = dbInteger Or fld.Type = dbLong Or _
                  fld.Type = dbSingle Or fld.Type = dbDouble Or fld.Type = dbCurrency Or _
                  fld.Type = dbDecimal)
-    
     '設定目標資料表名稱
     If newTableName = "" Then
         newTableName = tableName & "_Nulls"
     End If
-    
     '根據欄位型別建構不同的空值檢查條件
     Dim Condition As String
     If isNumeric Then
@@ -246,14 +265,85 @@ Public Function GetNulls(ByVal tableName As String, ByVal fieldName As String, O
         '文字欄位：檢查 NULL 或去除空白後的空字串
         Condition = "[" & fieldName & "] IS NULL OR TRIM([" & fieldName & "]) = ''"
     End If
-    
     '執行 SQL 查詢，將空值記錄匯出到新資料表
     Dim sql As String
-    sql = "SELECT * INTO [" & newTableName & "] FROM [" & tableName & "] WHERE " & Condition & ";"
+    sql = "SELECT * " & vbCrLf & _
+          "INTO [" & newTableName & "] " & vbCrLf & _
+          "FROM [" & tableName & "] " & vbCrLf & _
+          "WHERE " & Condition & ";"
     Call ExecuteNonQuery(sql, 1)
     GetNulls = True
     Exit Function
 ErrorHandler:
     Debug.Print "GetNullRecords 發生錯誤: " & Err.Number & " - " & Err.Description
     GetNulls = False
+End Function
+
+Public Function GetTotal(ByVal tableName As String, _
+                         ByVal fieldName As String, _
+                         ByVal totalType As String) As Double
+    ' ============================================================================
+    '方法: 取得資料表的統計值
+    '參數:
+    '   - tableName:    要統計的資料表名稱
+    '   - fieldName:    要統計的欄位名稱 (空字串時僅統計記錄數)
+    '   - totalType:    統計類型 (DBCount, NetValue, PositiveValue, NegativeValue, MaxValue, AverageValue)
+    ' ============================================================================
+    If Not m_IsConnected Then Connect
+    Dim sql As String
+    Dim rs As DAO.Recordset
+    '檢查資料表是否存在
+    If Not TableExists(tableName) Then
+        GetTotal = Null
+        Exit Function
+    End If
+    '根據欄位名稱和統計類型建構 SQL
+    If fieldName = "" Then
+        Select Case totalType
+            Case "DBCount"
+                sql = ""
+            Case Else
+                GetTotal = Null
+                Exit Function
+        End Select
+    Else
+        '檢查欄位是否存在
+        Dim tdf As DAO.TableDef
+        Set tdf = m_Db.TableDefs(tableName)
+        If Not FieldExists(tdf, fieldName) Then
+            GetTotal = Null
+            Exit Function
+        End If
+        '建構欄位統計 SQL
+        Select Case totalType
+            Case "NetValue"
+                '淨值 (絕對值總和)
+                sql = "SELECT ABS(SUM([" & fieldName & "])) AS Total FROM [" & tableName & "]"
+            Case "PositiveValue"
+                '正值總和 (借方值)
+                sql = "SELECT SUM(IIF([" & fieldName & "] > 0, [" & fieldName & "], 0)) AS Total FROM [" & tableName & "]"
+            Case "NegativeValue"
+                '負值總和 (貸方值的絕對值)
+                sql = "SELECT ABS(SUM(IIF([" & fieldName & "] < 0, [" & fieldName & "], 0))) AS Total FROM [" & tableName & "]"
+            Case "MaxValue"
+                '最大值
+                sql = "SELECT MAX([" & fieldName & "]) AS Total FROM [" & tableName & "]"
+            Case "AverageValue"
+                '平均值
+                sql = "SELECT AVG([" & fieldName & "]) AS Total FROM [" & tableName & "]"
+            Case Else
+                GetTotal = Null
+                Exit Function
+        End Select
+    End If
+    '執行查詢並取得結果
+    Set rs = m_Db.OpenRecordset(sql, dbOpenSnapshot)
+    If Not rs.EOF Then
+        GetTotal = IIf(IsNull(rs!Total), 0, rs!Total)
+    Else
+        GetTotal = 0
+    End If
+    '釋放資源
+    rs.Close
+    Set rs = Nothing
 End Function
