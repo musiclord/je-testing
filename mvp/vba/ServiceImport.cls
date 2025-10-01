@@ -30,9 +30,9 @@ End Sub
 
 Public Sub OpenWizard(ByVal target As String)
     ' ============================================================================
-    '方法: 使用 Access 的操作精靈來匯入資料
-    '參數:
-    '   - target: 定義匯入的目標是 JE 還是 TB
+    ' 方法: 使用 Access 的操作精靈來匯入資料
+    ' 參數:
+    '    - target: 定義匯入的目標是 JE 還是 TB
     ' ============================================================================
     Dim oldTables As New Collection
     Dim oldTimes As New Collection
@@ -105,8 +105,8 @@ End Sub
 
 Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
     ' ============================================================================
-    '方法: 將 JE 欄位設給資料實體
-    '參數:
+    ' 方法: 將 JE 欄位設給資料實體
+    ' 參數:
     '   - dict: 將表單傳入的參數設給資料實體
     ' ============================================================================
     On Error GoTo ErrorHandler
@@ -138,9 +138,9 @@ End Function
 
 Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
     ' ============================================================================
-    '方法: 將 TB 欄位設給資料實體
-    '參數:
-    '   - dict: 將表單傳入的參數設給資料實體
+    ' 方法: 將 TB 欄位設給資料實體
+    ' 參數:
+    '    - dict: 將表單傳入的參數設給資料實體
     ' ============================================================================
     ApplyTb = False
     '將TB欄位設給資料實體
@@ -163,9 +163,9 @@ End Function
 '***** 自訂
 Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     ' ============================================================================
-    '方法: 金額處理邏輯
-    '參數:
-    '   - amountMethod: 金額處理的方法，以數字區別四種模式
+    ' 方法: 金額處理邏輯
+    ' 參數:
+    '    - amountMethod: 金額處理的方法，以數字區別四種模式
     ' ============================================================================
     On Error GoTo ErrorHandler
     ProcessJeAmount = False

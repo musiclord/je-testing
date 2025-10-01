@@ -14,21 +14,6 @@ Private dbTarget As DbAccess
 Private je As EntityJe
 Private tb As EntityTb
 Private info As EntityInfo
-'資料表名稱常數
-Const TBL_JE_IN_PERIOD As String = "JE_IN_PERIOD"
-Const TBL_JE_NOT_IN_PERIOD As String = "JE_NOT_IN_PERIOD"
-Const TBL_JE_ACCOUNT_SUM As String = "JE_ACCOUNT_SUM"
-Const TBL_COMPLETENESS_CALCULATED As String = "COMPLETENESS_CALCULATED"
-Const TBL_COMPLETENESS_RESULT As String = "COMPLETENESS_RESULT"
-Const TBL_DOCUMENT_IN_PERIOD As String = "DOCUMENT_IN_PERIOD"
-Const TBL_DOCUMENT_SUM As String = "DOCUMENT_SUM"
-Const TBL_DOCUMENT_DIFF As String = "DOCUMENT_DIFF"
-Const TBL_DOCUMENT_NOT_BALANCE As String = "DOCUMENT_NOT_BALANCE"
-Const TBL_INF_RANDOM As String = "INF_RANDOM"
-Const TBL_INF_SORTED As String = "INF_SORTED"
-Const TBL_NULL_ACCOUNT As String = "NULL_ACCOUNT_RECORDS"
-Const TBL_NULL_DOCUMENT As String = "NULL_DOCUMENT_RECORDS"
-Const TBL_NULL_DESCRIPTION As String = "NULL_DESCRIPTION_RECORDS"
 
 Public Sub Initialize(ByRef context As ContextManager)
     '來源資料庫為存放原始資料的 input.accdb
