@@ -17,6 +17,8 @@ Private m_Info As EntityInfo
 Private m_Ace As New Access.Application
 Private je As EntityJe
 Private tb As EntityTb
+privaet m_xlApp
+priuvaet m_xlBook
 
 Public Sub Initialize(context As ContextManager)
     Set m_Db = context.DbValid
@@ -265,3 +267,4 @@ Private Function AccountMappingInfo() As Boolean
 End Function
 
 
+UnifyErrorHagelr
