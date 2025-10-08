@@ -77,7 +77,7 @@ End Sub
 Private Sub vProject_SelectProject(ByVal path As String)
     projector.SelectProject path
     vProject.Hide
-    vMain.Initialize fso.GetFolder(path).name
+    vMain.Initialize fso.GetFolder(path).Name
     vMain.Show vbModeless
 End Sub
 
@@ -127,12 +127,12 @@ End Sub
 Private Sub vImport_ImportJe(ByVal format As String)
     importer.dType = format
     importer.OpenWizard "je"
-    vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.name
+    vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.Name
 End Sub
 Private Sub vImport_ImportTb(ByVal format As String)
     importer.dType = format
     importer.OpenWizard "tb"
-    vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.name
+    vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.Name
 End Sub
 Private Sub vImport_MapJe()
     '@TODO:檢查是否有匯入 JE 資料表
@@ -152,11 +152,13 @@ Private Sub vImport_TestDefaultRequested()
     vMapTb.Initialize context.DbInput
     vMapTb.TriggerTestDefault
 End Sub
-Private Sub vImport_Complete(ByVal dtStart As Date, dtEnd As Date)
+Private Sub vImport_Confirm(ByVal dto As DataTransferObject)
     '結算所有處理步驟的結果
     'TODO: 最後需要檢查所有必填資料，若有缺失，則跳出錯誤視窗並忽略剩下步驟。
-    context.info.PeriodStart = dtStart
-    context.info.PeriodEnd = dtEnd
+    context.info.CompanyName = dto.CompanyName
+    context.info.PrepStartDate = dto.PrepStartDate
+    context.info.PeriodStart = dto.PeriodStart
+    context.info.PeriodEnd = dto.PeriodEnd
 End Sub
 
 '***** vMapJe
@@ -203,10 +205,10 @@ Private Sub vValidation_INF()
 End Sub
 
 '***** vExport
-Private Sub vExport_PreviewWp()
-    exporter.PreviewWp
-End Sub
-
 Private Sub vExport_ExportWp()
     exporter.ExportWp
+End Sub
+
+Private Sub vExport_ValidationReport()
+    ' exporter.Preview("ValidationReport")
 End Sub

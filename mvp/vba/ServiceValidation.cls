@@ -8,7 +8,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-'Class:ServiceValidation
+'===============================================================================
+' Class: ServiceValidation
+' Purpose: 對客戶資料進行驗證測試
+'===============================================================================
 Private dbSource As DbAccess
 Private dbTarget As DbAccess
 Private je As EntityJe
@@ -67,7 +70,7 @@ Public Function CheckCompleteness() As Boolean
     CheckCompleteness = False
     Debug.Print "********** 開始完整性檢查流程 **********"
     Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
-    Call CleanupTempTables(dbTarget, Array(tb.name, TBL_JE_IN_PERIOD, TBL_JE_NOT_IN_PERIOD, TBL_JE_ACCOUNT_SUM, TBL_COMPLETENESS_CALCULATED, TBL_COMPLETENESS_RESULT))
+    Call CleanupTempTables(dbTarget, Array(tb.Name, TBL_JE_IN_PERIOD, TBL_JE_NOT_IN_PERIOD, TBL_JE_ACCOUNT_SUM, TBL_COMPLETENESS_CALCULATED, TBL_COMPLETENESS_RESULT))
     
     ' ----------------------------------------------------------------------------
     ' 複製 TB 至目標資料庫
@@ -75,8 +78,8 @@ Public Function CheckCompleteness() As Boolean
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 複製 TB **********"
     sql = "SELECT * " & vbCrLf & _
-          "INTO " & tb.name & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & tb.name & " IN '" & dbSource.path & "';"
+          "INTO " & tb.Name & " IN '" & dbTarget.path & "' " & vbCrLf & _
+          "FROM " & tb.Name & " IN '" & dbSource.path & "';"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -86,7 +89,7 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** 篩選期間內資料 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_JE_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "FROM " & je.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
           "WHERE [" & je.PostDate & "] " & vbCrLf & _
           "BETWEEN #" & info.PeriodStart & "# AND #" & info.PeriodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
@@ -98,7 +101,7 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** 篩選期間外資料 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_JE_NOT_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "FROM " & je.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
           "WHERE [" & je.PostDate & "] < #" & info.PeriodStart & "# " & vbCrLf & _
           "   OR [" & je.PostDate & "] > #" & info.PeriodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
@@ -126,13 +129,13 @@ Public Function CheckCompleteness() As Boolean
           "    SELECT" & vbCrLf & _
           "        P.*, S.* " & vbCrLf & _
           "    FROM " & TBL_JE_ACCOUNT_SUM & " AS P " & vbCrLf & _
-          "    LEFT JOIN " & tb.name & " AS S " & vbCrLf & _
+          "    LEFT JOIN " & tb.Name & " AS S " & vbCrLf & _
           "        ON P.[" & je.AccountNumber & "] = S.[" & tb.AccountNumber & "] " & vbCrLf & _
           "    UNION " & vbCrLf & _
           "    SELECT " & vbCrLf & _
           "        P.*, S.* " & vbCrLf & _
           "    FROM " & TBL_JE_ACCOUNT_SUM & " AS P " & vbCrLf & _
-          "    RIGHT JOIN " & tb.name & " AS S " & vbCrLf & _
+          "    RIGHT JOIN " & tb.Name & " AS S " & vbCrLf & _
           "        ON P.[" & je.AccountNumber & "] = S.[" & tb.AccountNumber & "] " & vbCrLf & _
           ");"
     dbTarget.ExecuteNonQuery sql
@@ -233,7 +236,7 @@ Public Function CheckDocumentBalance() As Boolean
     Debug.Print "********** 篩選期間內資料 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_DOCUMENT_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "FROM " & je.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
           "WHERE [" & je.PostDate & "] " & vbCrLf & _
           "BETWEEN #" & info.PeriodStart & "# AND #" & info.PeriodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
@@ -318,7 +321,7 @@ Public Function CheckINF() As Boolean
     Debug.Print "********** 篩選期間內資料 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_JE_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "FROM " & je.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
           "WHERE [" & je.PostDate & "] " & vbCrLf & _
           "BETWEEN #" & info.PeriodStart & "# AND #" & info.PeriodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
@@ -374,19 +377,19 @@ Public Function CheckNullRecords() As Boolean
     On Error GoTo ErrorHandler
     CheckNullRecords = False
     Debug.Print "********** 開始空值記錄檢查 **********"
-    Call CleanupTempTables(dbSource, Array(TBL_NULL_ACCOUNT, TBL_NULL_DOCUMENT, TBL_NULL_DESCRIPTION))
-    Debug.Print "********** 檢查會計科目編號空值 =========="
-    If Not dbSource.GetNulls(je.name, je.AccountNumber, TBL_NULL_ACCOUNT) Then
+    Call CleanupTempTables(dbTarget, Array(TBL_NULL_ACCOUNT, TBL_NULL_DOCUMENT, TBL_NULL_DESCRIPTION))
+    Debug.Print "********** 檢查會計科目編號空值 **********"
+    If Not dbSource.ExtractNullRecords(je.Name, je.AccountNumber, TBL_NULL_ACCOUNT, destinationDb:=dbTarget.path) Then
         Debug.Print "會計科目編號空值檢查失敗"
         Exit Function
     End If
     Debug.Print "********** 檢查傳票號碼空值 **********"
-    If Not dbSource.GetNulls(je.name, je.DocumentNumber, TBL_NULL_DOCUMENT) Then
+    If Not dbSource.ExtractNullRecords(je.Name, je.DocumentNumber, TBL_NULL_DOCUMENT, destinationDb:=dbTarget.path) Then
         Debug.Print "傳票號碼空值檢查失敗"
         Exit Function
     End If
     Debug.Print "********** 檢查傳票摘要空值 **********"
-    If Not dbSource.GetNulls(je.name, je.EntryDescription, TBL_NULL_DESCRIPTION) Then
+    If Not dbSource.ExtractNullRecords(je.Name, je.EntryDescription, TBL_NULL_DESCRIPTION, destinationDb:=dbTarget.path) Then
         Debug.Print "傳票摘要空值檢查失敗"
         Exit Function
     End If
@@ -410,6 +413,6 @@ Private Sub CleanupTempTables(ByRef db As DbAccess, ByRef tableNames As Variant)
         End If
     Next i
     On Error GoTo 0
-    dbTarget.RefreshSchema
+    dbTarget.Refresh
 End Sub
 

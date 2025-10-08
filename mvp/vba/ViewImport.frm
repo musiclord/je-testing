@@ -20,7 +20,7 @@ Public Event ImportTb(ByVal format As String)
 Public Event MapJe()
 Public Event MapTb()
 Public Event TestDefaultRequested() '僅作測試用途
-Public Event Complete(ByVal dtStart As Date, dtEnd As Date)
+Public Event Confirm(ByVal dto As DataTransferObject)
 
 Private m_format As String
 
@@ -50,18 +50,28 @@ Private Sub btnMapTb_Click()
 End Sub
 
 Private Sub btnExit_Click()
-    Dim dtStart As Date, dtEnd As Date
-    dtStart = CDate(Me.PeriodStart.Value)
-    dtEnd = CDate(Me.PeriodEnd.Value)
+    Dim dto As New DataTransferObject
+    dto.CompanyName = CStr(Me.txtbCompanyName.Value)
+    dto.PeriodStart = CDate(Me.txtbPeriodStart.Value)
+    dto.PeriodEnd = CDate(Me.txtbPeriodEnd.Value)
+    dto.PrepStartDate = CDate(Me.txtbPrepStartDate.Value)
+    dto.Monday = Me.chkMonday.Value
+    dto.Tuesday = Me.chkTuesday.Value
+    dto.Wednesday = Me.chkWednesday.Value
+    dto.Thursday = Me.chkThursday.Value
+    dto.Friday = Me.chkFriday.Value
+    dto.Saturday = Me.chkSaturday.Value
+    dto.Sunday = Me.chkSunday.Value
     Me.Hide
-    RaiseEvent Complete(dtStart, dtEnd)
+    RaiseEvent Confirm(dto)
 End Sub
 
 Private Sub btnTestDefault_Click()
     '##### FOR DEBUG TESTING #####
     Me.txtbCompanyName.Text = "台塑寧波"
-    Me.PeriodStart.Text = "2024/01/01"
-    Me.PeriodEnd.Text = "2024/12/31"
+    Me.txtbPeriodStart.Text = "2024/01/01"
+    Me.txtbPeriodEnd.Text = "2024/12/31"
+    Me.txtbPrepStartDate = "2024/12/31"
     Me.chkSaturday.Value = True
     Me.chkSunday.Value = True
     RaiseEvent TestDefaultRequested

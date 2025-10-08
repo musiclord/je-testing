@@ -8,7 +8,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-'Class:ServiceProject
+'===============================================================================
+' Class: ServiceProject
+' Purpose: 管理專案的服務，主要負責創建與載入
+'===============================================================================
 Private m_Context As ContextManager
 Private m_Path As String
 
@@ -16,6 +19,11 @@ Public Sub Initialize(ByRef context As ContextManager)
     Set m_Context = context
 End Sub
 Public Function NewProject(ByVal path As String) As Boolean
+    ' ============================================================================
+    ' 依路徑創建專案目錄，並創建資料庫檔案
+    ' 參數:
+    '     - path: 要建立專案目錄的路徑
+    ' ============================================================================
     m_Path = path
     If Dir(m_Path, vbDirectory) <> "" Then
         MsgBox "專案已存在", vbExclamation, "創建專案"
@@ -29,6 +37,11 @@ Public Function NewProject(ByVal path As String) As Boolean
 End Function
 
 Public Function SelectProject(ByVal path As String) As Boolean
+    ' ============================================================================
+    ' 依路徑載入專案目錄，並載入資料庫檔案
+    ' 參數:
+    '     - path: 要載入專案目錄的路徑
+    ' ============================================================================
     m_Path = path
     If Dir(m_Path, vbDirectory) = "" Then
         MsgBox "專案不存在", vbExclamation, "載入專案"
@@ -41,6 +54,11 @@ Public Function SelectProject(ByVal path As String) As Boolean
 End Function
 
 Private Function CreateDb(ByVal dbName As String) As DbAccess
+    ' ============================================================================
+    ' 根據專案目錄創建資料庫檔案 (.accdb)
+    ' 參數:
+    '     - dbName: 資料庫名稱
+    ' ============================================================================
     Dim dbe As New DAO.DBEngine
     Dim dbs As DAO.Database
     Dim db As New DbAccess
@@ -53,6 +71,11 @@ Private Function CreateDb(ByVal dbName As String) As DbAccess
 End Function
 
 Private Function LoadDb(ByVal dbName As String) As DbAccess
+    ' ============================================================================
+    ' 根據專案目錄載入資料庫檔案 (.accdb)
+    ' 參數:
+    '     - dbName: 資料庫名稱
+    ' ============================================================================
     Dim dbPath As String
     dbPath = m_Path & "\" & dbName & ".accdb"
     If Dir(dbPath) = "" Then '

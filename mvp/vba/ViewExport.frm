@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewExport 
    Caption         =   "輸出結果"
-   ClientHeight    =   2760
+   ClientHeight    =   5295
    ClientLeft      =   120
    ClientTop       =   465
-   ClientWidth     =   1920
+   ClientWidth     =   6420
    OleObjectBlob   =   "ViewExport.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -15,16 +15,12 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 'Userform:ViewExport
-Public Event PreviewWp()
 Public Event ExportWp()
+Public Event ValidationReport()
+
 
 Public Sub Initialize()
     '...
-End Sub
-
-Private Sub btnPreviewWp_Click()
-    '預覽底稿於工作表
-    RaiseEvent PreviewWp
 End Sub
 
 Private Sub btnExportWp_Click()
@@ -34,4 +30,9 @@ End Sub
 
 Private Sub btnExit_Click()
     Me.Hide
+End Sub
+
+Private Sub btnValidationReport_Click()
+    '預覽驗證報告
+    RaiseEvent ValidationReport
 End Sub
