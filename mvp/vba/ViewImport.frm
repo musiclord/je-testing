@@ -20,7 +20,7 @@ Public Event ImportTb(ByVal format As String)
 Public Event MapJe()
 Public Event MapTb()
 Public Event TestDefaultRequested() '¶È§@´ú¸Õ¥Î³~
-Public Event Confirm(ByVal dto As DataTransferObject)
+Public Event Submitted(ByVal dto As DataTransferObject)
 
 Private m_format As String
 
@@ -63,7 +63,7 @@ Private Sub btnExit_Click()
     dto.Saturday = Me.chkSaturday.Value
     dto.Sunday = Me.chkSunday.Value
     Me.Hide
-    RaiseEvent Confirm(dto)
+    RaiseEvent Submitted(dto)
 End Sub
 
 Private Sub btnTestDefault_Click()

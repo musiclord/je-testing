@@ -19,7 +19,7 @@ Public Event Completeness()
 Public Event DocumentBalance()
 Public Event INF()
 Public Event NullRecords()
-Public Event Confirm(ByVal dto As DataTransferObject)
+Public Event Submitted(ByVal dto As DataTransferObject)
 
 Public Sub Initialize()
     '...
@@ -44,5 +44,5 @@ End Sub
 Private Sub btnExit_Click()
     Dim dto As DataTransferObject
     Me.Hide
-    RaiseEvent Confirm(dto)
+    RaiseEvent Submitted(dto)
 End Sub

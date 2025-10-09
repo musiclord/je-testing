@@ -16,7 +16,10 @@ Attribute VB_Exposed = False
 Option Explicit
 'Userform:ViewExport
 Public Event ExportWp()
-Public Event ValidationReport()
+Public Event ShowEngagementOverview()
+Public Event ShowValidationReport()
+Public Event ShowCompletenessReport()
+Public Event ShowDocumentBalanceReport()
 
 
 Public Sub Initialize()
@@ -32,7 +35,22 @@ Private Sub btnExit_Click()
     Me.Hide
 End Sub
 
+Private Sub btnEngagementOverview_Click()
+    '預覽專案總覽
+    RaiseEvent ShowEngagementOverview
+End Sub
+
 Private Sub btnValidationReport_Click()
     '預覽驗證報告
-    RaiseEvent ValidationReport
+    RaiseEvent ShowValidationReport
+End Sub
+
+Private Sub btnCompletenessReport_Click()
+    '預覽完整性測試報告
+    RaiseEvent ShowCompletenessReport
+End Sub
+
+Private Sub btnDocumentBalanceReport_Click()
+    '預覽借貸不平測試報告
+    RaiseEvent ShowDocumentBalanceReport
 End Sub

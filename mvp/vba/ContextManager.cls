@@ -14,12 +14,14 @@ Option Explicit
 '===============================================================================
 Private m_DbInput As DbAccess
 Private m_DbValid As DbAccess
+Private m_DbCriteria As DbAccess
+Private m_DbReport As DbAccess
 Private m_Info As EntityInfo
 Private m_Je As EntityJe
 Private m_Tb As EntityTb
 
 '***** 屬性
-'存放原始資料的資料庫
+'輸入資料
 Public Property Get DbInput() As DbAccess
     Set DbInput = m_DbInput
 End Property
@@ -27,7 +29,7 @@ Public Property Set DbInput(ByVal db As DbAccess)
     Set m_DbInput = db
 End Property
 
-'存放驗證資料的資料庫
+'驗證資料
 Public Property Get DbValid() As DbAccess
     Set DbValid = m_DbValid
 End Property
@@ -35,20 +37,33 @@ Public Property Set DbValid(ByVal db As DbAccess)
     Set m_DbValid = db
 End Property
 
-'存放篩選資料的資料庫
+'篩選資料
 Public Property Get DbCriteria() As DbAccess
+    Set DbCriteria = m_DbCriteria
 End Property
 Public Property Set DbCriteria(ByVal db As DbAccess)
+    Set m_DbCriteria = db
 End Property
 
+'報告資料
+Public Property Get DbReport() As DbAccess
+    Set DbReport = m_DbReport
+End Property
+Public Property Set DbReport(ByVal db As DbAccess)
+    Set m_DbReport = db
+End Property
+
+'JE資料實體
 Public Property Get je() As EntityJe
     Set je = m_Je
 End Property
 
+'TB資料實體
 Public Property Get tb() As EntityTb
     Set tb = m_Tb
 End Property
 
+'專案資訊資料實體
 Public Property Get info() As EntityInfo
     Set info = m_Info
 End Property
@@ -57,6 +72,8 @@ End Property
 Public Sub Initialize()
     Set m_DbInput = New DbAccess
     Set m_DbValid = New DbAccess
+    Set m_DbCriteria = New DbAccess
+    Set m_DbReport = New DbAccess
     Set m_Je = New EntityJe
     Set m_Tb = New EntityTb
     Set m_Info = New EntityInfo

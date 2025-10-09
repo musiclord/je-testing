@@ -33,6 +33,7 @@ Public Function NewProject(ByVal path As String) As Boolean
         Set m_Context.DbInput = CreateDb("input")
         Set m_Context.DbValid = CreateDb("valid")
         Set m_Context.DbCriteria = CreateDb("criteria")
+        Set m_Context.DbReport = CreateDb("report")
     End If
 End Function
 
@@ -50,6 +51,7 @@ Public Function SelectProject(ByVal path As String) As Boolean
         Set m_Context.DbInput = LoadDb("input")
         Set m_Context.DbValid = LoadDb("valid")
         Set m_Context.DbCriteria = LoadDb("criteria")
+        Set m_Context.DbReport = LoadDb("report")
     End If
 End Function
 

@@ -27,11 +27,13 @@ Public Sub Initialize(ByRef db As DbAccess)
 End Sub
 
 '--そ秨よ猭ㄑ场秸ノ(ノ代刚)
-Public Sub TriggerTestDefault()
-    Call btnTestDefault_Click
+Public Sub ApplyTestDefaults()
+    '恶代刚把计
+    Call btnTestDefaults_Click
+    '莱ノ代刚把计
     Call btnApplyField_Click
 End Sub
-Private Sub btnTestDefault_Click()
+Private Sub btnTestDefaults_Click()
     '### FOR DEBUG TESTING ###
     Call btnMethod2_Click
     Me.AccountName.Value = FindField(Me.AccountName, "兜ヘ嘿")

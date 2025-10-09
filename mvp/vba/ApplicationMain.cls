@@ -37,6 +37,7 @@ Private context As ContextManager
 Private projector As ServiceProject
 Private importer As ServiceImport
 Private exporter As ServiceExport
+Private reporter As ServiceReport
 Private validator As ServiceValidation
 Private filter As ServiceFilter
 
@@ -57,6 +58,7 @@ Public Sub Initialize()
     Set projector = New ServiceProject
     Set importer = New ServiceImport
     Set exporter = New ServiceExport
+    Set reporter = New ServiceReport
     Set validator = New ServiceValidation
     Set filter = New ServiceFilter
     '--
@@ -77,7 +79,7 @@ End Sub
 Private Sub vProject_SelectProject(ByVal path As String)
     projector.SelectProject path
     vProject.Hide
-    vMain.Initialize fso.GetFolder(path).Name
+    vMain.Initialize fso.GetFolder(path).name
     vMain.Show vbModeless
 End Sub
 
@@ -101,6 +103,7 @@ Private Sub vMain_DoStep3()
     vFilter.Show vbModeless
 End Sub
 Private Sub vMain_DoStep4()
+    reporter.Initialize context
     exporter.Initialize context
     '--
     vExport.Initialize
@@ -127,12 +130,12 @@ End Sub
 Private Sub vImport_ImportJe(ByVal format As String)
     importer.dType = format
     importer.OpenWizard "je"
-    vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.Name
+    vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.name
 End Sub
 Private Sub vImport_ImportTb(ByVal format As String)
     importer.dType = format
     importer.OpenWizard "tb"
-    vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.Name
+    vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.name
 End Sub
 Private Sub vImport_MapJe()
     '@TODO:檢查是否有匯入 JE 資料表
@@ -148,11 +151,11 @@ Private Sub vImport_TestDefaultRequested()
     '### FOR DEBUG TESTING ###
     Debug.Print "========== DEFAULT DEBUG PARAMETER =========="
     vMapJe.Initialize context.DbInput
-    vMapJe.TriggerTestDefault
+    vMapJe.ApplyTestDefaults
     vMapTb.Initialize context.DbInput
-    vMapTb.TriggerTestDefault
+    vMapTb.ApplyTestDefaults
 End Sub
-Private Sub vImport_Confirm(ByVal dto As DataTransferObject)
+Private Sub vImport_Submitted(ByVal dto As DataTransferObject)
     '結算所有處理步驟的結果
     'TODO: 最後需要檢查所有必填資料，若有缺失，則跳出錯誤視窗並忽略剩下步驟。
     context.info.CompanyName = dto.CompanyName
@@ -204,11 +207,30 @@ Private Sub vValidation_INF()
     validator.CheckINF
 End Sub
 
+Private Sub vValidation_Submitted(ByVal dto As DataTransferObject)
+    '
+End Sub
+
 '***** vExport
 Private Sub vExport_ExportWp()
     exporter.ExportWp
 End Sub
 
-Private Sub vExport_ValidationReport()
-    ' exporter.Preview("ValidationReport")
+Private Sub vExport_ShowEngagementOverview()
+    reporter.GenerateEngagementOverview
+    exporter.ShowEngagementOverview
 End Sub
+Private Sub vExport_ShowValidationReport()
+    reporter.GenerateDataOverview
+    exporter.ShowValidationReport
+End Sub
+
+Private Sub vExport_ShowCompletenessReport()
+    '...
+End Sub
+
+
+Private Sub vExport_ShowDocumentBalanceReport()
+    '...
+End Sub
+

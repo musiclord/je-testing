@@ -53,7 +53,7 @@ Public Sub Disconnect()
         Call RollbackTx
     End If
     Dim wsName As String
-    If Not m_Ws Is Nothing Then wsName = m_Ws.Name
+    If Not m_Ws Is Nothing Then wsName = m_Ws.name
     If Not m_Db Is Nothing Then
         m_Db.Close
         Set m_Db = Nothing
@@ -74,24 +74,20 @@ Public Sub Refresh(Optional forceDeep As Boolean = False)
     '         - True: 強制深度刷新，會逐一刷新所有資料表的欄位結構
     ' ============================================================================
     On Error Resume Next
-    
     If Not m_IsConnected Then Exit Sub
-    
     '刷新 JET/ACE 引擎快取
     DAO.DBEngine.Idle dbRefreshCache
-    
     '刷新資料表定義集合
     m_Db.TableDefs.Refresh
-    
     '刷新資料表欄位結構
     If forceDeep Then
         Dim tdf As DAO.TableDef
         For Each tdf In m_Db.TableDefs
             '跳過系統表和臨時表
-            If Not (tdf.Name Like "MSys*" Or tdf.Name Like "~TMPCLP*") Then
+            If Not (tdf.name Like "MSys*" Or tdf.name Like "~TMPCLP*") Then
                 tdf.Fields.Refresh
                 If Err.Number <> 0 Then
-                    Debug.Print "警告: 無法刷新資料表欄位: " & tdf.Name & " (錯誤: " & Err.Number & ")"
+                    Debug.Print "警告: 無法刷新資料表欄位: " & tdf.name & " (錯誤: " & Err.Number & ")"
                     Err.Clear
                 End If
             End If
@@ -107,6 +103,8 @@ Public Sub BeginTx()
         Exit Sub
     End If
     m_Ws.BeginTrans
+    '刷新快取
+    Call Refresh
     m_Tx = True
 End Sub
 
@@ -116,6 +114,8 @@ Public Sub CommitTx()
         Exit Sub
     End If
     m_Ws.CommitTrans
+    '刷新快取
+    Call Refresh
     m_Tx = False
 End Sub
 
@@ -125,6 +125,8 @@ Public Sub RollbackTx()
         Exit Sub
     End If
     m_Ws.Rollback
+    '刷新快取
+    Call Refresh
     m_Tx = False
 End Sub
 
@@ -189,7 +191,7 @@ End Function
 Public Function ExecuteNonQuery(ByVal sql As String) As Long
     If Not m_IsConnected Then Connect
     Debug.Print String(60, "-")
-    Debug.Print "<<" & Dir(m_Db.Name) & ">> : "
+    Debug.Print "<<" & Dir(m_Db.name) & ">> : "
     Debug.Print sql
     Debug.Print String(60, "-")
     m_Db.Execute sql, dbFailOnError
@@ -227,10 +229,10 @@ Public Function GetTableFields(ByVal tableName As String) As Collection
     Dim Fields As New Collection
     Dim fld As DAO.Field
     Dim rs As DAO.Recordset
-    Set rs = m_Db.OpenRecordset(Name:=tableName, Type:=dbOpenDynaset)
+    Set rs = m_Db.OpenRecordset(name:=tableName, Type:=dbOpenDynaset)
     '遍歷 RS 的欄位
     For Each fld In rs.Fields
-        Fields.Add fld.Name
+        Fields.Add fld.name
     Next fld
     rs.Close
     Set rs = Nothing
@@ -366,7 +368,7 @@ Public Function GetTotal( _
     '執行查詢並取得結果
     Set rs = m_Db.OpenRecordset(sql, dbOpenSnapshot)
     If Not rs.EOF Then
-        GetTotal = IIf(IsNull(rs!Total), 0, rs!Total)
+        GetTotal = IIf(IsNull(rs!Total), 0, rs!Total) 'Total 是查詢字串中設置的臨時變數
     Else
         GetTotal = 0
     End If

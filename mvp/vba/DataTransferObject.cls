@@ -10,7 +10,15 @@ Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
 ' Class: DataTransferObject
-' Purpose: 用於在 View 和 Service 之間傳遞專案資訊的 DTO
+' Purpose: 用於在 View 和 Service 之間傳遞參數
+'          並解藕 View 和 Entity 之間的直接依賴
+'
+' Usage Pattern:
+'   [ViewImport] → (建立臨時 DTO) → [RaiseEvent Submitted(dto)]
+'        ↓
+'   [ApplicationMain] → (驗證 dto) → (dto.CopyTo context.ProjectDto)
+'        ↓
+'   [ContextManager] → (context.SyncDtoToEntity) → [EntityInfo]
 '===============================================================================
 ' ***** 成員
 Public CompanyName As String
@@ -27,13 +35,14 @@ Public Sunday As Boolean
 
 Public Sub Initialize()
     CompanyName = ""
-    PeriodStart = #1/1/1900#
-    PeriodEnd = #1/1/1900#
+    PeriodStart = DateSerial(Year(Date), 1, 1)
+    PeriodEnd = DateSerial(Year(Date), 12, 31)
+    PrepStartDate = Date
     Monday = True
     Tuesday = True
     Wednesday = True
     Thursday = True
     Friday = True
-    Saturday = True
-    Sunday = True
+    Saturday = False
+    Sunday = False
 End Sub

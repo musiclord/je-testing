@@ -17,7 +17,7 @@ Public Const TBL_TB As String = "TB"
 '-- 完整性檢查相關資料表
 Public Const TBL_COMPLETENESS_CALCULATED As String = "COMPLETENESS_CALCULATED"
 Public Const TBL_COMPLETENESS_RESULT As String = "COMPLETENESS_RESULT"
-'-- 傳票平衡檢查相關資料表
+'-- 借貸平衡檢查相關資料表
 Public Const TBL_DOCUMENT_IN_PERIOD As String = "DOCUMENT_IN_PERIOD"
 Public Const TBL_DOCUMENT_SUM As String = "DOCUMENT_SUM"
 Public Const TBL_DOCUMENT_DIFF As String = "DOCUMENT_DIFF"
@@ -29,8 +29,15 @@ Public Const TBL_INF_SORTED As String = "INF_SORTED"
 Public Const TBL_NULL_ACCOUNT As String = "NULL_ACCOUNT_RECORDS"
 Public Const TBL_NULL_DOCUMENT As String = "NULL_DOCUMENT_RECORDS"
 Public Const TBL_NULL_DESCRIPTION As String = "NULL_DESCRIPTION_RECORDS"
-
-
+'-- 報表資料表
+Public Const RPT_ENGAGEMENT_OVERVIEW As String = "ENGAGEMENT_OVERVIEW"
+Public Const RPT_DATA_OVERVIEW As String = "DATA_OVERVIEW"
+Public Const RPT_VALIDATION_OVERVIEW As String = "VALIDATION_OVERVIEW"
+Public Const RPT_COMPLETENESS_DETAIL As String = "COMPLETENESS_DETAIL"
+Public Const RPT_DOCUMENT_BALANCE_DETAIL As String = "DOCUMENT_BALANCE_DETAIL"
+Public Const RPT_INF_SAMPLE_DETAIL As String = "INF_SAMPLE_DETAIL"
+Public Const RPT_ACCOUNT_MAPPING_INFO As String = "ACCOUNT_MAPPING_INFO"
+Public Const RPT_FIELD_MAPPING_INFO As String = "FIELD_MAPPING_INFO"
 
 '===============================================================================
 '專案全域入口介面
@@ -52,4 +59,24 @@ Public Function Nz(ByVal fieldName As String, Optional ByVal defaultValue As Str
     fieldName = "[" & fieldName & "]"
     Nz = "IIF(ISNULL(" & fieldName & ")," & defaultValue & "," & fieldName & ")"
 End Function
+
+
+'===============================================================================
+'檢查資料方法
+'===============================================================================
+Public Function CheckDate(ByVal Value As Variant) As Boolean
+    ' Use: If Not CheckDate(date) Then Exit Sub
+    ' CDate (value)
+End Function
+
+Public Function CheckDouble(ByVal Value As Variant) As Boolean
+    ' Use: If Not CheckDouble(double) Then Exit Sub
+    ' CDouble (value)
+End Function
+
+Public Function CheckText(ByVal Value As Variant) As Boolean
+    ' Use If Not CheckText(text) Then Exit Sub
+    ' CStr(value)
+End Function
+
 
