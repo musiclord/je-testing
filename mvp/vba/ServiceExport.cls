@@ -26,36 +26,72 @@ Public Sub Initialize(context As ContextManager)
 End Sub
 
 '***** 資料預覽方法
-Private Sub RecordsetToSheet(ByVal rs As DAO.Recordset, ByVal ws As Worksheet)
-    ' ============================================================================
-    ' 方法:將資料庫記錄集預覽於工作表
-    ' 參數:
-    '    - rs: 資料庫記錄集物件
-    '    - ws: 工作表物件
-    ' ============================================================================
+Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
+                                    ByVal tableNames As Variant, _
+                                    ByVal sectionTitles As Variant, _
+                                    Optional ByVal startRow As Long = 1)
     On Error GoTo ErrorHandler
-    If (rs Is Nothing) Or (rs.BOF And rs.EOF) Then Exit Sub
+    Dim idx As Long
+    Dim currentRow As Long
+    Dim rs As DAO.Recordset
+    Dim rowsCopied As Long
+    
+    currentRow = startRow
     ws.Cells.Clear
-    '寫入標題列
-    Dim i As Long
-    For i = 0 To rs.Fields.Count - 1
-        ws.Cells(1, i + 1).Value = rs.Fields(i).name
-    Next i
-    '格式化標題列
-    With ws.Range(ws.Cells(1, 1), ws.Cells(1, rs.Fields.Count))
-        .Font.Bold = True
-        .Interior.Color = vbYellow
-        .HorizontalAlignment = xlCenter
-    End With
-    '寫入資料
-    rs.MoveFirst
-    ws.Range("A2").CopyFromRecordset rs, MAX_ROWS
+    
+    For idx = LBound(tableNames) To UBound(tableNames)
+        Dim tableName As String
+        tableName = CStr(tableNames(idx))
+        
+        If Not m_Db.TableExists(tableName) Then
+            ws.Cells(currentRow, 1).Value = "資料表 [" & tableName & "] 不存在"
+            ws.Cells(currentRow, 1).Font.Color = vbRed
+            currentRow = currentRow + 2
+        Else
+            Set rs = m_Db.ExecuteQuery("SELECT * FROM [" & tableName & "];")
+            rowsCopied = 0
+            '寫入標題列
+            ws.Cells(currentRow, 1).Value = CStr(sectionTitles(idx))
+            ws.Cells(currentRow, 1).Font.Bold = True
+            currentRow = currentRow + 1
+            
+            Dim col As Long
+            For col = 0 To rs.Fields.Count - 1
+                ws.Cells(currentRow, col + 1).Value = rs.Fields(col).name
+            Next col
+            
+            With ws.Range(ws.Cells(currentRow, 1), ws.Cells(currentRow, rs.Fields.Count))
+                .Font.Bold = True
+                .Interior.Color = RGB(245, 241, 222)
+            End With
+            
+            currentRow = currentRow + 1
+            
+            If rs.BOF And rs.EOF Then
+                ws.Cells(currentRow, 1).Value = "(無資料)"
+                currentRow = currentRow + 2
+            Else
+                '寫入資料
+                If rs.RecordCount = -1 Then
+                    rs.MoveLast
+                End If
+                rowsCopied = rs.RecordCount
+                If rowsCopied < 0 Then rowsCopied = 0
+                rs.MoveFirst
+                ws.Cells(currentRow, 1).CopyFromRecordset rs
+                currentRow = currentRow + rowsCopied + 2
+            End If
+            
+            rs.Close
+            Set rs = Nothing
+        End If
+    Next idx
     '自動調整欄寬
     ws.Columns.AutoFit
     ws.Activate
     Exit Sub
 ErrorHandler:
-    Debug.Print "RecordsetToSheet(): " & Err.Number & " - " & Err.Description
+    Debug.Print "RenderTablesToWorksheet(): " & Err.Number & " - " & Err.Description
 End Sub
 
 Private Sub SetPassword(ByRef xlSheet As Excel.Worksheet)
@@ -78,24 +114,28 @@ Public Function ShowEngagementOverview() As Boolean
     ' 資料預先整理之說明
     ' = ENGAGEMENT_OVERVIEW
     ' ============================================================================
+    On Error GoTo ErrorHandler
+    ShowEngagementOverview = False
     '設置資料表名稱
-    Dim tableName As String
-    tableName = RPT_ENGAGEMENT_OVERVIEW
+    Dim tableNames As Variant
+    tableNames = Array(RPT_ENGAGEMENT_OVERVIEW)
+    '設置報表名稱
+    Dim sectionTitles As Variant
+    sectionTitles = Array("資料預先整理說明")
     '設置工作表名稱
     Dim sheetName As String
-    sheetName = "資料預先整理說明"
+    sheetName = "Step-1 預先整理說明"
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
     ws.name = sheetName
-    '設置記錄集物件
-    Dim rs As DAO.Recordset
-    Set rs = m_Db.ExecuteQuery("SELECT * FROM [" & tableName & "];")
     '預覽記錄集於工作表
-    Call RecordsetToSheet(rs, ws)
-    '釋放資源
-    rs.Close
-    Set rs = Nothing
+    Call RenderTablesToWorksheet(ws, tableNames, sectionTitles)
+    
+    ShowEngagementOverview = True
+    Exit Function
+ErrorHandler:
+    Debug.Print "ShowEngagementOverview(): " & Err.Number & " - " & Err.Description
 End Function
 
 Public Function ShowWorkingPaperSummary() As Boolean
@@ -105,27 +145,31 @@ End Function
 
 Public Function ShowValidationReport() As Boolean
     ' ============================================================================
-    ' Step1-0 - 驗證測試報告
+    ' 驗證測試報告
     ' = ENGAGEMENT_OVERVIEW + VALIDATION_OVERVIEW + DATA_OVERVIEW
     ' ============================================================================
+    On Error GoTo ErrorHandler
+    ShowValidationReport = False
     '設置資料表名稱
-    Dim tableName As String
-    tableName = RPT_DATA_OVERVIEW
+    Dim tableNames As Variant
+    tableNames = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_VALIDATION_OVERVIEW, RPT_DATA_OVERVIEW)
+    '設置報表名稱
+    Dim sectionTitles As Variant
+    sectionTitles = Array("專案總覽", "驗證測試彙總", "資料輸入概況")
     '設置工作表名稱
     Dim sheetName As String
-    sheetName = "驗證測試報告"
+    sheetName = "Step1-0 驗證測試報告"
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
     ws.name = sheetName
-    '設置記錄集物件
-    Dim rs As DAO.Recordset
-    Set rs = m_Db.ExecuteQuery("SELECT * FROM [" & tableName & "];")
     '預覽記錄集於工作表
-    Call RecordsetToSheet(rs, ws)
-    '釋放資源
-    rs.Close
-    Set rs = Nothing
+    Call RenderTablesToWorksheet(ws, tableNames, sectionTitles)
+    
+    ShowValidationReport = True
+    Exit Function
+ErrorHandler:
+    Debug.Print "ShowValidationReport(): " & Err.Number & " - " & Err.Description
 End Function
 
 Public Function ShowCompletenessReport() As Boolean
