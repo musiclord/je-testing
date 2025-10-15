@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewFilterAddSql
    Caption         =   "自定義SQL"
    ClientHeight    =   2820
    ClientLeft      =   120
-   ClientTop       =   468
-   ClientWidth     =   4752
+   ClientTop       =   465
+   ClientWidth     =   4755
    OleObjectBlob   =   "ViewFilterAddSql.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End

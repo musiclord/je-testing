@@ -53,7 +53,6 @@ Public Function GenerateEngagementOverview() As Boolean
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
           "FROM " & m_Context.je.name & " IN '" & m_Context.DbInput.path & "';"
     m_Db.ExecuteNonQuery sql
-    
     GenerateEngagementOverview = True
     Exit Function
 ErrorHandler:
@@ -110,7 +109,6 @@ Public Function GenerateDataOverview() As Boolean
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
           "FROM " & m_Context.je.name & " IN '" & m_Context.DbInput.path & "';"
     m_Db.ExecuteNonQuery sql
-    
     GenerateDataOverview = True
     Exit Function
 ErrorHandler:
@@ -128,8 +126,9 @@ Public Function GenerateValidationOverview() As Boolean
     Const FLD_NULL_ACCOUNT_RECORD_COUNT As String = "無會計科目編號筆數"
     Const FLD_NULL_DOCUMENT_RECORD_COUNT As String = "無傳票號碼筆數"
     Const FLD_NULL_DESCRIPTION_RECORD_COUNT As String = "無傳票摘要筆數"
+    Const FLD_NOT_IN_PERIOD_COUNT As String = "傳票核准日不在會計期間內筆數"
     Const FLD_COMEPLETENESS_DIFF_COUNT As String = "完整性差異筆數"
-    Const FLD_DOCUMENT_NOT_BALANCE_COUNT As String = "借貸不平差異筆數"
+    Const FLD_DOCUMENT_BALANCE_DIFF_COUNT As String = "借貸不平差異筆數"
     '指定資料表名稱至全域常數
     Dim tableName As String
     tableName = RPT_VALIDATION_OVERVIEW
@@ -138,13 +137,84 @@ Public Function GenerateValidationOverview() As Boolean
         Call m_Context.DbReport.DropTable(tableName)
     End If
     '取得報表所需資料
-    
+    Dim nullAccountCount As Double
+    Dim nullDocumentCount As Double
+    Dim nullDescriptionCount As Double
+    Dim notInPeriodCount As Double
+    Dim completenessDiffCount As Double
+    Dim documentDiffCount As Double
+    nullAccountCount = m_Context.DbValid.GetTotal(TBL_NULL_ACCOUNT, "", "DBCount")
+    nullDocumentCount = m_Context.DbValid.GetTotal(TBL_NULL_DOCUMENT, "", "DBCount")
+    nullDescriptionCount = m_Context.DbValid.GetTotal(TBL_NULL_DESCRIPTION, "", "DBCount")
+    notInPeriodCount = m_Context.DbValid.GetTotal(TBL_JE_NOT_IN_PERIOD, "", "DBCount")
+    completenessDiffCount = m_Context.DbValid.GetTotal(TBL_COMPLETENESS_DIFF, "", "DBCount")
+    documentDiffCount = m_Context.DbValid.GetTotal(TBL_DOCUMENT_BALANCE_DIFF, "", "DBCount")
     '處理資料庫查詢
     Dim sql As String
-    sql = ""
+    sql = "SELECT TOP 1 " & vbCrLf & _
+          "    '" & nullAccountCount & "' AS [" & FLD_NULL_ACCOUNT_RECORD_COUNT & "], " & vbCrLf & _
+          "    '" & nullDocumentCount & "' AS [" & FLD_NULL_DOCUMENT_RECORD_COUNT & "], " & vbCrLf & _
+          "    '" & nullDescriptionCount & "' AS [" & FLD_NULL_DESCRIPTION_RECORD_COUNT & "], " & vbCrLf & _
+          "    '" & notInPeriodCount & "' AS [" & FLD_NOT_IN_PERIOD_COUNT & "], " & vbCrLf & _
+          "    '" & completenessDiffCount & "' AS [" & FLD_COMEPLETENESS_DIFF_COUNT & "], " & vbCrLf & _
+          "    '" & documentDiffCount & "' AS [" & FLD_DOCUMENT_BALANCE_DIFF_COUNT & "] " & vbCrLf & _
+          "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
+          "FROM " & m_Context.je.name & " IN '" & m_Context.DbInput.path & "';"
+    m_Db.ExecuteNonQuery sql
+    GenerateValidationOverview = True
     Exit Function
 ErrorHandler:
     Debug.Print "GenerateValidationOverview(): " & Err.Number & " - " & Err.Description
 End Function
 
+Public Function GenerateCompletenessDetail() As Boolean
+    ' ============================================================================
+    ' 方法
+    ' 參數:
+    ' ============================================================================
+    On Error GoTo ErrorHandler
+    GenerateCompletenessDetail = False
+    '指定資料表名稱至全域常數
+    Dim tableName As String
+    tableName = RPT_COMPLETENESS_DETAIL
+    '檢查已存在資料表
+    If m_Context.DbReport.TableExists(tableName) Then
+        Call m_Context.DbReport.DropTable(tableName)
+    End If
+    '處理資料庫查詢
+    Dim sql As String
+    sql = "SELECT * " & vbCrLf & _
+          "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
+          "FROM " & TBL_COMPLETENESS_DETAIL & " IN '" & m_Context.DbValid.path & "';"
+    m_Db.ExecuteNonQuery sql
+    GenerateCompletenessDetail = True
+    Exit Function
+ErrorHandler:
+    Debug.Print "GenerateCompletenessDetail(): " & Err.Number & " - " & Err.Description
+End Function
 
+Public Function GenerateDocumentBalanceDetail() As Boolean
+    ' ============================================================================
+    ' 方法
+    ' 參數:
+    ' ============================================================================
+    On Error GoTo ErrorHandler
+    GenerateDocumentBalanceDetail = False
+    '指定資料表名稱至全域常數
+    Dim tableName As String
+    tableName = RPT_DOCUMENT_BALANCE_DETAIL
+    '檢查已存在資料表
+    If m_Context.DbReport.TableExists(tableName) Then
+        Call m_Context.DbReport.DropTable(tableName)
+    End If
+    '處理資料庫查詢
+    Dim sql As String
+    sql = "SELECT * " & vbCrLf & _
+          "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
+          "FROM " & TBL_DOCUMENT_BALANCE_DETAIL & " IN '" & m_Context.DbValid.path & "';"
+    m_Db.ExecuteNonQuery sql
+    GenerateDocumentBalanceDetail = True
+    Exit Function
+ErrorHandler:
+    Debug.Print "GenerateDocumentBalanceDetail(): " & Err.Number & " - " & Err.Description
+End Function

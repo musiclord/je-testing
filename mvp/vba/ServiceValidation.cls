@@ -56,7 +56,8 @@ Public Function CheckCompleteness() As Boolean
     '       - JE_IN_PERIOD:             期間內分錄資料
     '       - JE_ACCOUNT_SUM:           分錄科目彙總資料
     '       - COMPLETENESS_CALCULATED:  完整性比對計算結果
-    '       - COMPLETENESS_RESULT:      最終完整性檢查報告
+    '       - COMPLETENESS_DIFF:        完整性比對異常傳票清單
+    '       - COMPLETENESS_DETAIL:      最終完整性檢查報告
     '   產生的欄位:
     '       - ACCOUNT_MERGED:   統一的會計科目編號 (優先顯示JE科目,無則顯示TB科目)
     '       - TB_JE_DIFF:       TB變動金額與JE彙總金額的差異
@@ -70,7 +71,7 @@ Public Function CheckCompleteness() As Boolean
     CheckCompleteness = False
     Debug.Print "********** 開始完整性檢查流程 **********"
     Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
-    Call CleanupTempTables(dbTarget, Array(tb.name, TBL_JE_IN_PERIOD, TBL_JE_NOT_IN_PERIOD, TBL_JE_ACCOUNT_SUM, TBL_COMPLETENESS_CALCULATED, TBL_COMPLETENESS_RESULT))
+    Call CleanupTempTables(dbTarget, Array(tb.name, TBL_JE_IN_PERIOD, TBL_JE_NOT_IN_PERIOD, TBL_JE_ACCOUNT_SUM, TBL_COMPLETENESS_CALCULATED, TBL_COMPLETENESS_DIFF, TBL_COMPLETENESS_DETAIL))
     
     ' ----------------------------------------------------------------------------
     ' 複製 TB 至目標資料庫
@@ -173,6 +174,17 @@ Public Function CheckCompleteness() As Boolean
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
+    ' 產生完整性檢查異常清單
+    ' 邏輯: WHERE ABS([DIFF]) > 0
+    ' ----------------------------------------------------------------------------
+    Debug.Print "********** 產生完整性檢查異常清單 **********"
+    sql = "SELECT * " & vbCrLf & _
+          "INTO " & TBL_COMPLETENESS_DIFF & " " & vbCrLf & _
+          "FROM " & TBL_COMPLETENESS_CALCULATED & " " & vbCrLf & _
+          "WHERE ABS([" & FLD_TB_JE_DIFF & "]) > 0;"
+    dbTarget.ExecuteNonQuery sql
+    
+    ' ----------------------------------------------------------------------------
     ' 產生完整性檢查明細
     ' 邏輯: 匯出關鍵欄位
     ' ----------------------------------------------------------------------------
@@ -183,9 +195,8 @@ Public Function CheckCompleteness() As Boolean
           "    [" & tb.K_Amount & "], " & vbCrLf & _
           "    [" & je.K_Amount_Sum & "], " & vbCrLf & _
           "    [" & FLD_TB_JE_DIFF & "] " & vbCrLf & _
-          "INTO " & TBL_COMPLETENESS_RESULT & " " & vbCrLf & _
-          "FROM " & TBL_COMPLETENESS_CALCULATED & " " & vbCrLf & _
-          ""
+          "INTO " & TBL_COMPLETENESS_DETAIL & " " & vbCrLf & _
+          "FROM " & TBL_COMPLETENESS_CALCULATED & ";"
     dbTarget.ExecuteNonQuery sql
     
     CheckCompleteness = True
@@ -217,9 +228,9 @@ Public Function CheckDocumentBalance() As Boolean
     '       - info: 資訊實體物件 (包含檢查期間設定)
     '   產生的資料表:
     '       - DOCUMENT_IN_PERIOD:   指定期間內的所有分錄
-    '       - DOCUMENT_SUM:         各傳票的借貸彙總結果
-    '       - DOCUMENT_DIFF:        借貸不平衡的異常傳票清單
-    '       - DOCUMENT_NOT_BALANCE: 異常傳票的完整明細資料
+    '       - DOCUMENT_BALANCE_SUM:         各傳票的借貸彙總結果
+    '       - DOCUMENT_BALANCE_DIFF:        借貸不平衡的異常傳票清單
+    '       - DOCUMENT_BALANCE_DETAIL: 異常傳票的完整明細資料
     ' ============================================================================
     On Error GoTo ErrorHandler
     '查詢字串
@@ -227,7 +238,7 @@ Public Function CheckDocumentBalance() As Boolean
     CheckDocumentBalance = False
     Debug.Print "********** 開始完整性檢查流程 **********"
     Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
-    Call CleanupTempTables(dbTarget, Array(TBL_DOCUMENT_IN_PERIOD, TBL_DOCUMENT_SUM, TBL_DOCUMENT_DIFF, TBL_DOCUMENT_NOT_BALANCE))
+    Call CleanupTempTables(dbTarget, Array(TBL_DOCUMENT_IN_PERIOD, TBL_DOCUMENT_BALANCE_SUM, TBL_DOCUMENT_BALANCE_DIFF, TBL_DOCUMENT_BALANCE_DETAIL))
     
     ' ----------------------------------------------------------------------------
     ' 篩選指定期間內的 JE
@@ -249,7 +260,7 @@ Public Function CheckDocumentBalance() As Boolean
     sql = "SELECT " & vbCrLf & _
           "    [" & je.DocumentNumber & "], " & vbCrLf & _
           "    SUM([" & je.K_Amount & "]) AS [" & je.K_Amount_Sum & "] " & vbCrLf & _
-          "INTO " & TBL_DOCUMENT_SUM & " " & vbCrLf & _
+          "INTO " & TBL_DOCUMENT_BALANCE_SUM & " " & vbCrLf & _
           "FROM " & TBL_DOCUMENT_IN_PERIOD & " " & vbCrLf & _
           "GROUP BY [" & je.DocumentNumber & "];"
     dbTarget.ExecuteNonQuery sql
@@ -260,8 +271,8 @@ Public Function CheckDocumentBalance() As Boolean
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 篩選出借貸不平衡的分錄 **********"
     sql = "SELECT * " & vbCrLf & _
-          "INTO " & TBL_DOCUMENT_DIFF & " " & vbCrLf & _
-          "FROM " & TBL_DOCUMENT_SUM & " " & vbCrLf & _
+          "INTO " & TBL_DOCUMENT_BALANCE_DIFF & " " & vbCrLf & _
+          "FROM " & TBL_DOCUMENT_BALANCE_SUM & " " & vbCrLf & _
           "WHERE [" & je.K_Amount_Sum & "] <> 0;"
     dbTarget.ExecuteNonQuery sql
     
@@ -273,9 +284,9 @@ Public Function CheckDocumentBalance() As Boolean
     sql = "SELECT " & vbCrLf & _
           "    P.*, " & vbCrLf & _
           "    S.[" & je.K_Amount_Sum & "] " & vbCrLf & _
-          "INTO " & TBL_DOCUMENT_NOT_BALANCE & " " & vbCrLf & _
+          "INTO " & TBL_DOCUMENT_BALANCE_DETAIL & " " & vbCrLf & _
           "FROM " & TBL_DOCUMENT_IN_PERIOD & " AS P" & vbCrLf & _
-          "INNER JOIN " & TBL_DOCUMENT_DIFF & " AS S " & vbCrLf & _
+          "INNER JOIN " & TBL_DOCUMENT_BALANCE_DIFF & " AS S " & vbCrLf & _
           "    ON p.[" & je.DocumentNumber & "] = S.[" & je.DocumentNumber & "];"
     dbTarget.ExecuteNonQuery sql
     

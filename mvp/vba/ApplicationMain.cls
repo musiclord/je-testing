@@ -217,20 +217,35 @@ Private Sub vExport_ExportWp()
 End Sub
 
 Private Sub vExport_ShowEngagementOverview()
+    '建立必要報表
     reporter.GenerateEngagementOverview
+    '輸出報表
     exporter.ShowEngagementOverview
 End Sub
+
 Private Sub vExport_ShowValidationReport()
+    '建立必要報表
+    reporter.GenerateEngagementOverview
     reporter.GenerateDataOverview
+    reporter.GenerateValidationOverview
+    '輸出報表
     exporter.ShowValidationReport
 End Sub
 
 Private Sub vExport_ShowCompletenessReport()
-    '...
+    '建立必要報表
+    reporter.GenerateEngagementOverview
+    reporter.GenerateCompletenessDetail
+    '輸出報表
+    exporter.ShowCompletenessReport
 End Sub
 
 
 Private Sub vExport_ShowDocumentBalanceReport()
-    '...
+    '建立必要報表
+    reporter.GenerateEngagementOverview
+    reporter.GenerateDocumentBalanceDetail
+    '輸出報表
+    exporter.ShowDocumentBalanceReport
 End Sub
 

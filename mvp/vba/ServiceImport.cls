@@ -180,28 +180,26 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
         Case 1 '直接使用原始金額欄位
             Set fld = CreateOrReplace(tdf, je.K_Amount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " " & _
-                  "SET [" & je.K_Amount & "] = " & vbCrLf & _
-                  "CDbl(" & Nz(je.Amount) & ");"
+            sql = "UPDATE " & tdf.name & " SET [" & je.K_Amount & "] = " & vbCrLf & _
+                  SanitizeNumericField(je.Amount) & ";"
             db.ExecuteNonQuery sql
             
         Case 2 '傳票金額 = 借方金額 - 貸方金額
             Set fld = CreateOrReplace(tdf, je.K_Amount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " " & _
-                  "SET [" & je.K_Amount & "] = " & vbCrLf & _
-                  "CDbl(" & Nz(je.DebitAmount) & ") - CDbl(" & Nz(je.CreditAmount) & ");"
+            sql = "UPDATE " & tdf.name & " SET [" & je.K_Amount & "] = " & vbCrLf & _
+                  SanitizeNumericField(je.DebitAmount) & " - " & vbCrLf & _
+                  SanitizeNumericField(je.CreditAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 3 '依借貸別決定金額正負號
             Set fld = CreateOrReplace(tdf, je.K_Amount)
             tdf.Fields.Append fld
-            sql = "UPDATE [" & tdf.name & "] " & _
-                  "SET [" & je.K_Amount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.name & " SET [" & je.K_Amount & "] = " & vbCrLf & _
                   "IIF(" & vbCrLf & _
-                  "  [" & je.DrCr & "] = """ & je.IsDebit & """, " & vbCrLf & _
-                  "  CDbl(" & Nz(je.Amount) & ")," & vbCrLf & _
-                  "  CDbl(" & Nz(je.Amount) & ") * -1" & vbCrLf & _
+                  "    [" & je.DrCr & "] = '" & je.IsDebit & "', " & vbCrLf & _
+                  "    " & SanitizeNumericField(je.Amount) & "," & vbCrLf & _
+                  "    " & SanitizeNumericField(je.Amount) & " * -1" & vbCrLf & _
                   ");"
             db.ExecuteNonQuery sql
             
@@ -234,37 +232,41 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
             '直接使用變動金額
             Set fld = CreateOrReplace(tdf, tb.K_Amount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " " & _
-                  "SET [" & tb.K_Amount & "] = " & vbCrLf & _
-                  "CDbl(" & Nz(tb.ChangeAmount) & ");"
+            sql = "UPDATE " & tdf.name & " SET [" & tb.K_Amount & "] = " & vbCrLf & _
+                  SanitizeNumericField(tb.ChangeAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 2
             '期末 - 期初 = 變動金額
             Set fld = CreateOrReplace(tdf, tb.K_Amount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " " & _
-                  "SET [" & tb.K_Amount & "] = " & vbCrLf & _
-                  "CDbl(" & Nz(tb.ClosingBalance) & ") - CDbl(" & Nz(tb.OpeningBalance) & ");"
+            sql = "UPDATE " & tdf.name & " SET [" & tb.K_Amount & "] = " & vbCrLf & _
+                  SanitizeNumericField(tb.ClosingBalance) & " - " & vbCrLf & _
+                  SanitizeNumericField(tb.OpeningBalance) & ";"
             db.ExecuteNonQuery sql
             
         Case 3
             '借方 - 貸方 = 變動金額
             Set fld = CreateOrReplace(tdf, tb.K_Amount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " " & _
-                  "SET [" & tb.K_Amount & "] = " & vbCrLf & _
-                  "CDbl(" & Nz(tb.DebitAmount) & ") - CDbl(" & Nz(tb.CreditAmount) & ");"
+            sql = "UPDATE " & tdf.name & " SET [" & tb.K_Amount & "] = " & vbCrLf & _
+                  SanitizeNumericField(tb.DebitAmount) & " - " & vbCrLf & _
+                  SanitizeNumericField(tb.CreditAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 4
             '(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
             Set fld = CreateOrReplace(tdf, tb.K_Amount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " " & _
-                  "SET [" & tb.K_Amount & "] = " & vbCrLf & _
-                  "(CDbl(" & Nz(tb.ClosingDebitBalance) & ") - CDbl(" & Nz(tb.OpeningCreditBalance) & ")) - " & vbCrLf & _
-                  "(CDbl(" & Nz(tb.OpeningDebitBalance) & ") - CDbl(" & Nz(tb.OpeningCreditBalance) & "));"
+            sql = "UPDATE " & tdf.name & " SET [" & tb.K_Amount & "] = " & vbCrLf & _
+                  "(" & vbCrLf & _
+                  "    " & SanitizeNumericField(tb.ClosingDebitBalance) & " - " & vbCrLf & _
+                  "    " & SanitizeNumericField(tb.OpeningDebitBalance) & vbCrLf & _
+                  ") - " & vbCrLf & _
+                  "(" & vbCrLf & _
+                  "    " & SanitizeNumericField(tb.ClosingCreditBalance) & " - " & vbCrLf & _
+                  "    " & SanitizeNumericField(tb.OpeningCreditBalance) & vbCrLf & _
+                  ");"
             db.ExecuteNonQuery sql
             
         Case Else
@@ -282,10 +284,23 @@ ErrorHandler:
     ProcessTbAmount = False
 End Function
 
+Public Function SanitizeNumericField(ByVal fieldName As String) As String
+    '============================================================================
+    ' 方法: 轉換空值或任何非值為零
+    '============================================================================
+    SanitizeNumericField = _
+        "CDbl(IIf(" & _
+        "    [" & fieldName & "] IS NULL " & vbCrLf & _
+        "        OR Trim([" & fieldName & "]) = '' " & vbCrLf & _
+        "        OR Trim([" & fieldName & "]) = '-', " & vbCrLf & _
+        "    0, [" & fieldName & "]))"
+End Function
+
 Private Function AddLineItem(ByVal tableName As String, ByVal fieldGroupby As String, ByVal fieldLineItem As String) As Boolean
     '逐筆增加分錄項次
     Dim db As Database
     Dim rs As Recordset
+    '@TODO
 End Function
     
 

@@ -180,6 +180,7 @@ End Function
 Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     If Not m_IsConnected Then Connect
     Debug.Print String(60, "-")
+    Debug.Print "<<" & Dir(m_Db.name) & ">> : "
     Debug.Print sql
     Debug.Print String(60, "-")
     '刷新快取
@@ -323,6 +324,7 @@ Public Function GetTotal( _
     Dim rs As DAO.Recordset
     '檢查資料表是否存在
     If Not TableExists(tableName) Then
+        Debug.Print "  - 錯誤: 資料表 [" & tableName & "] 不存在"
         GetTotal = Null
         Exit Function
     End If
@@ -332,6 +334,7 @@ Public Function GetTotal( _
             Case "DBCount"
                 sql = "SELECT COUNT(*) AS Total FROM [" & tableName & "]"
             Case Else
+                Debug.Print "  - 錯誤: 空欄位僅支援 DBCount, 收到: " & totalType
                 GetTotal = Null
                 Exit Function
         End Select
@@ -340,6 +343,7 @@ Public Function GetTotal( _
         Dim tdf As DAO.TableDef
         Set tdf = m_Db.TableDefs(tableName)
         If Not FieldExists(tdf, fieldName) Then
+            Debug.Print "  - 錯誤: 欄位 [" & fieldName & "] 在資料表 ["; tableName & "] 不存在"
             GetTotal = Null
             Exit Function
         End If
@@ -361,20 +365,30 @@ Public Function GetTotal( _
                 '平均值
                 sql = "SELECT AVG([" & fieldName & "]) AS Total FROM [" & tableName & "]"
             Case Else
+                Debug.Print "  - 錯誤: 不支援的統計類型"
                 GetTotal = Null
                 Exit Function
         End Select
     End If
     '執行查詢並取得結果
+    Debug.Print "  - 執行SQL: " & sql
     Set rs = m_Db.OpenRecordset(sql, dbOpenSnapshot)
-    If Not rs.EOF Then
-        GetTotal = IIf(IsNull(rs!Total), 0, rs!Total) 'Total 是查詢字串中設置的臨時變數
-    Else
+    If Not rs.EOF And rs.BOF Then
+        Debug.Print "  - 狀態: 記錄集為空"
         GetTotal = 0
+    ElseIf IsNull(rs!Total) Then
+        Debug.Print "  -  狀態: 查詢結果為 NULL"
+        GetTotal = 0
+    Else
+        Dim actualTotal As Double
+        actualTotal = CDbl(rs!Total)
+        Debug.Print "  - 結果: " & GetTotal
+        GetTotal = CDbl(rs!Total)
     End If
     '釋放資源
     rs.Close
     Set rs = Nothing
+    Exit Function
 ErrorHandler:
     Debug.Print "GetTotal():  " & Err.Number
     Debug.Print "  - 錯誤描述: " & Err.Description
