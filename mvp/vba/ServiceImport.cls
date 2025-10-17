@@ -31,6 +31,7 @@ Public Sub Initialize(context As ContextManager)
     Set tb = context.tb
 End Sub
 
+
 Public Sub OpenWizard(ByVal target As String)
     ' ============================================================================
     ' 方法: 使用 Access 的操作精靈來匯入資料
@@ -282,18 +283,6 @@ ErrorHandler:
     Debug.Print "  - 錯誤代碼: " & Err.Number
     Debug.Print "  - 錯誤描述: " & Err.Description
     ProcessTbAmount = False
-End Function
-
-Public Function SanitizeNumericField(ByVal fieldName As String) As String
-    '============================================================================
-    ' 方法: 轉換空值或任何非值為零
-    '============================================================================
-    SanitizeNumericField = _
-        "CDbl(IIf(" & _
-        "    [" & fieldName & "] IS NULL " & vbCrLf & _
-        "        OR Trim([" & fieldName & "]) = '' " & vbCrLf & _
-        "        OR Trim([" & fieldName & "]) = '-', " & vbCrLf & _
-        "    0, [" & fieldName & "]))"
 End Function
 
 Private Function AddLineItem(ByVal tableName As String, ByVal fieldGroupby As String, ByVal fieldLineItem As String) As Boolean

@@ -7,6 +7,8 @@ Private m_App As New ApplicationMain
 '===============================================================================
 ' 全域常數-資料表名稱
 '===============================================================================
+'-- 日期維度表
+Public Const TBL_DATE_DIMENSION As String = "DATE_DIMENSION"
 '-- JE 相關資料表
 Public Const TBL_JE As String = "JE"
 Public Const TBL_JE_IN_PERIOD As String = "JE_IN_PERIOD"
@@ -19,7 +21,6 @@ Public Const TBL_COMPLETENESS_CALCULATED As String = "COMPLETENESS_CALCULATED"
 Public Const TBL_COMPLETENESS_DIFF As String = "COMPLETENESS_DIFF"
 Public Const TBL_COMPLETENESS_DETAIL As String = "COMPLETENESS_DETAIL"
 '-- 借貸平衡檢查相關資料表
-Public Const TBL_DOCUMENT_IN_PERIOD As String = "DOCUMENT_IN_PERIOD"
 Public Const TBL_DOCUMENT_BALANCE_SUM As String = "DOCUMENT_BALANCE_SUM"
 Public Const TBL_DOCUMENT_BALANCE_DIFF As String = "DOCUMENT_BALANCE_DIFF"
 Public Const TBL_DOCUMENT_BALANCE_DETAIL As String = "DOCUMENT_BALANCE_DETAIL"
@@ -59,6 +60,16 @@ Public Function Nz(ByVal fieldName As String, Optional ByVal defaultValue As Str
     ' 如果 fieldName 包含空格或特殊字元，用方括號包圍
     fieldName = "[" & fieldName & "]"
     Nz = "IIF(ISNULL(" & fieldName & ")," & defaultValue & "," & fieldName & ")"
+End Function
+
+Public Function SanitizeNumericField(ByVal fieldName As String) As String
+    ' 轉換空值或任何非值為零
+    SanitizeNumericField = _
+        "CDbl(IIf(" & _
+        "    [" & fieldName & "] IS NULL " & vbCrLf & _
+        "        OR Trim([" & fieldName & "]) = '' " & vbCrLf & _
+        "        OR Trim([" & fieldName & "]) = '-', " & vbCrLf & _
+        "    0, [" & fieldName & "]))"
 End Function
 
 

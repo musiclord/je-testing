@@ -25,6 +25,7 @@ Public CompanyName As String
 Public PeriodStart As Date
 Public PeriodEnd As Date
 Public PrepStartDate As Date
+Public NonBusinessDay As Collection
 Public Monday As Boolean
 Public Tuesday As Boolean
 Public Wednesday As Boolean
@@ -38,6 +39,7 @@ Public Sub Initialize()
     PeriodStart = DateSerial(Year(Date), 1, 1)
     PeriodEnd = DateSerial(Year(Date), 12, 31)
     PrepStartDate = Date
+    Set NonBusinessDay = New Collection
     Monday = True
     Tuesday = True
     Wednesday = True

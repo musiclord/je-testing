@@ -71,6 +71,7 @@ Public Sub Run()
     vProject.Show vbModeless
 End Sub
 
+
 '***** vProject
 Private Sub vProject_NewProject(ByVal path As String)
     projector.NewProject path
@@ -127,25 +128,30 @@ Private Sub vMain_ExitApplication()
 End Sub
 
 '***** vImport
-Private Sub vImport_ImportJe(ByVal format As String)
+Private Sub vImport_ImportJournalEntries(ByVal format As String)
     importer.dType = format
     importer.OpenWizard "je"
-    vImport.lblJeStatus.Caption = "匯入資料表: " & context.je.name
+    vImport.lblImportStatus.Caption = "匯入資料表: " & context.je.name
 End Sub
-Private Sub vImport_ImportTb(ByVal format As String)
+Private Sub vImport_ImportTrialBalance(ByVal format As String)
     importer.dType = format
     importer.OpenWizard "tb"
-    vImport.lblTbStatus.Caption = "匯入資料表: " & context.tb.name
+    vImport.lblImportStatus.Caption = "匯入資料表: " & context.tb.name
 End Sub
-Private Sub vImport_MapJe()
+Private Sub vImport_JeFieldMappingRequested()
     '@TODO:檢查是否有匯入 JE 資料表
     vMapJe.Initialize context.DbInput
     vMapJe.Show vbModeless
 End Sub
-Private Sub vImport_MapTb()
+Private Sub vImport_TbFieldMappingRequested()
     '@TODO:檢查是否有匯入 TB 資料表
     vMapTb.Initialize context.DbInput
     vMapTb.Show vbModeless
+End Sub
+Private Sub vImport_UpdateDateDimensionRequested()
+    '@TODO: 開啟工作表
+    '更新覆寫日期為度表
+    
 End Sub
 Private Sub vImport_TestDefaultRequested()
     '### FOR DEBUG TESTING ###
@@ -156,21 +162,22 @@ Private Sub vImport_TestDefaultRequested()
     vMapTb.ApplyTestDefaults
 End Sub
 Private Sub vImport_Submitted(ByVal dto As DataTransferObject)
-    '結算所有處理步驟的結果
-    'TODO: 最後需要檢查所有必填資料，若有缺失，則跳出錯誤視窗並忽略剩下步驟。
+    '處理匯入表單提交並更新 Context
     context.info.CompanyName = dto.CompanyName
     context.info.PrepStartDate = dto.PrepStartDate
     context.info.PeriodStart = dto.PeriodStart
     context.info.PeriodEnd = dto.PeriodEnd
+    'context.info.NonBusinessDay = dto.NonBusinessDay -> Collection
 End Sub
 
 '***** vMapJe
 Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
     context.je.Method = amountMethod
     If Not importer.ApplyJe(dict) Then
+        vImport.lblFieldMappingStatus.Caption = " JE FAILED"
         MsgBox "JE 套用欄位失敗", vbExclamation, "JE 套用欄位"
     Else
-        'pass
+        vImport.lblFieldMappingStatus.Caption = "JE PASS"
     End If
 End Sub
 
@@ -178,9 +185,10 @@ End Sub
 Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
     context.tb.Method = amountMethod
     If Not importer.ApplyTb(dict) Then
+        vImport.lblFieldMappingStatus.Caption = "TB FAILED"
         MsgBox "TB套用欄位失敗", vbExclamation, "TB套用欄位"
     Else
-        'pass
+        vImport.lblFieldMappingStatus.Caption = "TB PASS"
     End If
 End Sub
 

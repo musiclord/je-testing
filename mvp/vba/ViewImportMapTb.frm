@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapTb 
-   Caption         =   "UserForm1"
+   Caption         =   "處理 TB 欄位映射"
    ClientHeight    =   7020
    ClientLeft      =   105
    ClientTop       =   405
-   ClientWidth     =   7635
+   ClientWidth     =   8520.001
    OleObjectBlob   =   "ViewImportMapTb.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -103,6 +103,25 @@ Private Sub btnMethod4_Click()
 End Sub
 
 Private Sub btnExit_Click()
+    '檢查必填欄位
+    Dim errors As Collection
+    Set errors = New Collection
+    If Trim(Me.AccountNumber.Value & "") = "" Then
+        errors.Add "請選擇會計科目編號"
+    End If
+    If Trim(Me.AccountName.Value & "") = "" Then
+        errors.Add "請選擇會計科目名稱"
+    End If
+    '顯示錯誤訊息(若有)
+    If errors.Count > 0 Then
+        Dim errMsg As String
+        Dim i As Long
+        errMsg = "請修正以下問題:" & vbCrLf & vbCrLf
+        For i = 1 To errors.Count
+            errMsg = errMsg & i & ". " & errors(i) & vbCrLf
+        Next i
+        MsgBox errMsg, vbExclamation, "欄位映射失敗"
+    End If
     Me.Hide
 End Sub
 

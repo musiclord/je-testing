@@ -221,6 +221,9 @@ Public Function CheckDocumentBalance() As Boolean
     '       2. 依傳票號碼彙總 JE 借貸金額
     '       3. 篩選出借貸總額不為零的異常傳票
     '       4. 展開異常傳票的所有分錄明細
+    '   強依賴:
+    '       - 需先執行過 CheckCompleteness() 才會有 TBL_JE_IN_PERIOD 資料表
+    '         為了節省運算成本，因此總帳僅篩選一次期間內分錄
     '   相依性:
     '       - dbSource: 來源資料庫 (包含原始分錄資料)
     '       - dbTarget: 目標資料庫 (用於產生中間結果和明細)
@@ -238,19 +241,7 @@ Public Function CheckDocumentBalance() As Boolean
     CheckDocumentBalance = False
     Debug.Print "********** 開始完整性檢查流程 **********"
     Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
-    Call CleanupTempTables(dbTarget, Array(TBL_DOCUMENT_IN_PERIOD, TBL_DOCUMENT_BALANCE_SUM, TBL_DOCUMENT_BALANCE_DIFF, TBL_DOCUMENT_BALANCE_DETAIL))
-    
-    ' ----------------------------------------------------------------------------
-    ' 篩選指定期間內的 JE
-    ' 邏輯: @BetweenDate(je.[PostDate], info.PeriodStart, info.PeriodEnd)
-    ' ----------------------------------------------------------------------------
-    Debug.Print "********** 篩選期間內資料 **********"
-    sql = "SELECT * " & vbCrLf & _
-          "INTO " & TBL_DOCUMENT_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
-          "WHERE [" & je.PostDate & "] " & vbCrLf & _
-          "BETWEEN #" & info.PeriodStart & "# AND #" & info.PeriodEnd & "#;"
-    dbTarget.ExecuteNonQuery sql
+    Call CleanupTempTables(dbTarget, Array(TBL_DOCUMENT_BALANCE_SUM, TBL_DOCUMENT_BALANCE_DIFF, TBL_DOCUMENT_BALANCE_DETAIL))
     
     ' ----------------------------------------------------------------------------
     ' 依傳票號碼彙總 JE 金額
@@ -261,7 +252,7 @@ Public Function CheckDocumentBalance() As Boolean
           "    [" & je.DocumentNumber & "], " & vbCrLf & _
           "    SUM([" & je.K_Amount & "]) AS [" & je.K_Amount_Sum & "] " & vbCrLf & _
           "INTO " & TBL_DOCUMENT_BALANCE_SUM & " " & vbCrLf & _
-          "FROM " & TBL_DOCUMENT_IN_PERIOD & " " & vbCrLf & _
+          "FROM " & TBL_JE_IN_PERIOD & " " & vbCrLf & _
           "GROUP BY [" & je.DocumentNumber & "];"
     dbTarget.ExecuteNonQuery sql
     
@@ -285,7 +276,7 @@ Public Function CheckDocumentBalance() As Boolean
           "    P.*, " & vbCrLf & _
           "    S.[" & je.K_Amount_Sum & "] " & vbCrLf & _
           "INTO " & TBL_DOCUMENT_BALANCE_DETAIL & " " & vbCrLf & _
-          "FROM " & TBL_DOCUMENT_IN_PERIOD & " AS P" & vbCrLf & _
+          "FROM " & TBL_JE_IN_PERIOD & " AS P" & vbCrLf & _
           "INNER JOIN " & TBL_DOCUMENT_BALANCE_DIFF & " AS S " & vbCrLf & _
           "    ON p.[" & je.DocumentNumber & "] = S.[" & je.DocumentNumber & "];"
     dbTarget.ExecuteNonQuery sql
@@ -424,6 +415,7 @@ Private Sub CleanupTempTables(ByRef db As DbAccess, ByRef tableNames As Variant)
         End If
     Next i
     On Error GoTo 0
+    dbTarget.CompactAndRepair
     dbTarget.Refresh
 End Sub
 

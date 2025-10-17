@@ -14,6 +14,7 @@ Option Explicit
 '===============================================================================
 Private Const CHUNK_SIZE As Long = 100000
 Private Const DO_EVENTS_INTERVAL As Double = 2#
+Private m_Fso As FileSystemObject
 Private m_Ws As DAO.Workspace
 Private m_Db As DAO.Database
 Private m_Conn As DAO.Connection
@@ -36,6 +37,10 @@ Public Property Let path(ByVal Value As String)
 End Property
 
 '***** 方法
+Private Sub Class_Initialize()
+    Set m_Fso = New FileSystemObject
+End Sub
+
 Public Sub Connect()
     If m_IsConnected Then
         Exit Sub
@@ -95,6 +100,50 @@ Public Sub Refresh(Optional forceDeep As Boolean = False)
     End If
     On Error GoTo 0
 End Sub
+
+Public Function CompactAndRepair() As Boolean
+    ' ============================================================================
+    ' 統一的壓縮及修復資料庫方法
+    ' ============================================================================
+    On Error GoTo ErrorHandler
+    CompactAndRepair = False
+    '檢查是否連線
+    If Not m_IsConnected Then Connect
+    '檢查路徑是否有效
+    If m_Path = "" Or Dir(m_Path) = "" Then
+        Debug.Print "CompactAndRepair(): 路徑無效:" & m_Path
+        Exit Function
+    End If
+    '儲存事務狀態
+    Dim wasTx As Boolean
+    wasTx = m_Tx
+    If m_Tx Then Call CommitTx
+    '建立暫存檔案路徑
+    Dim tempPath As String
+    tempPath = m_Fso.GetParentFolderName(m_Path) & "\" & _
+               m_Fso.GetBaseName(m_Path) & "_temp_" & _
+               format(Now(), "yyyymmddnnss") & ".accdb"
+    '關閉所有連線
+    Call Disconnect
+    '執行壓縮與修復
+    Debug.Print "  - 壓縮與修復資料庫: " & m_Path
+    DAO.DBEngine.CompactDatabase m_Path, tempPath
+    '刪除原始檔案
+    Kill m_Path
+    '重新命名檔案
+    Name tempPath As m_Path
+    '重新連線資料庫
+    Call Connect
+    '返回原有的事務 (若有)
+    If wasTx Then Call BeginTx
+    '刷新快取
+    Call Refresh(True)
+    Debug.Print "CompactAndRepair(): 壓縮完成"
+    CompactAndRepair = True
+    Exit Function
+ErrorHandler:
+    Debug.Print "CompactAndRepair(): " & Err.Number & " - " & Err.Description
+End Function
 
 Public Sub BeginTx()
     If Not m_IsConnected Then Connect

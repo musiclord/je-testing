@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewMain 
-   Caption         =   "UserForm1"
+   Caption         =   "Main"
    ClientHeight    =   5385
    ClientLeft      =   105
    ClientTop       =   405
@@ -26,22 +26,22 @@ Public Sub Initialize(ByVal title As String)
 End Sub
 
 Private Sub btnDoStep1_Click()
-    '...
+    '觸發步驟1 - 匯入資料
     RaiseEvent DoStep1
 End Sub
 
 Private Sub btnDoStep2_Click()
-    '...
+    '觸發步驟2 - 驗證資料
     RaiseEvent DoStep2
 End Sub
 
 Private Sub btnDoStep3_Click()
-    '...
+    '觸發步驟3 - 篩選資料
     RaiseEvent DoStep3
 End Sub
 
 Private Sub btnDoStep4_Click()
-    '...
+    '觸發步驟4 - 匯出資料
     RaiseEvent DoStep4
 End Sub
 

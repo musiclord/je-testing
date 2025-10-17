@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapJe 
-   Caption         =   "映射 JE"
+   Caption         =   "處理 JE 欄位映射"
    ClientHeight    =   8820.001
    ClientLeft      =   105
    ClientTop       =   405
-   ClientWidth     =   7650
+   ClientWidth     =   9165.001
    OleObjectBlob   =   "ViewImportMapJe.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -102,6 +102,38 @@ Private Sub btnMethod3_Click()
 End Sub
 
 Private Sub btnExit_Click()
+    '檢查必填欄位
+    Dim errors As Collection
+    Set errors = New Collection
+    If Trim(Me.AccountNumber.Value & "") = "" Then
+        errors.Add "請選擇會計科目編號"
+    End If
+    If Trim(Me.AccountName.Value & "") = "" Then
+        errors.Add "請選擇會計科目名稱"
+    End If
+    If Trim(Me.DocumentNumber.Value & "") = "" Then
+        errors.Add "請選擇傳票編號"
+    End If
+    If Trim(Me.EntryDescription.Value & "") = "" Then
+        errors.Add "請選擇傳票摘要"
+    End If
+    If Trim(Me.LineItem.Value & "") = "" Then
+        errors.Add "請選擇傳票項次"
+    End If
+    If Trim(Me.PostDate.Value & "") = "" Then
+        errors.Add "請選擇總帳日期"
+    End If
+    '顯示錯誤訊息(若有)
+    If errors.Count > 0 Then
+        Dim errMsg As String
+        Dim i As Long
+        errMsg = "請修正以下問題:" & vbCrLf & vbCrLf
+        For i = 1 To errors.Count
+            errMsg = errMsg & i & ". " & errors(i) & vbCrLf
+        Next i
+        MsgBox errMsg, vbExclamation, "欄位映射失敗"
+    End If
+    
     Me.Hide
 End Sub
 
@@ -148,3 +180,4 @@ Private Function FindField(ByVal cbo As MSForms.ComboBox, ByVal keyword As Strin
     '如果找不到，回傳空字串
     FindField = ""
 End Function
+

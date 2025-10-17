@@ -221,11 +221,11 @@ Public Function ShowPreparerSummary() As Boolean
     ShowPreparerSummary = True
 End Function
 
-Public Function ShowCompletenessDifferenceSummary() As Boolean
+Public Function ShowCompletenessDiffSummary() As Boolean
     '============================================================================
     ' 完整性測試之差異說明 =
     '============================================================================
-    ShowCompletenessDifferenceSummary = False
+    ShowCompletenessDiffSummary = False
     '設置資料表陣列
     Dim tables As Variant
     tables = Array()
@@ -238,7 +238,7 @@ Public Function ShowCompletenessDifferenceSummary() As Boolean
     ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, tables)
-    ShowCompletenessDifferenceSummary = True
+    ShowCompletenessDiffSummary = True
 End Function
 
 Public Function ShowCompletenessReconciliationReport() As Boolean
