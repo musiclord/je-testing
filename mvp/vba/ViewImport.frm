@@ -51,21 +51,21 @@ End Sub
 
 Private Sub btnConfigureCalendar_Click()
     ' 將所有日期覆寫
-    '//TODO:要先檢查所有日期(Holiday, MakeUpDay, Weekend)的狀態
+    '//TODO:要先檢查所有日期(Holidays, MakeupDays, Weekend)的狀態
     RaiseEvent UpdateDateDimensionRequested
 End Sub
 
 Private Sub btnApplyDateConfig_Click()
     '收集並套用日期設定
-    Dim MakeupDayDates As New Collection
-    Dim HolidayDates As New Collection
+    Dim MakeupDaysDates As New Collection
+    Dim HolidaysDates As New Collection
     
     'RaiseEvent UpdateDateDimensionRequested
 End Sub
 
-Private Sub btnConfigureHoliday_Click()
+Private Sub btnConfigureHolidays_Click()
     Dim ws As Worksheet
-    Set ws = HolidaySheet
+    Set ws = HolidaysSheet
     '開啟工作表讓用戶填入假期資料
     ws.Activate
     '清空並初始化
@@ -77,9 +77,9 @@ Private Sub btnConfigureHoliday_Click()
     ws.Range("A1:B1").Font.Bold = True
 End Sub
 
-Private Sub btnConfigureMakeUpDay_Click()
+Private Sub btnConfigureMakeupDays_Click()
     Dim ws As Worksheet
-    Set ws = MakeupDaySheet
+    Set ws = MakeupDaysSheet
     '開啟工作表讓用戶填入補班日資料
     ws.Activate
     '清空並初始化
@@ -173,15 +173,15 @@ End Sub
 Private Sub btnTestDefault_Click()
     '//WARNING: ONLY FOR TESTING
     '填上假期
-    Call btnConfigureHoliday_Click
+    Call btnConfigureHolidays_Click
     Dim ws As Worksheet
-    Set ws = HolidaySheet
+    Set ws = HolidaysSheet
     ws.Range("A2").Value = DateSerial(2024, 10, 12)
     ws.Range("B2").Value = "國慶日"
     ws.Columns("A:B").AutoFit
     '填上補班日
-    Call btnConfigureMakeUpDay_Click
-    Set ws = MakeupDaySheet
+    Call btnConfigureMakeupDays_Click
+    Set ws = MakeupDaysSheet
     ws.Range("A2").Value = DateSerial(2024, 11, 4)
     ws.Range("B2").Value = "補班日"
     ws.Columns("A:B").AutoFit

@@ -9,8 +9,9 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Class: DbAccess
-' Purpose: 統一所有資料庫操作介面
+' Class:    DbAccess
+' Purpose:  統一所有資料庫操作介面
+' Methods:
 '===============================================================================
 Private Const CHUNK_SIZE As Long = 100000
 Private Const DO_EVENTS_INTERVAL As Double = 2#
@@ -22,7 +23,7 @@ Private m_Path As String
 Private m_IsConnected As Boolean
 Private m_Tx As Boolean
 
-'***** 屬性
+'-- 屬性
 Public Property Get Database() As DAO.Database
     Set Database = m_Db
 End Property
@@ -36,17 +37,20 @@ Public Property Let path(ByVal Value As String)
     m_Path = Value
 End Property
 
-'***** 方法
+'-- 方法
 Private Sub Class_Initialize()
     Set m_Fso = New FileSystemObject
 End Sub
 
 Public Sub Connect()
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
     If m_IsConnected Then
         Exit Sub
     Else
         Dim wsName As String
-        wsName = "WS_" & format(Now(), "yyyymmddnnss") & "_" & Rnd()
+        wsName = "WS_" & Format(Now(), "yyyymmddnnss") & "_" & Rnd()
         Set m_Ws = DAO.DBEngine.CreateWorkspace(wsName, "admin", "")
         Set m_Db = m_Ws.OpenDatabase(m_Path, False, False)
         m_IsConnected = True
@@ -54,6 +58,9 @@ Public Sub Connect()
 End Sub
 
 Public Sub Disconnect()
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
     If m_Tx Then
         Call RollbackTx
     End If
@@ -71,13 +78,13 @@ Public Sub Disconnect()
 End Sub
 
 Public Sub Refresh(Optional forceDeep As Boolean = False)
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 統一的快取刷新方法
     ' 參數:
     '     - foreceDeep:
     '         - False (預設): 僅刷新資料快取與資料表清單，適用一般讀寫後
     '         - True: 強制深度刷新，會逐一刷新所有資料表的欄位結構
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error Resume Next
     If Not m_IsConnected Then Exit Sub
     '刷新 JET/ACE 引擎快取
@@ -102,9 +109,9 @@ Public Sub Refresh(Optional forceDeep As Boolean = False)
 End Sub
 
 Public Function CompactAndRepair() As Boolean
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 統一的壓縮及修復資料庫方法
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     CompactAndRepair = False
     '檢查是否連線
@@ -122,7 +129,7 @@ Public Function CompactAndRepair() As Boolean
     Dim tempPath As String
     tempPath = m_Fso.GetParentFolderName(m_Path) & "\" & _
                m_Fso.GetBaseName(m_Path) & "_temp_" & _
-               format(Now(), "yyyymmddnnss") & ".accdb"
+               Format(Now(), "yyyymmddnnss") & ".accdb"
     '關閉所有連線
     Call Disconnect
     '執行壓縮與修復
@@ -146,11 +153,11 @@ ErrorHandler:
 End Function
 
 Public Sub BeginTx()
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
-    If m_Tx Then
-        '已在事務中
-        Exit Sub
-    End If
+    If m_Tx Then Exit Sub
     m_Ws.BeginTrans
     '刷新快取
     Call Refresh
@@ -158,10 +165,10 @@ Public Sub BeginTx()
 End Sub
 
 Public Sub CommitTx()
-    If Not m_Tx Then
-        '沒有進行中的事務
-        Exit Sub
-    End If
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
+    If Not m_Tx Then Exit Sub
     m_Ws.CommitTrans
     '刷新快取
     Call Refresh
@@ -169,10 +176,10 @@ Public Sub CommitTx()
 End Sub
 
 Public Sub RollbackTx()
-    If Not m_Tx Then
-        '沒有進行中的事務
-        Exit Sub
-    End If
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
+    If Not m_Tx Then Exit Sub
     m_Ws.Rollback
     '刷新快取
     Call Refresh
@@ -180,9 +187,10 @@ Public Sub RollbackTx()
 End Sub
 
 Public Function CreateTable() As Boolean
+    '---------------------------------------------------------------------------
     '創建資料表
+    '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
-    
 End Function
 
 Public Function DropTable(ByVal tableName As String) As Boolean
@@ -197,7 +205,9 @@ Public Function DropTable(ByVal tableName As String) As Boolean
 End Function
 
 Public Function TableExists(ByVal tableName As String) As Boolean
-    '檢查資料表
+    '---------------------------------------------------------------------------
+    ' 檢查資料表
+    '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
     Dim dummyTdf As DAO.TableDef
     On Error Resume Next
@@ -212,11 +222,16 @@ Public Function TableExists(ByVal tableName As String) As Boolean
 End Function
 
 Public Function CreateField(ByVal fieldName As String) As Boolean
-
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
 End Function
 
 
 Public Function FieldExists(ByVal tdf As DAO.TableDef, ByVal fieldName As String) As Boolean
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
     '檢查欄位是否存在
     Dim dummyFld As DAO.Field
     On Error Resume Next
@@ -227,6 +242,9 @@ Public Function FieldExists(ByVal tdf As DAO.TableDef, ByVal fieldName As String
 End Function
 
 Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
     Debug.Print String(60, "-")
     Debug.Print "<<" & Dir(m_Db.name) & ">> : "
@@ -239,6 +257,9 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
 End Function
 
 Public Function ExecuteNonQuery(ByVal sql As String) As Long
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
     Debug.Print String(60, "-")
     Debug.Print "<<" & Dir(m_Db.name) & ">> : "
@@ -251,14 +272,18 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
     ExecuteNonQuery = m_Db.RecordsAffected
 End Function
 
-Public Function Summarization(ByVal tableName As String, fieldToSum As String, fieldToGroup As String)
-    ' ============================================================================
+Public Function Summarization( _
+    ByVal tableName As String, _
+    fieldToSum As String, _
+    fieldToGroup As String _
+)
+    '---------------------------------------------------------------------------
     '負責資料彙總的功能，對資料按某些維度進行分組，並加總指定的數值欄位。
     '參數:
     '   - tableName:     要彙總的資料表
     '   - fieldToSum:    要加總的數值欄位
     '   - fieldToGroup:  要分組的屬性欄位
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     Dim sql As String
     Dim newTable As String
     Dim newField As String
@@ -274,6 +299,9 @@ Public Function Summarization(ByVal tableName As String, fieldToSum As String, f
 End Function
 
 Public Function GetTableFields(ByVal tableName As String) As Collection
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
     '取得指定資料表的欄位
     If Not m_IsConnected Then Connect
     Dim Fields As New Collection
@@ -290,38 +318,35 @@ Public Function GetTableFields(ByVal tableName As String) As Collection
 End Function
 
 
-'***** 額外定義封裝的方法
+'-- 額外定義封裝的方法
 Public Function ExtractNullRecords( _
-                            ByVal tableName As String, _
-                            ByVal fieldName As String, _
-                            ByVal newTableName As String, _
-                            Optional ByVal destinationDb As String = "") As Boolean
-    ' ============================================================================
+    ByVal tableName As String, _
+    ByVal fieldName As String, _
+    ByVal newTableName As String, _
+    Optional ByVal destinationDb As String = "" _
+) As Boolean
+    '---------------------------------------------------------------------------
     '方法: 提取指定欄位資料為空的記錄，並存為新資料表。
     '參數:
     '   - tableName:     來源資料表名稱
     '   - fieldName:     要檢查是否為空值的欄位名稱
     '   - newTableName:  新資料表名稱
     '   - targetDbPath:  目標資料庫路徑 (空字串表示同資料庫)
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     ExtractNullRecords = False
-    
     '確認資料庫連線且資料表存在
     If Not m_IsConnected Then Connect
     If Not TableExists(tableName) Then Exit Function
-    
     '取得資料表定義，檢查指定欄位是否存在
     Dim tdf As DAO.TableDef: Set tdf = m_Db.TableDefs(tableName)
     If Not FieldExists(tdf, fieldName) Then Exit Function
-    
     '取得欄位物件，準備分析欄位型別
     Dim fld As DAO.Field: Set fld = tdf.Fields(fieldName)
     Dim isNumeric As Boolean
     isNumeric = (fld.Type = dbByte Or fld.Type = dbInteger Or fld.Type = dbLong Or _
                  fld.Type = dbSingle Or fld.Type = dbDouble Or fld.Type = dbCurrency Or _
                  fld.Type = dbDecimal)
-    
     '根據欄位型別建構不同的空值檢查條件
     Dim Condition As String
     If isNumeric Then
@@ -331,7 +356,6 @@ Public Function ExtractNullRecords( _
         '文字欄位：檢查 NULL 或去除空白後的空字串
         Condition = "[" & fieldName & "] IS NULL OR TRIM([" & fieldName & "]) = ''"
     End If
-    
     '建構 SQL
     Dim sql As String
     If destinationDb <> "" Then
@@ -360,13 +384,13 @@ Public Function GetTotal( _
                     ByVal tableName As String, _
                     ByVal fieldName As String, _
                     ByVal totalType As String) As Double
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     '方法: 取得資料表的統計值
     '參數:
     '   - tableName:    要統計的資料表名稱
     '   - fieldName:    要統計的欄位名稱 (空字串時僅統計記錄數)
-    '   - totalType:    統計類型 (DBCount, NetValue, PositiveValue, NegativeValue, MaxValue, AverageValue)
-    ' ============================================================================
+    '   - totalType:    DBCount, NetValue, PositiveValue, NegativeValue, MaxValue, AverageValue
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     If Not m_IsConnected Then Connect
     Dim sql As String
@@ -443,5 +467,4 @@ ErrorHandler:
     Debug.Print "  - 錯誤描述: " & Err.Description
 End Function
 
-'***** 自訂私有方法
 

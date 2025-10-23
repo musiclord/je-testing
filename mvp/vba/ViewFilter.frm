@@ -14,7 +14,11 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'Userform:ViewFilter
+'===============================================================================
+' Form:     ViewFilter
+' Purpose:
+' Methods:
+'===============================================================================
 Public Event OverviewCriteria()
 Private m_Sql As String
 

@@ -16,7 +16,7 @@ Private m_Name As String
 Private m_Method As Long
 Private m_Fields As New Dictionary
 
-'***** 方法
+'-- 方法
 Private Sub Class_Initialize()
     m_Name = "TB"
     Dim Fields As Variant
@@ -56,7 +56,7 @@ Public Sub PrintFields()
     Debug.Print String(60, "-")
 End Sub
 
-'***** 屬性訪問
+'-- 屬性訪問
 Public Property Get name() As String
     name = m_Name
 End Property
@@ -73,13 +73,13 @@ Public Property Get Fields() As Dictionary
     Set Fields = m_Fields
 End Property
 
-'***** 屬性自訂欄位
+'-- 屬性自訂欄位
 Public Property Get K_Amount() As String
     '計算用的的金額欄位
     K_Amount = m_Fields("AMOUNT_TB")
 End Property
 
-'***** 屬性快速補全
+'-- 屬性快速補全
 Public Property Get ChangeAmount() As String
     ChangeAmount = m_Fields("ChangeAmount")
 End Property

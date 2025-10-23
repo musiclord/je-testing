@@ -14,8 +14,12 @@ Option Explicit
 '           以每日為單位提供標準化的日期屬性，其用途為:
 '               - 提供唯一的日期鍵值 YYYYMMDD 為主鍵
 '               - 儲存日期相關屬性如 Year, Month, Day, DayOfWeek
-'               - 標示是否為周末(IsWeekend)、假日(IsHoliday)、補班日(IsMakeUpDay)
-'               - 提供假期與補班日的文字描述 (HolidayDesc, MakeUpDayDesc)
+'               - 標示是否為周末(IsWeekend)、假日(IsHolidays)、補班日(IsMakeupDays)
+'               - 提供假期與補班日的文字描述 (HolidaysDesc, MakeupDaysDesc)
+' NonBusinessDays:
+'     - Holidays: 國定假日
+'     - MakeUpDays: 補班日/加班日
+'     - Weekend: 週末
 '===============================================================================
 '--
 Private m_Context As ContextManager
@@ -27,10 +31,10 @@ Private Const FLD_MONTH As String = "Month"                     '[NUM]    月份 (
 Private Const FLD_DAY As String = "Day"                         '[NUM]    日 (1-31)
 Private Const FLD_DAY_OF_WEEK As String = "DayOfWeek"           '[NUM]    天 (1-7)
 Private Const FLD_IS_WEEKEND As String = "IsWeekend"            '[Y/N]    -1/0 (系統自動產生)
-Private Const FLD_IS_HOLIDAY As String = "IsHoliday"            '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
-Private Const FLD_IS_MAKEUP_DAY As String = "IsMakeUpDay"       '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
-Private Const FLD_HOLIDAY_DESC As String = "HolidayDesc"        '[CHAR]   假期說明 (選填)
-Private Const FLD_MAKEUP_DAY_DESC As String = "MakeUpDayDesc"   '[CHAR]   補班日說明 (選填)
+Private Const FLD_IS_HOLIDAY As String = "IsHolidays"            '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
+Private Const FLD_IS_MAKEUP_DAY As String = "IsMakeupDays"       '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
+Private Const FLD_HOLIDAY_DESC As String = "HolidaysDesc"        '[CHAR]   假期說明 (選填)
+Private Const FLD_MAKEUP_DAY_DESC As String = "MakeupDaysDesc"   '[CHAR]   補班日說明 (選填)
 
 Public Sub Initialize(context As ContextManager)
     Set m_Context = context
@@ -63,13 +67,11 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
     '---------------------------------------------------------------------------
     ' 將使用者於工作表匯入的假期資料，合併至 DateDimension 資料表
     '---------------------------------------------------------------------------
-    Dim ws As Worksheet
-    Set ws = HolidaySheet
-    '預期 rsHolidays 有欄位 Date(DATE), Description(TEXT)
     If rsHolidays Is Nothing Then Exit Sub
     If rsHolidays.EOF Then Exit Sub
     rsHolidays.MoveFirst
     Do While Not rsHolidays.EOF
+        '預期 rsHolidays 有欄位 Date(DATE), Description(TEXT)
         Dim sql As String
         sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
               "SET [" & FLD_IS_HOLIDAY & "] = True, " & vbCrLf & _
@@ -81,26 +83,24 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
     rsHolidays.Close
 End Sub
 
-Public Sub MergeMakeUpDays(rsMakeUpDays As DAO.Recordset)
+Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
     '---------------------------------------------------------------------------
     ' 將使用者於工作表匯入的補班日資料，合併至 DateDimension 資料表
     '---------------------------------------------------------------------------
-    Dim ws As Worksheet
-    Set ws = MakeupDaySheet
-    '預期 rsMakeUpDays 有欄位 Date(DATE), Description(TEXT)
-    If rsMakeUpDays Is Nothing Then Exit Sub
-    If rsMakeUpDays.EOF Then Exit Sub
-    rsMakeUpDays.MoveFirst
-    Do While Not rsMakeUpDays.EOF
+    If rsMakeupDays Is Nothing Then Exit Sub
+    If rsMakeupDays.EOF Then Exit Sub
+    rsMakeupDays.MoveFirst
+    Do While Not rsMakeupDays.EOF
+        '預期 rsMakeupDays 有欄位 Date(DATE), Description(TEXT)
         Dim sql  As String
         sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
               "SET [" & FLD_IS_MAKEUP_DAY & "] = True, " & vbCrLf & _
-              "    [" & FLD_MAKEUP_DAY_DESC & "] = '" & Replace(rsMakeUpDays!MakeUpDesc, "'", "''") & "' " & _
-              "WHERE [" & FLD_DATEKEY & "] = #" & Format(rsMakeUpDays!MakeUpDate, "mm/dd/yyyy") & "#"
+              "    [" & FLD_MAKEUP_DAY_DESC & "] = '" & Replace(rsMakeupDays!MakeUpDesc, "'", "''") & "' " & _
+              "WHERE [" & FLD_DATEKEY & "] = #" & Format(rsMakeupDays!MakeUpDate, "mm/dd/yyyy") & "#"
         Call m_Db.ExecuteNonQuery(sql)
-        rsMakeUpDays.MoveNext
+        rsMakeupDays.MoveNext
     Loop
-    rsMakeUpDays.Close
+    rsMakeupDays.Close
 End Sub
 
 Public Sub CreateDateDimensionTable()
@@ -126,11 +126,11 @@ Public Sub CreateDateDimensionTable()
           "    [" & FLD_DAY & "] SHORT, " & vbCrLf & _
           "    [" & FLD_DAY_OF_WEEK & "] SHORT, " & vbCrLf & _
           "    [" & FLD_IS_WEEKEND & "] YESNO, " & vbCrLf & _
-          "    [" & FLD_IS_HOLIDAY & "] YESNO" & vbCrLf & _
-          "    [" & FLD_IS_MAKEUP_DAY & "] YESNO" & vbCrLf & _
-          "    [" & FLD_HOLIDAY_DESC & "] TEXT(50)" & vbCrLf & _
-          "    [" & FLD_MAKEUP_DAY_DESC & "] TEXT(50)" & vbCrLf & _
-          "    CONSTRAINT PK_" & TBL_DATE_DIMENSION & " PRIMARY KEY (" & FLD_DATEKEY & ")" & vbCrLf & _
+          "    [" & FLD_IS_HOLIDAY & "] YESNO," & vbCrLf & _
+          "    [" & FLD_IS_MAKEUP_DAY & "] YESNO," & vbCrLf & _
+          "    [" & FLD_HOLIDAY_DESC & "] TEXT(50)," & vbCrLf & _
+          "    [" & FLD_MAKEUP_DAY_DESC & "] TEXT(50)," & vbCrLf & _
+          "    CONSTRAINT PK_" & TBL_DATE_DIMENSION & " PRIMARY KEY ([" & FLD_DATEKEY & "])" & vbCrLf & _
           ");"
     Call m_Db.ExecuteNonQuery(sql)
     '遍歷新增日期表

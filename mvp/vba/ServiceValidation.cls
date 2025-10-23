@@ -9,8 +9,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Class: ServiceValidation
-' Purpose: 對客戶資料進行驗證測試
+'Class Name: ServiceValidationrd
+'Purpose: 對客戶資料進行驗證測試
 '===============================================================================
 Private dbSource As DbAccess
 Private dbTarget As DbAccess
@@ -29,7 +29,7 @@ Public Sub Initialize(ByRef context As ContextManager)
 End Sub
 
 Public Function CheckCompleteness() As Boolean
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 完整性檢查 (Completeness/Roll-forward Test)
     '   目的:
     '       - 驗證分錄檔 (JE) 與試算表 (TB) 的資料完整性和一致性
@@ -61,7 +61,7 @@ Public Function CheckCompleteness() As Boolean
     '   產生的欄位:
     '       - ACCOUNT_MERGED:   統一的會計科目編號 (優先顯示JE科目,無則顯示TB科目)
     '       - TB_JE_DIFF:       TB變動金額與JE彙總金額的差異
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     '欄位名稱
     Const FLD_ACCOUNT_MERGED As String = "ACCOUNT_MERGED"
@@ -208,7 +208,7 @@ ErrorHandler:
 End Function
     
 Public Function CheckDocumentBalance() As Boolean
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 傳票借貸平衡檢查 (Document Balance Test)
     '   目的:
     '       - 檢查會計分錄系統中每張傳票的借貸是否平衡
@@ -234,7 +234,7 @@ Public Function CheckDocumentBalance() As Boolean
     '       - DOCUMENT_BALANCE_SUM:         各傳票的借貸彙總結果
     '       - DOCUMENT_BALANCE_DIFF:        借貸不平衡的異常傳票清單
     '       - DOCUMENT_BALANCE_DETAIL: 異常傳票的完整明細資料
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     '查詢字串
     Dim sql As String
@@ -243,10 +243,10 @@ Public Function CheckDocumentBalance() As Boolean
     Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
     Call CleanupTempTables(dbTarget, Array(TBL_DOCUMENT_BALANCE_SUM, TBL_DOCUMENT_BALANCE_DIFF, TBL_DOCUMENT_BALANCE_DETAIL))
     
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     ' 依傳票號碼彙總 JE 金額
     ' 邏輯: SUM [K_Amount], GROUP BY [DocumentNumber]
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     Debug.Print "********** 依傳票號碼彙總金額 **********"
     sql = "SELECT " & vbCrLf & _
           "    [" & je.DocumentNumber & "], " & vbCrLf & _
@@ -256,10 +256,10 @@ Public Function CheckDocumentBalance() As Boolean
           "GROUP BY [" & je.DocumentNumber & "];"
     dbTarget.ExecuteNonQuery sql
     
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     ' 篩選出借貸總額不為零的異常傳票
     ' 邏輯: WHERE je.[K_Amount_Sum] <> 0
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     Debug.Print "********** 篩選出借貸不平衡的分錄 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_DOCUMENT_BALANCE_DIFF & " " & vbCrLf & _
@@ -267,10 +267,10 @@ Public Function CheckDocumentBalance() As Boolean
           "WHERE [" & je.K_Amount_Sum & "] <> 0;"
     dbTarget.ExecuteNonQuery sql
     
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     ' 展開異常傳票的所有分錄明細
     ' 邏輯: JoinDatabase, WI_JOIN_MATCH_ONLY
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     Debug.Print "********** 配對(若有)不平衡分錄之明細 **********"
     sql = "SELECT " & vbCrLf & _
           "    P.*, " & vbCrLf & _
@@ -290,11 +290,11 @@ ErrorHandler:
 End Function
 
 Public Function CheckINF() As Boolean
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 評估INF可靠性之抽樣程序
     '   背景:
     '       - INF Testing：測試控制所依賴的資訊是否可靠，通常與 ITGC、應用控制有關。
-    '       - INF: Information used in the performance of controls
+    '       - INF: InFormation used in the performance of controls
     '   目的:
     '       - 從總帳分錄 (JE) 中依據定義的風險隨機抽取指定數量的樣本，並排序後產出明細。
     '   業務邏輯:
@@ -308,18 +308,21 @@ Public Function CheckINF() As Boolean
     '       - JE_IN_PERIOD: 期間內分錄。
     '       - INF_RANDOM:   隨機抽取的 60 筆樣本。
     '       - INF_SORTED:   排序後的明細。
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     '查詢字串
     Dim sql As String
     CheckINF = False
     Debug.Print "********** 開始隨機抽樣流程 **********"
     Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
-    Call CleanupTempTables(dbTarget, Array(TBL_JE_IN_PERIOD, TBL_INF_RANDOM, TBL_INF_SORTED))
-    ' ----------------------------------------------------------------------------
+    Call CleanupTempTables( _
+        dbTarget, _
+        Array(TBL_JE_IN_PERIOD, TBL_INF_RANDOM, TBL_INF_SORTED) _
+        )
+    '---------------------------------------------------------------------------
     ' 篩選指定期間內的 JE
     ' 邏輯: @BetweenDate(je.[PostDate], info.PeriodStart, info.PeriodEnd)
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     Debug.Print "********** 篩選期間內資料 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_JE_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
@@ -328,10 +331,10 @@ Public Function CheckINF() As Boolean
           "BETWEEN #" & info.PeriodStart & "# AND #" & info.PeriodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
     
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     ' 隨機抽取 60 筆樣本
     ' 邏輯: 使用 RND() 函數產生隨機排序，再用 TOP 60 選取樣本。
-    ' ----------------------------------------------------------------------------
+    '---------------------------------------------------------------------------
     Debug.Print "********** 隨機抽取 60 筆樣本 **********"
     Randomize
     sql = "SELECT TOP 60 * " & vbCrLf & _
@@ -360,7 +363,7 @@ ErrorHandler:
 End Function
 
 Public Function CheckNullRecords() As Boolean
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 空值記錄檢查 (Check Null Records)
     '   目的:
     '       - 檢查會計分錄中關鍵欄位是否有空值或空白記錄
@@ -375,7 +378,7 @@ Public Function CheckNullRecords() As Boolean
     '       - NULL_ACCOUNT_RECORDS:     會計科目編號為空的記錄
     '       - NULL_DOCUMENT_RECORDS:    傳票號碼為空的記錄
     '       - NULL_DESCRIPTION_RECORDS: 傳票摘要為空的記錄
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     CheckNullRecords = False
     Debug.Print "********** 開始空值記錄檢查 **********"
@@ -406,7 +409,9 @@ End Function
 
 '--自訂方法
 Private Sub CleanupTempTables(ByRef db As DbAccess, ByRef tableNames As Variant)
+    '---------------------------------------------------------------------------
     ' 清理暫存資料表的輔助方法
+    '---------------------------------------------------------------------------
     On Error Resume Next
     Dim i As Long
     For i = LBound(tableNames) To UBound(tableNames)

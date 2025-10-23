@@ -32,7 +32,6 @@ Private m_Friday As Boolean
 Private m_Saturday As Boolean
 Private m_Sunday As Boolean
 
-
 Public Sub Initialize()
     Set m_WSHnet = New WshNetwork
     Set m_UserObject = GetObject("WinNT://" & m_UserDomain & "/" & m_UserName & ",user")
@@ -43,8 +42,6 @@ Public Sub Initialize()
     If m_UserFullName = "" Then m_UserFullName = m_UserName
 End Sub
 
-
-'***** 屬性訪問
 '--使用者名稱
 Public Property Get UserName() As String
     Let UserName = m_UserName

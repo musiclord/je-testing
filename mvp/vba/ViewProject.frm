@@ -14,7 +14,11 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'Userform:ViewProject
+'===============================================================================
+' Form:     ViewProject
+' Purpose:
+' Methods:
+'===============================================================================
 Public Event NewProject(ByVal path As String)
 Public Event SelectProject(ByVal path As String)
 
@@ -42,7 +46,7 @@ End Sub
 
 Private Sub UpdateProjectList()
     Dim projects As New Collection
-    Dim Item As Variant
+    Dim item As Variant
     Dim fso As New FileSystemObject
     Dim rootFolder As folder
     Dim subFolder As folder
@@ -54,8 +58,8 @@ Private Sub UpdateProjectList()
     Next subFolder
     '更新目錄清單
     Me.lstProjectList.Clear
-    For Each Item In projects
-        Me.lstProjectList.AddItem Item
-    Next Item
+    For Each item In projects
+        Me.lstProjectList.AddItem item
+    Next item
 End Sub
 

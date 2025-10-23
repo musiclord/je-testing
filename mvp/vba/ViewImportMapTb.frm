@@ -14,7 +14,11 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'Userform:ViewImportMapTb
+'===============================================================================
+' Form:     ViewImportMapTb
+' Purpose:
+' Methods:
+'===============================================================================
 Public Event ApplyField(ByVal dict As Dictionary, ByVal Method As Long)
 Private m_Method As Long
 
@@ -138,7 +142,7 @@ Private Sub UpdateFields(ByVal Fields As Collection)
             Set cbo = ctrl
             cbo.Clear
             For i = 1 To Fields.Count
-                cbo.AddItem Fields.Item(i)
+                cbo.AddItem Fields.item(i)
             Next i
         End If
     Next ctrl

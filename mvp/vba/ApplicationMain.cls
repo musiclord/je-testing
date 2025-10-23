@@ -74,11 +74,16 @@ Public Sub Run()
 End Sub
 
 '-- vProject
-'-------------------------------------------------------------------------------
 Private Sub vProject_NewProject(ByVal path As String)
+    '---------------------------------------------------------------------------
+    ' 依據輸入路徑創建專案目錄
+    '---------------------------------------------------------------------------
     projector.NewProject path
 End Sub
 Private Sub vProject_SelectProject(ByVal path As String)
+    '---------------------------------------------------------------------------
+    ' 依據輸入路徑載入專案目錄並開啟主要表單介面 ViewMain
+    '---------------------------------------------------------------------------
     projector.SelectProject path
     vProject.Hide
     Call vMain.Initialize(fso.GetFolder(path).name)
@@ -86,8 +91,10 @@ Private Sub vProject_SelectProject(ByVal path As String)
 End Sub
 
 '-- vMain
-'-------------------------------------------------------------------------------
 Private Sub vMain_DoStep1()
+    '---------------------------------------------------------------------------
+    ' 初始化步驟一所需的物件並開啟表單介面 ViewImport
+    '---------------------------------------------------------------------------
     Call importer.Initialize(context)
     Call calendar.Initialize(context)
     '--
@@ -95,18 +102,27 @@ Private Sub vMain_DoStep1()
     vImport.Show vbModeless
 End Sub
 Private Sub vMain_DoStep2()
+    '---------------------------------------------------------------------------
+    ' 初始化步驟二所需的物件並開啟表單介面 ViewValidation
+    '---------------------------------------------------------------------------
     Call validator.Initialize(context)
     '--
     Call vValidation.Initialize
     vValidation.Show vbModeless
 End Sub
 Private Sub vMain_DoStep3()
+    '---------------------------------------------------------------------------
+    ' 初始化步驟三所需的物件並開啟臨時的表單介面 ViewFilterTemp 來選取篩選模式
+    '---------------------------------------------------------------------------
     Call filter.Initialize(context)
     '--
     Call vFilter.Initialize
     vFilter.Show vbModeless
 End Sub
 Private Sub vMain_DoStep4()
+    '---------------------------------------------------------------------------
+    ' 初始化步驟四所需的物件並開啟表單介面 ViewExport
+    '---------------------------------------------------------------------------
     Call reporter.Initialize(context)
     Call exporter.Initialize(context)
     '--
@@ -114,7 +130,9 @@ Private Sub vMain_DoStep4()
     vExport.Show vbModeless
 End Sub
 Private Sub vMain_ExitApplication()
-    '釋放資源
+    '---------------------------------------------------------------------------
+    ' 關閉程序並釋放資源
+    '---------------------------------------------------------------------------
     If Not context Is Nothing Then
         If Not context.DbInput Is Nothing Then
             context.DbInput.Disconnect
@@ -130,21 +148,29 @@ Private Sub vMain_ExitApplication()
 End Sub
 
 '-- vImport
-'-------------------------------------------------------------------------------
 Private Sub vImport_ImportJournalEntries(ByVal Format As String)
+    '---------------------------------------------------------------------------
+    ' 使用資料庫匯入精靈處理 JE 匯入
+    '---------------------------------------------------------------------------
     importer.dType = Format
     importer.OpenWizard "je"
     vImport.lblImportStatus.Caption = "匯入資料表: " & context.je.name
 End Sub
 Private Sub vImport_ImportTrialBalance(ByVal Format As String)
+    '---------------------------------------------------------------------------
+    ' 使用資料庫匯入精靈處理 TB 匯入
+    '---------------------------------------------------------------------------
     importer.dType = Format
     importer.OpenWizard "tb"
     vImport.lblImportStatus.Caption = "匯入資料表: " & context.tb.name
 End Sub
 Private Sub vImport_JeFieldMappingRequested()
+    '---------------------------------------------------------------------------
+    ' 開啟JE欄位映射的介面
+    '---------------------------------------------------------------------------
     '檢查是否有匯入 JE 資料表
     If Not context.DbInput.TableExists(context.je.name) Then
-        MsgBox "", vbExclamation, ""
+        MsgBox "尚未匯入 JE 資料表", vbExclamation, "JE欄位映射"
         vImport.btnImportJe.SetFocus
         Exit Sub
     End If
@@ -153,9 +179,12 @@ Private Sub vImport_JeFieldMappingRequested()
     vMapJe.Show vbModeless
 End Sub
 Private Sub vImport_TbFieldMappingRequested()
+    '---------------------------------------------------------------------------
+    ' 開啟TB欄位映射的介面
+    '---------------------------------------------------------------------------
     '檢查是否有匯入 TB 資料表
     If Not context.DbInput.TableExists(context.tb.name) Then
-        MsgBox "", vbExclamation, ""
+        MsgBox "尚未匯入 TB 資料表", vbExclamation, "TB欄位映射"
         vImport.btnImportTb.SetFocus
         Exit Sub
     End If
@@ -164,19 +193,50 @@ Private Sub vImport_TbFieldMappingRequested()
     vMapTb.Show vbModeless
 End Sub
 Private Sub vImport_UpdateDateDimensionRequested()
-    '更新覆寫日期為度表
-    
+    '---------------------------------------------------------------------------
+    ' 更新/覆寫日期維度表
+    '---------------------------------------------------------------------------
+    Dim types As Variant
+    Dim rowCount As Long
+    '匯入假期資料並更新
+    Dim rsHolidays As DAO.Recordset
+    '//TODO: rowCount -> extract how many rows in worksheet
+    types = Array("DATE", "TEXT(50)")
+    Set rsHolidays = importer.ImportFromSheet(HolidaysSheet, "A2:B10", types)
+    If Not rsHolidays.EOF Then
+        Call calendar.MergeHolidays(rsHolidays)
+        Debug.Print "  - 已匯入 " & rsHolidays.RecordCount & " 筆假日資料"
+    Else
+        Debug.Print "HolidaysSheet無資料"
+    End If
+    '匯入補班日資料並更新
+    Dim rsMakeupDays As DAO.Recordset
+    '//TODO: rowCount -> ???
+    types = Array("DATE", "TEXT(50)")
+    Set rsMakeupDays = importer.ImportFromSheet(MakeupDaysSheet, "A2:B10", types)
+    If Not rsMakeupDays.EOF Then
+        Call calendar.MergeMakeupDays(rsMakeupDays)
+        Debug.Print "  - 已匯入 " & rsMakeupDays.RecordCount & " 筆補班日資料"
+    Else
+        Debug.Print "MakeupDays無資料"
+    End If
+    '完成
+    MsgBox "日期維度表更新完成", vbInformation, "日期設置"
 End Sub
 Private Sub vImport_TestDefaultRequested()
+    '---------------------------------------------------------------------------
     '//WARNING: ONLY FOR TESTING
     '//NOTE:只負責觸發前端的操作
+    '---------------------------------------------------------------------------
     Call vMapJe.Initialize(context.DbInput)
     vMapJe.ApplyTestDefaults
     Call vMapTb.Initialize(context.DbInput)
     vMapTb.ApplyTestDefaults
 End Sub
 Private Sub vImport_Submitted(ByVal dto As DataTransferObject)
-    '處理匯入表單提交並更新 Context
+    '---------------------------------------------------------------------------
+    ' 處理匯入表單提交並更新 Context
+    '---------------------------------------------------------------------------
     context.info.CompanyName = dto.CompanyName
     context.info.PrepStartDate = dto.PrepStartDate
     context.info.PeriodStart = dto.PeriodStart
@@ -188,6 +248,9 @@ End Sub
 '-- vMapJe
 '-------------------------------------------------------------------------------
 Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
+    '---------------------------------------------------------------------------
+    ' 套用表單 MapJe 的欄位映射
+    '---------------------------------------------------------------------------
     context.je.Method = amountMethod
     If Not importer.ApplyJe(dict) Then
         vImport.lblFieldMappingStatus.Caption = " JE FAILED"
@@ -200,6 +263,9 @@ End Sub
 '-- vMapTb
 '-------------------------------------------------------------------------------
 Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
+    '---------------------------------------------------------------------------
+    ' 套用表單 MapTb 的欄位映射
+    '---------------------------------------------------------------------------
     context.tb.Method = amountMethod
     If Not importer.ApplyTb(dict) Then
         vImport.lblFieldMappingStatus.Caption = "TB FAILED"
@@ -212,24 +278,32 @@ End Sub
 '-- vValidation
 '-------------------------------------------------------------------------------
 Private Sub vValidation_Completeness()
-    '完整性測試
+    '---------------------------------------------------------------------------
+    ' 執行完整性測試
+    '---------------------------------------------------------------------------
     If validator.CheckCompleteness() Then
         'exporter.PreviewTable
     End If
 End Sub
 
 Private Sub vValidation_DocumentBalance()
-    '借貸不平測試
+    '---------------------------------------------------------------------------
+    ' 執行借貸不平測試
+    '---------------------------------------------------------------------------
     validator.CheckDocumentBalance
 End Sub
 
 Private Sub vValidation_NullRecords()
-    '檢查空值分錄
+    '---------------------------------------------------------------------------
+    ' 檢查空值分錄
+    '---------------------------------------------------------------------------
     validator.CheckNullRecords
 End Sub
 
 Private Sub vValidation_INF()
-    '可靠性測試
+    '---------------------------------------------------------------------------
+    ' 執行可靠性測試
+    '---------------------------------------------------------------------------
     validator.CheckINF
 End Sub
 
@@ -240,10 +314,16 @@ End Sub
 '-- vExport
 '-------------------------------------------------------------------------------
 Private Sub vExport_ExportWp()
+    '---------------------------------------------------------------------------
+    ' 匯出全部完整的報表至專案目錄
+    '---------------------------------------------------------------------------
     exporter.ExportWp
 End Sub
 
 Private Sub vExport_ShowEngagementOverview()
+    '---------------------------------------------------------------------------
+    ' 產出專案摘要的報表
+    '---------------------------------------------------------------------------
     '建立必要報表
     reporter.GenerateEngagementOverview
     '輸出報表
@@ -251,6 +331,9 @@ Private Sub vExport_ShowEngagementOverview()
 End Sub
 
 Private Sub vExport_ShowValidationReport()
+    '---------------------------------------------------------------------------
+    ' 產出驗證結果的報表
+    '---------------------------------------------------------------------------
     '建立必要報表
     reporter.GenerateEngagementOverview
     reporter.GenerateDataOverview
@@ -259,6 +342,9 @@ Private Sub vExport_ShowValidationReport()
     exporter.ShowValidationReport
 End Sub
 Private Sub vExport_ShowCompletenessReport()
+    '---------------------------------------------------------------------------
+    ' 產出完整性測試的報表
+    '---------------------------------------------------------------------------
     '建立必要報表
     reporter.GenerateEngagementOverview
     reporter.GenerateCompletenessDetail
@@ -266,6 +352,9 @@ Private Sub vExport_ShowCompletenessReport()
     exporter.ShowCompletenessReport
 End Sub
 Private Sub vExport_ShowDocumentBalanceReport()
+    '---------------------------------------------------------------------------
+    ' 產出借貸不平的報表
+    '---------------------------------------------------------------------------
     '建立必要報表
     reporter.GenerateEngagementOverview
     reporter.GenerateDocumentBalanceDetail

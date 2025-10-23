@@ -14,7 +14,11 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'Userform:ViewFilterAddCriteria
+'===============================================================================
+' Form:     ViewFilterAddCriteria
+' Purpose:
+' Methods:
+'===============================================================================
 Public Event AddCriteria()
 Private m_S As String
 

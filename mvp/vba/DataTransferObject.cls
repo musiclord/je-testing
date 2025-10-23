@@ -22,8 +22,8 @@ Option Explicit
 '===============================================================================
 '-- жин√
 Public DateWeekend As Collection
-Public DateHoliday As Collection
-Public DateMakeUpDay As Collection
+Public DateHolidays As Collection
+Public DateMakeupDays As Collection
 Public CompanyName As String
 Public PeriodStart As Date
 Public PeriodEnd As Date
@@ -31,8 +31,8 @@ Public PrepStartDate As Date
 
 Public Sub Initialize()
     Set DateWeekend = New Collection
-    Set DateHoliday = New Collection
-    Set DateMakeUpDay = New Collection
+    Set DateHolidays = New Collection
+    Set DateMakeupDays = New Collection
     CompanyName = ""
     PeriodStart = DateSerial(Year(Date), 1, 1)
     PeriodEnd = DateSerial(Year(Date), 12, 31)

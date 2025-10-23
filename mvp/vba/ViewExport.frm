@@ -14,7 +14,11 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'Userform:ViewExport
+'===============================================================================
+' Form:     ViewExport
+' Purpose:
+' Methods:
+'===============================================================================
 Public Event ExportWp()
 Public Event ShowEngagementOverview()
 Public Event ShowValidationReport()

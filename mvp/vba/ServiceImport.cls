@@ -282,6 +282,30 @@ ErrorHandler:
     ProcessTbAmount = False
 End Function
 
+Public Function ImportFromSheet( _
+    ByVal ws As Worksheet, _
+    ByVal dataRange As String, _
+    ByVal fieldTypes As Variant _
+) As DAO.Recordset
+    '---------------------------------------------------------------------------
+    ' 通用方法：從工作表範圍匯入資料至暫存表
+    ' 參數說明:
+    '   ws              - [必要] 來源工作表物件
+    '   dataRange       - [必要] 資料範圍（含標題列），例如 "A1:B100"）
+    '   fieldTypes      - [必要] 欄位型別陣列，例如 Array("DATE", "TEXT(50)", "SHORT")
+    ' 回傳:
+    '   DAO.Recordset - 指向暫存表的記錄集（可直接傳給 Service 層）
+    ' 範例:
+    '   Dim types As Variant
+    '   types = Array("DATE", "TEXT(50)", "YESNO", "LONG")
+    '   Set rs = importer.ImportFromSheetEx(CustomSheet, "A1:D100", types)
+    '---------------------------------------------------------------------------
+    Dim rs As DAO.Recordset
+    '...
+    Set ImportFromSheet = rs
+End Function
+
+
 Private Function AddLineItem( _
     ByVal tableName As String, _
     ByVal fieldGroupby As String, _

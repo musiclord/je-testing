@@ -9,8 +9,9 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Class: ServiceFilter
-' Purpose: 定義處理篩選條件的服務，
+' Class:    ServiceFilter
+' Purpose:  定義處理篩選條件的服務
+' Methods:
 '===============================================================================
 Private db As DbAccess
 
