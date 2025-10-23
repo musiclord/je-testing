@@ -14,7 +14,11 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-'Userform:ViewMain
+'===============================================================================
+' Form:     ViewMain
+' Purpose:
+' Methods:
+'===============================================================================
 Public Event DoStep1()
 Public Event DoStep2()
 Public Event DoStep3()

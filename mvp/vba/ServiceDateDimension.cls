@@ -10,43 +10,103 @@ Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
 ' Class: ServiceDateDimension
-' Purpose: 負責管理日期維度表 (Date Dimension)
+' Purpose:  負責管理日期維度表 (Date Dimension)
+'           以每日為單位提供標準化的日期屬性，其用途為:
+'               - 提供唯一的日期鍵值 YYYYMMDD 為主鍵
+'               - 儲存日期相關屬性如 Year, Month, Day, DayOfWeek
+'               - 標示是否為周末(IsWeekend)、假日(IsHoliday)、補班日(IsMakeUpDay)
+'               - 提供假期與補班日的文字描述 (HolidayDesc, MakeUpDayDesc)
 '===============================================================================
-
+'--
 Private m_Context As ContextManager
 Private m_Db As DbAccess
-
+'--
+Private Const FLD_DATEKEY As String = "DateKey"                 '[DATE]   唯一主鍵，格式: YYYYMMDD
+Private Const FLD_YEAR As String = "Year"                       '[NUM]    西元年 (1900-?)
+Private Const FLD_MONTH As String = "Month"                     '[NUM]    月份 (1-12)
+Private Const FLD_DAY As String = "Day"                         '[NUM]    日 (1-31)
+Private Const FLD_DAY_OF_WEEK As String = "DayOfWeek"           '[NUM]    天 (1-7)
+Private Const FLD_IS_WEEKEND As String = "IsWeekend"            '[Y/N]    -1/0 (系統自動產生)
+Private Const FLD_IS_HOLIDAY As String = "IsHoliday"            '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
+Private Const FLD_IS_MAKEUP_DAY As String = "IsMakeUpDay"       '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
+Private Const FLD_HOLIDAY_DESC As String = "HolidayDesc"        '[CHAR]   假期說明 (選填)
+Private Const FLD_MAKEUP_DAY_DESC As String = "MakeUpDayDesc"   '[CHAR]   補班日說明 (選填)
 
 Public Sub Initialize(context As ContextManager)
     Set m_Context = context
     Set m_Db = context.DbInput
 End Sub
 
-Public Sub MergeHolidays()
-    '將使用者於工作表匯入的假期資料，合併至 DateDimension 資料表
+Public Sub MergeWeekends(ByVal selectedDays As Variant)
+    '---------------------------------------------------------------------------
+    ' 將使用者於表單中設定的周末，合併至 DateDimension 資料表
+    '---------------------------------------------------------------------------
+    Dim dayList As String
+    Dim item As Variant
+    '將使用者勾選的星期數字組合成逗號分隔字串
+    For Each item In selectedDays
+        If dayList <> "" Then dayList = dayList & ","
+        dayList = dayList & item
+    Next item
+    '清除欄位資料
+    Dim sql As String
+    sql = "UPDATE " & TBL_DATE_DIMENSION & " SET [" & FLD_IS_WEEKEND & "] = False;"
+    Call m_Db.ExecuteNonQuery(sql)
+    'Weekday(d) 默認星期日為第一天，回傳編碼
+    sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
+          "SET [" & FLD_IS_WEEKEND & "] = True " & vbCrLf & _
+          "WHERE Weekday([" & FLD_DATEKEY & "]) IN (" & dayList & ");"
+    Call m_Db.ExecuteNonQuery(sql)
 End Sub
 
-Public Sub MergeMakeUpDays()
-    '將使用者於工作表匯入的補班日資料，合併至 DateDimension 資料表
+Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
+    '---------------------------------------------------------------------------
+    ' 將使用者於工作表匯入的假期資料，合併至 DateDimension 資料表
+    '---------------------------------------------------------------------------
+    Dim ws As Worksheet
+    Set ws = HolidaySheet
+    '預期 rsHolidays 有欄位 Date(DATE), Description(TEXT)
+    If rsHolidays Is Nothing Then Exit Sub
+    If rsHolidays.EOF Then Exit Sub
+    rsHolidays.MoveFirst
+    Do While Not rsHolidays.EOF
+        Dim sql As String
+        sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
+              "SET [" & FLD_IS_HOLIDAY & "] = True, " & vbCrLf & _
+              "    [" & FLD_HOLIDAY_DESC & "] = '" & Replace(rsHolidays!Description, "'", "''") & vbCrLf & "' " & _
+              "WHERE [" & FLD_DATEKEY & "] = #" & Format(rsHolidays!Date, "mm/dd/yyyy") & "#;"
+        Call m_Db.ExecuteNonQuery(sql)
+        rsHolidays.MoveNext
+    Loop
+    rsHolidays.Close
 End Sub
 
-Public Sub MergeWeekends()
-    '將使用者於表單中設定的周末，合併至 DateDimension 資料表
+Public Sub MergeMakeUpDays(rsMakeUpDays As DAO.Recordset)
+    '---------------------------------------------------------------------------
+    ' 將使用者於工作表匯入的補班日資料，合併至 DateDimension 資料表
+    '---------------------------------------------------------------------------
+    Dim ws As Worksheet
+    Set ws = MakeupDaySheet
+    '預期 rsMakeUpDays 有欄位 Date(DATE), Description(TEXT)
+    If rsMakeUpDays Is Nothing Then Exit Sub
+    If rsMakeUpDays.EOF Then Exit Sub
+    rsMakeUpDays.MoveFirst
+    Do While Not rsMakeUpDays.EOF
+        Dim sql  As String
+        sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
+              "SET [" & FLD_IS_MAKEUP_DAY & "] = True, " & vbCrLf & _
+              "    [" & FLD_MAKEUP_DAY_DESC & "] = '" & Replace(rsMakeUpDays!MakeUpDesc, "'", "''") & "' " & _
+              "WHERE [" & FLD_DATEKEY & "] = #" & Format(rsMakeUpDays!MakeUpDate, "mm/dd/yyyy") & "#"
+        Call m_Db.ExecuteNonQuery(sql)
+        rsMakeUpDays.MoveNext
+    Loop
+    rsMakeUpDays.Close
 End Sub
 
-Private Sub CreateDateDimensionTable()
-    '設定欄位常數
-    Const FLD_DATEKEY As String = "DateKey"                 '[DATE]   唯一主鍵，格式: YYYYMMDD
-    Const FLD_YEAR As String = "Year"                       '[NUM]    西元年 (1900-?)
-    Const FLD_MONTH As String = "Month"                     '[NUM]    月份 (1-12)
-    Const FLD_DAY As String = "Day"                         '[NUM]    日 (1-31)
-    Const FLD_DAY_OF_WEEK As String = "DayOfWeek"           '[NUM]    天 (1-7)
-    Const FLD_IS_WEEKEND As String = "IsWeekend"            '[Y/N]    -1/0 (系統自動產生)
-    Const FLD_IS_HOLIDAY As String = "IsHoliday"            '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
-    Const FLD_IS_MAKEUP_DAY As String = "IsMakeUpDay"       '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
-    Const FLD_HOLIDAY_DESC As String = "HolidayDesc"        '[CHAR]   假期說明 (選填)
-    Const FLD_MAKEUP_DAY_DESC As String = "MakeUpDayDesc"   '[CHAR]   補班日說明 (選填)
-    '設定日期維度表的起始日及結束日
+Public Sub CreateDateDimensionTable()
+    '---------------------------------------------------------------------------
+    ' 設定日期維度表的起始日及結束日
+    '---------------------------------------------------------------------------
     Dim dateStart As Date
     Dim dateEnd As Date
     dateStart = m_Context.info.PeriodStart
@@ -72,7 +132,7 @@ Private Sub CreateDateDimensionTable()
           "    [" & FLD_MAKEUP_DAY_DESC & "] TEXT(50)" & vbCrLf & _
           "    CONSTRAINT PK_" & TBL_DATE_DIMENSION & " PRIMARY KEY (" & FLD_DATEKEY & ")" & vbCrLf & _
           ");"
-    m_Db.ExecuteNonQuery sql
+    Call m_Db.ExecuteNonQuery(sql)
     '遍歷新增日期表
     Dim rs As DAO.Recordset
     Set rs = m_Db.Database.OpenRecordset(TBL_DATE_DIMENSION, dbOpenDynaset)

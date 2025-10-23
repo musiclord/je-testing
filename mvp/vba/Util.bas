@@ -1,12 +1,11 @@
 Attribute VB_Name = "Util"
 Option Explicit
+'===============================================================================
+' Module:   Util
+' Purpose:
+' Methods:
+'===============================================================================
 Private m_App As New ApplicationMain
-
-
-
-'===============================================================================
-' 全域常數-資料表名稱
-'===============================================================================
 '-- 日期維度表
 Public Const TBL_DATE_DIMENSION As String = "DATE_DIMENSION"
 '-- JE 相關資料表
@@ -41,20 +40,19 @@ Public Const RPT_INF_SAMPLE_DETAIL As String = "INF_SAMPLE_DETAIL"
 Public Const RPT_ACCOUNT_MAPPING_INFO As String = "ACCOUNT_MAPPING_INFO"
 Public Const RPT_FIELD_MAPPING_INFO As String = "FIELD_MAPPING_INFO"
 
-'===============================================================================
-'專案全域入口介面
-'===============================================================================
+'-- 專案全域入口介面
+'-------------------------------------------------------------------------------
 Public Sub Launch()
-    m_App.Initialize
-    m_App.Run
+    Call m_App.Initialize
+    Call m_App.Run
 End Sub
 
-
-
-'===============================================================================
-'查詢輔助語法
-'===============================================================================
-Public Function Nz(ByVal fieldName As String, Optional ByVal defaultValue As String = "0") As String
+'-- 查詢輔助語法
+'-------------------------------------------------------------------------------
+Public Function Nz( _
+    ByVal fieldName As String, _
+    Optional ByVal defaultValue As String = "0" _
+) As String
     ' 將欄位名稱轉換成 IIF(ISNULL(...),defaultValue,...) SQL 語法
     fieldName = Trim$(fieldName)
     ' 如果 fieldName 包含空格或特殊字元，用方括號包圍
@@ -65,17 +63,15 @@ End Function
 Public Function SanitizeNumericField(ByVal fieldName As String) As String
     ' 轉換空值或任何非值為零
     SanitizeNumericField = _
-        "CDbl(IIf(" & _
+        "CDbl(IIf(" & vbCrLf & _
         "    [" & fieldName & "] IS NULL " & vbCrLf & _
         "        OR Trim([" & fieldName & "]) = '' " & vbCrLf & _
         "        OR Trim([" & fieldName & "]) = '-', " & vbCrLf & _
         "    0, [" & fieldName & "]))"
 End Function
 
-
-'===============================================================================
-'檢查資料方法
-'===============================================================================
+'-- 檢查資料方法
+'-------------------------------------------------------------------------------
 Public Function CheckDate(ByVal Value As Variant) As Boolean
     ' Use: If Not CheckDate(date) Then Exit Sub
     ' CDate (value)
@@ -90,5 +86,4 @@ Public Function CheckText(ByVal Value As Variant) As Boolean
     ' Use If Not CheckText(text) Then Exit Sub
     ' CStr(value)
 End Function
-
 

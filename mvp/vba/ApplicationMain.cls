@@ -9,10 +9,10 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Class: ApplicationMain
-' Purpose: 主要程式，作為表單和類別的溝通主體
+' Class:    ApplicationMain
+' Purpose:  主要程式，作為表單和類別的溝通主體
+' Methods:
 '===============================================================================
-'--
 Private WithEvents vProject As ViewProject
 Attribute vProject.VB_VarHelpID = -1
 Private WithEvents vMain As ViewMain
@@ -33,6 +33,7 @@ Private WithEvents vExport As ViewExport
 Attribute vExport.VB_VarHelpID = -1
 '--
 Private fso As FileSystemObject
+Private calendar As ServiceDateDimension
 Private context As ContextManager
 Private projector As ServiceProject
 Private importer As ServiceImport
@@ -41,7 +42,8 @@ Private reporter As ServiceReport
 Private validator As ServiceValidation
 Private filter As ServiceFilter
 
-'***** Application
+'-- Application
+'-------------------------------------------------------------------------------
 Public Sub Initialize()
     Set vProject = New ViewProject
     Set vMain = New ViewMain
@@ -54,6 +56,7 @@ Public Sub Initialize()
     Set vExport = New ViewExport
     '--
     Set fso = New FileSystemObject
+    Set calendar = New ServiceDateDimension
     Set context = New ContextManager
     Set projector = New ServiceProject
     Set importer = New ServiceImport
@@ -62,55 +65,54 @@ Public Sub Initialize()
     Set validator = New ServiceValidation
     Set filter = New ServiceFilter
     '--
-    context.Initialize
+    Call context.Initialize
 End Sub
-
 Public Sub Run()
-    projector.Initialize context
-    vProject.Initialize
+    Call projector.Initialize(context)
+    Call vProject.Initialize
     vProject.Show vbModeless
 End Sub
 
-
-'***** vProject
+'-- vProject
+'-------------------------------------------------------------------------------
 Private Sub vProject_NewProject(ByVal path As String)
     projector.NewProject path
 End Sub
-
 Private Sub vProject_SelectProject(ByVal path As String)
     projector.SelectProject path
     vProject.Hide
-    vMain.Initialize fso.GetFolder(path).name
+    Call vMain.Initialize(fso.GetFolder(path).name)
     vMain.Show vbModeless
 End Sub
 
-'***** vMain
+'-- vMain
+'-------------------------------------------------------------------------------
 Private Sub vMain_DoStep1()
-    importer.Initialize context
+    Call importer.Initialize(context)
+    Call calendar.Initialize(context)
     '--
-    vImport.Initialize
+    Call vImport.Initialize
     vImport.Show vbModeless
 End Sub
 Private Sub vMain_DoStep2()
-    validator.Initialize context
+    Call validator.Initialize(context)
     '--
-    vValidation.Initialize
+    Call vValidation.Initialize
     vValidation.Show vbModeless
 End Sub
 Private Sub vMain_DoStep3()
-    filter.Initialize context
+    Call filter.Initialize(context)
     '--
-    vFilter.Initialize
+    Call vFilter.Initialize
     vFilter.Show vbModeless
 End Sub
 Private Sub vMain_DoStep4()
-    reporter.Initialize context
-    exporter.Initialize context
+    Call reporter.Initialize(context)
+    Call exporter.Initialize(context)
     '--
-    vExport.Initialize
+    Call vExport.Initialize
     vExport.Show vbModeless
 End Sub
-
 Private Sub vMain_ExitApplication()
     '釋放資源
     If Not context Is Nothing Then
@@ -127,38 +129,50 @@ Private Sub vMain_ExitApplication()
     Application.Quit
 End Sub
 
-'***** vImport
-Private Sub vImport_ImportJournalEntries(ByVal format As String)
-    importer.dType = format
+'-- vImport
+'-------------------------------------------------------------------------------
+Private Sub vImport_ImportJournalEntries(ByVal Format As String)
+    importer.dType = Format
     importer.OpenWizard "je"
     vImport.lblImportStatus.Caption = "匯入資料表: " & context.je.name
 End Sub
-Private Sub vImport_ImportTrialBalance(ByVal format As String)
-    importer.dType = format
+Private Sub vImport_ImportTrialBalance(ByVal Format As String)
+    importer.dType = Format
     importer.OpenWizard "tb"
     vImport.lblImportStatus.Caption = "匯入資料表: " & context.tb.name
 End Sub
 Private Sub vImport_JeFieldMappingRequested()
-    '@TODO:檢查是否有匯入 JE 資料表
-    vMapJe.Initialize context.DbInput
+    '檢查是否有匯入 JE 資料表
+    If Not context.DbInput.TableExists(context.je.name) Then
+        MsgBox "", vbExclamation, ""
+        vImport.btnImportJe.SetFocus
+        Exit Sub
+    End If
+    '初始化映射JE的表單物件
+    Call vMapJe.Initialize(context.DbInput)
     vMapJe.Show vbModeless
 End Sub
 Private Sub vImport_TbFieldMappingRequested()
-    '@TODO:檢查是否有匯入 TB 資料表
-    vMapTb.Initialize context.DbInput
+    '檢查是否有匯入 TB 資料表
+    If Not context.DbInput.TableExists(context.tb.name) Then
+        MsgBox "", vbExclamation, ""
+        vImport.btnImportTb.SetFocus
+        Exit Sub
+    End If
+    '初始化映射TB的表單物件
+    Call vMapTb.Initialize(context.DbInput)
     vMapTb.Show vbModeless
 End Sub
 Private Sub vImport_UpdateDateDimensionRequested()
-    '@TODO: 開啟工作表
     '更新覆寫日期為度表
     
 End Sub
 Private Sub vImport_TestDefaultRequested()
-    '### FOR DEBUG TESTING ###
-    Debug.Print "========== DEFAULT DEBUG PARAMETER =========="
-    vMapJe.Initialize context.DbInput
+    '//WARNING: ONLY FOR TESTING
+    '//NOTE:只負責觸發前端的操作
+    Call vMapJe.Initialize(context.DbInput)
     vMapJe.ApplyTestDefaults
-    vMapTb.Initialize context.DbInput
+    Call vMapTb.Initialize(context.DbInput)
     vMapTb.ApplyTestDefaults
 End Sub
 Private Sub vImport_Submitted(ByVal dto As DataTransferObject)
@@ -168,9 +182,11 @@ Private Sub vImport_Submitted(ByVal dto As DataTransferObject)
     context.info.PeriodStart = dto.PeriodStart
     context.info.PeriodEnd = dto.PeriodEnd
     'context.info.NonBusinessDay = dto.NonBusinessDay -> Collection
+    
 End Sub
 
-'***** vMapJe
+'-- vMapJe
+'-------------------------------------------------------------------------------
 Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
     context.je.Method = amountMethod
     If Not importer.ApplyJe(dict) Then
@@ -181,7 +197,8 @@ Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Lo
     End If
 End Sub
 
-'***** vMapTb
+'-- vMapTb
+'-------------------------------------------------------------------------------
 Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
     context.tb.Method = amountMethod
     If Not importer.ApplyTb(dict) Then
@@ -192,7 +209,8 @@ Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Lo
     End If
 End Sub
 
-'***** vValidation
+'-- vValidation
+'-------------------------------------------------------------------------------
 Private Sub vValidation_Completeness()
     '完整性測試
     If validator.CheckCompleteness() Then
@@ -216,10 +234,11 @@ Private Sub vValidation_INF()
 End Sub
 
 Private Sub vValidation_Submitted(ByVal dto As DataTransferObject)
-    '
+    '...
 End Sub
 
-'***** vExport
+'-- vExport
+'-------------------------------------------------------------------------------
 Private Sub vExport_ExportWp()
     exporter.ExportWp
 End Sub
@@ -239,7 +258,6 @@ Private Sub vExport_ShowValidationReport()
     '輸出報表
     exporter.ShowValidationReport
 End Sub
-
 Private Sub vExport_ShowCompletenessReport()
     '建立必要報表
     reporter.GenerateEngagementOverview
@@ -247,8 +265,6 @@ Private Sub vExport_ShowCompletenessReport()
     '輸出報表
     exporter.ShowCompletenessReport
 End Sub
-
-
 Private Sub vExport_ShowDocumentBalanceReport()
     '建立必要報表
     reporter.GenerateEngagementOverview

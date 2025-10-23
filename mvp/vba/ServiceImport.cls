@@ -9,10 +9,11 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Class: ServiceImport
-' Purpose: 負責匯入資料，使用 Access 精靈匯入
+' Class:    ServiceImport
+' Purpose:  負責匯入資料，使用 Access 精靈匯入
+' Methods:  OpenWizard, ApplyJe, ApplyTb, ProcessJeAmount, ProcessTbAmount,
+'           AddLineItem, AddFieldSuffix, IsUserTable, CreateOrReplace
 '===============================================================================
-
 Private db As DbAccess
 Private je As EntityJe
 Private tb As EntityTb
@@ -33,11 +34,11 @@ End Sub
 
 
 Public Sub OpenWizard(ByVal target As String)
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 方法: 使用 Access 的操作精靈來匯入資料
     ' 參數:
     '    - target: 定義匯入的目標是 JE 還是 TB
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     Dim oldTables As New Collection
     Dim oldTimes As New Collection
     Dim newTables As New Collection
@@ -64,12 +65,11 @@ Public Sub OpenWizard(ByVal target As String)
         If IsUserTable(tdf.name) Then
             found = False
             timeChanged = False
-            
             '檢查是否為新表或現有表被更新
             For i = 1 To oldTables.Count
-                If oldTables.Item(i) = tdf.name Then
+                If oldTables.item(i) = tdf.name Then
                     found = True
-                    If oldTimes.Item(i) <> tdf.LastUpdated Then
+                    If oldTimes.item(i) <> tdf.LastUpdated Then
                         timeChanged = True
                     End If
                     Exit For
@@ -85,14 +85,14 @@ Public Sub OpenWizard(ByVal target As String)
     If newTables.Count = 1 Then
         Select Case LCase$(target)
             Case "je"
-                je.name = newTables.Item(1)
+                je.name = newTables.item(1)
                 Debug.Print "匯入/更新 JE 表：" & je.name
             Case "tb"
-                tb.name = newTables.Item(1)
+                tb.name = newTables.item(1)
                 Debug.Print "匯入/更新 TB 表：" & tb.name
         End Select
         '對匯入的資料表加入後綴
-        Call AddFieldSuffix(newTables.Item(1), target)
+        Call AddFieldSuffix(newTables.item(1), target)
     ElseIf newTables.Count = 0 Then
         Debug.Print "沒有偵測到新表或更新，可能是使用者取消操作"
     Else
@@ -106,11 +106,11 @@ Public Sub OpenWizard(ByVal target As String)
 End Sub
 
 Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 方法: 將 JE 欄位設給資料實體
     ' 參數:
     '   - dict: 將表單傳入的參數設給資料實體
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     ApplyJe = False
     Dim key As Variant
@@ -118,7 +118,7 @@ Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
         je.SetField key, dict(key)
     Next key
     je.PrintFields
-    '@TEMP: 臨時映射識別碼欄位
+    '//NOTE: 臨時映射識別碼欄位
     Dim uid As String
     uid = "識別碼_" & je.name
     je.SetField "UID", uid
@@ -138,11 +138,11 @@ ErrorHandler:
 End Function
 
 Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 方法: 將 TB 欄位設給資料實體
     ' 參數:
     '    - dict: 將表單傳入的參數設給資料實體
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ApplyTb = False
     '將TB欄位設給資料實體
     Dim key As Variant
@@ -161,13 +161,13 @@ Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
     ApplyTb = True
 End Function
 
-'***** 自訂
+'-- 自訂
 Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     ' 方法: 金額處理邏輯
     ' 參數:
     '    - amountMethod: 金額處理的方法，以數字區別四種模式
-    ' ============================================================================
+    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     ProcessJeAmount = False
     Dim sql As String
@@ -210,7 +210,6 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     End Select
     ProcessJeAmount = True
     Exit Function
-    
 ErrorHandler:
     Debug.Print "ProcessJeAmount 發生錯誤:"
     Debug.Print "  - 錯誤代碼: " & Err.Number
@@ -275,9 +274,7 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
             Exit Function
     End Select
     ProcessTbAmount = True
-    
     Exit Function
-    
 ErrorHandler:
     Debug.Print "ProcessTbAmount 發生錯誤:"
     Debug.Print "  - 錯誤代碼: " & Err.Number
@@ -285,15 +282,27 @@ ErrorHandler:
     ProcessTbAmount = False
 End Function
 
-Private Function AddLineItem(ByVal tableName As String, ByVal fieldGroupby As String, ByVal fieldLineItem As String) As Boolean
+Private Function AddLineItem( _
+    ByVal tableName As String, _
+    ByVal fieldGroupby As String, _
+    ByVal fieldLineItem As String _
+) As Boolean
+    '---------------------------------------------------------------------------
     '逐筆增加分錄項次
+    '---------------------------------------------------------------------------
     Dim db As Database
     Dim rs As Recordset
-    '@TODO
+    '//TODO:增加項次欄位
 End Function
     
 
-Private Sub AddFieldSuffix(ByVal tableName As String, suffix As String)
+Private Sub AddFieldSuffix( _
+    ByVal tableName As String, _
+    suffix As String _
+)
+    '---------------------------------------------------------------------------
+    ' 新增欄位後綴字以辨別 _JE 或 _TB
+    '---------------------------------------------------------------------------
     Dim dbs As DAO.Database
     Dim tdf As DAO.TableDef
     Dim fld As DAO.Field
@@ -301,7 +310,6 @@ Private Sub AddFieldSuffix(ByVal tableName As String, suffix As String)
     Dim newName As String
     Set dbs = m_Ace.CurrentDb
     Set tdf = dbs.TableDefs(tableName)
-    '逐一重新命名欄位
     For Each fld In tdf.Fields
         oldName = fld.name
         newName = oldName & "_" & UCase(suffix)
@@ -310,20 +318,25 @@ Private Sub AddFieldSuffix(ByVal tableName As String, suffix As String)
 End Sub
 
 Private Function IsUserTable(ByVal tableName As String) As Boolean
-    '排除系統表和例外
+    '---------------------------------------------------------------------------
+    ' 判斷是否為使用者表
+    '---------------------------------------------------------------------------
     Dim name As String
     name = LCase$(tableName)
-    '直接判斷是否為使用者表（排除系統表和例外情況）
+    '排除系統表和例外情況
     IsUserTable = Not (Left$(name, 4) = "msys" Or _
                       Left$(tableName, 1) = "~" Or _
                       InStr(1, tableName, "匯入錯誤") > 0)
 End Function
 
-Private Function CreateOrReplace(tdf As DAO.TableDef, fieldName As String) As DAO.Field
-    '若欄位存在則刪除
-    If db.FieldExists(tdf, fieldName) Then
-        tdf.Fields.Delete fieldName
-    End If
+Private Function CreateOrReplace( _
+    tdf As DAO.TableDef, _
+    fieldName As String _
+) As DAO.Field
+    '---------------------------------------------------------------------------
+    ' 若欄位存在則刪除
+    '---------------------------------------------------------------------------
+    If db.FieldExists(tdf, fieldName) Then tdf.Fields.Delete fieldName
     '建立欄位且型別為 CURRENCY
     Set CreateOrReplace = tdf.CreateField(fieldName, dbCurrency)
 End Function

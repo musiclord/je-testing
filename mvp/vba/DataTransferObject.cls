@@ -20,31 +20,21 @@ Option Explicit
 '        ↓
 '   [ContextManager] → (context.SyncDtoToEntity) → [EntityInfo]
 '===============================================================================
-' ***** 成員
+'-- 成員
+Public DateWeekend As Collection
+Public DateHoliday As Collection
+Public DateMakeUpDay As Collection
 Public CompanyName As String
 Public PeriodStart As Date
 Public PeriodEnd As Date
 Public PrepStartDate As Date
-Public NonBusinessDay As Collection
-Public Monday As Boolean
-Public Tuesday As Boolean
-Public Wednesday As Boolean
-Public Thursday As Boolean
-Public Friday As Boolean
-Public Saturday As Boolean
-Public Sunday As Boolean
 
 Public Sub Initialize()
+    Set DateWeekend = New Collection
+    Set DateHoliday = New Collection
+    Set DateMakeUpDay = New Collection
     CompanyName = ""
     PeriodStart = DateSerial(Year(Date), 1, 1)
     PeriodEnd = DateSerial(Year(Date), 12, 31)
     PrepStartDate = Date
-    Set NonBusinessDay = New Collection
-    Monday = True
-    Tuesday = True
-    Wednesday = True
-    Thursday = True
-    Friday = True
-    Saturday = False
-    Sunday = False
 End Sub
