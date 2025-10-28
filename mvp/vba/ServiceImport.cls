@@ -285,7 +285,8 @@ End Function
 Public Function ImportFromSheet( _
     ByVal ws As Worksheet, _
     ByVal dataRange As String, _
-    ByVal fieldTypes As Variant _
+    ByVal fieldTypes As Variant, _
+    Optional ByVal fieldNames As Variant _
 ) As DAO.Recordset
     '---------------------------------------------------------------------------
     ' 硄ノよ猭眖絛瞅蹲戈既
@@ -300,11 +301,89 @@ Public Function ImportFromSheet( _
     '   types = Array("DATE", "TEXT(50)", "YESNO", "LONG")
     '   Set rs = importer.ImportFromSheetEx(CustomSheet, "A1:D100", types)
     '---------------------------------------------------------------------------
-    Dim rs As DAO.Recordset
-    '...
-    Set ImportFromSheet = rs
-End Function
+    On Error GoTo ErrorHandler
+    
+    Dim tempTableName As String
+    Dim rng As Range
+    Dim headerRow As Range
+    Dim dataRows As Range
+    Dim sql As String
+    Dim i As Long
+    Dim colCount As Long
+    Dim useCustomNames As Boolean
+    
+    tempTableName = "TEMP_" & ws.name & "_" & Format(Now, "hhnnss")
+    Set rng = ws.Range(dataRange)
+    useCustomNames = IsArray(fieldNames)
+    If useCustomNames Then
+        colCount = UBound(fieldNames) - LBound(fieldNames) + 1
+        If (UBound(fieldTypes) - LBound(fieldTypes) + 1) <> colCount Then
+            Err.Raise vbObjectError + 514, "ImportFromSheet", "fieldNames 籔 fieldTypes 计秖ぃ才"
+        End If
+    Else
+        Set headerRow = rng.Rows(1)
+        colCount = headerRow.Columns.Count
+        If (UBound(fieldTypes) - LBound(fieldTypes) + 1) <> colCount Then
+            Err.Raise vbObjectError + 514, "ImportFromSheet", "fieldTypes 计秖籔逆计秖ぃ才"
+        End If
+    End If
+    sql = "CREATE TABLE [" & tempTableName & "] ("
+    For i = 1 To colCount
+        Dim colName As String
+        If useCustomNames Then
+            colName = CStr(fieldNames(LBound(fieldNames) + i - 1))
+        Else
+            colName = Trim$(CStr(headerRow.Cells(1, i).Value))
+            If colName = "" Then colName = "Field" & i
+        End If
+        sql = sql & "[" & colName & "] " & fieldTypes(LBound(fieldTypes) + i - 1)
+        If i < colCount Then sql = sql & ", "
+    Next i
+    sql = sql & ");"
+    db.ExecuteNonQuery sql
+    If useCustomNames Then
+        Set dataRows = rng
+    ElseIf rng.Rows.Count > 1 Then
+        Set dataRows = rng.Offset(1, 0).Resize(rng.Rows.Count - 1, colCount)
+    End If
+    If Not dataRows Is Nothing Then
+        Dim row As Range
+        For Each row In dataRows.Rows
+            Dim allBlank As Boolean
+            allBlank = True
+            sql = "INSERT INTO [" & tempTableName & "] VALUES ("
+            For i = 1 To colCount
+                Dim cellValue As Variant
+                cellValue = row.Cells(1, i).Value
+                If Not IsNull(cellValue) Then
+                    If Trim$(CStr(cellValue)) <> "" Then allBlank = False
+                End If
+                If IsNull(cellValue) Or Trim$(CStr(cellValue)) = "" Then
+                    sql = sql & "NULL"
+                ElseIf InStr(1, fieldTypes(LBound(fieldTypes) + i - 1), "DATE", vbTextCompare) > 0 Then
+                    If IsDate(cellValue) Then
+                        sql = sql & "#" & Format(CDate(cellValue), "mm/dd/yyyy") & "#"
+                    Else
+                        sql = sql & "NULL"
+                    End If
+                ElseIf InStr(1, fieldTypes(LBound(fieldTypes) + i - 1), "TEXT", vbTextCompare) > 0 Then
+                    sql = sql & "'" & Replace(CStr(cellValue), "'", "''") & "'"
+                Else
+                    sql = sql & cellValue
+                End If
+                If i < colCount Then sql = sql & ", "
+            Next i
+            sql = sql & ");"
+            If Not allBlank Then db.ExecuteNonQuery sql
+        Next row
+    End If
 
+    Set ImportFromSheet = db.ExecuteQuery("SELECT * FROM [" & tempTableName & "];")
+    Exit Function
+ErrorHandler:
+    Debug.Print "ImportFromSheet(): " & Err.Number & " - " & Err.Description
+    Set ImportFromSheet = Nothing
+End Function
 
 Private Function AddLineItem( _
     ByVal tableName As String, _

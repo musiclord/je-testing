@@ -70,7 +70,7 @@ Public Function CheckCompleteness() As Boolean
     Dim sql As String
     CheckCompleteness = False
     Debug.Print "********** 開始完整性檢查流程 **********"
-    Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
+    Debug.Print "檢查期間: " & info.periodStart & " ~ " & info.periodEnd
     Call CleanupTempTables(dbTarget, Array(tb.name, TBL_JE_IN_PERIOD, TBL_JE_NOT_IN_PERIOD, TBL_JE_ACCOUNT_SUM, TBL_COMPLETENESS_CALCULATED, TBL_COMPLETENESS_DIFF, TBL_COMPLETENESS_DETAIL))
     
     ' ----------------------------------------------------------------------------
@@ -92,7 +92,7 @@ Public Function CheckCompleteness() As Boolean
           "INTO " & TBL_JE_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
           "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
           "WHERE [" & je.PostDate & "] " & vbCrLf & _
-          "BETWEEN #" & info.PeriodStart & "# AND #" & info.PeriodEnd & "#;"
+          "BETWEEN #" & info.periodStart & "# AND #" & info.periodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -103,8 +103,8 @@ Public Function CheckCompleteness() As Boolean
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_JE_NOT_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
           "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
-          "WHERE [" & je.PostDate & "] < #" & info.PeriodStart & "# " & vbCrLf & _
-          "   OR [" & je.PostDate & "] > #" & info.PeriodEnd & "#;"
+          "WHERE [" & je.PostDate & "] < #" & info.periodStart & "# " & vbCrLf & _
+          "   OR [" & je.PostDate & "] > #" & info.periodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -240,7 +240,7 @@ Public Function CheckDocumentBalance() As Boolean
     Dim sql As String
     CheckDocumentBalance = False
     Debug.Print "********** 開始完整性檢查流程 **********"
-    Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
+    Debug.Print "檢查期間: " & info.periodStart & " ~ " & info.periodEnd
     Call CleanupTempTables(dbTarget, Array(TBL_DOCUMENT_BALANCE_SUM, TBL_DOCUMENT_BALANCE_DIFF, TBL_DOCUMENT_BALANCE_DETAIL))
     
     '---------------------------------------------------------------------------
@@ -314,7 +314,7 @@ Public Function CheckINF() As Boolean
     Dim sql As String
     CheckINF = False
     Debug.Print "********** 開始隨機抽樣流程 **********"
-    Debug.Print "檢查期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
+    Debug.Print "檢查期間: " & info.periodStart & " ~ " & info.periodEnd
     Call CleanupTempTables( _
         dbTarget, _
         Array(TBL_JE_IN_PERIOD, TBL_INF_RANDOM, TBL_INF_SORTED) _
@@ -328,7 +328,7 @@ Public Function CheckINF() As Boolean
           "INTO " & TBL_JE_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
           "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
           "WHERE [" & je.PostDate & "] " & vbCrLf & _
-          "BETWEEN #" & info.PeriodStart & "# AND #" & info.PeriodEnd & "#;"
+          "BETWEEN #" & info.periodStart & "# AND #" & info.periodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
     
     '---------------------------------------------------------------------------

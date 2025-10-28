@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImport 
    Caption         =   "Import"
-   ClientHeight    =   8430.001
-   ClientLeft      =   105
-   ClientTop       =   405
-   ClientWidth     =   7155
+   ClientHeight    =   8424.001
+   ClientLeft      =   108
+   ClientTop       =   408
+   ClientWidth     =   7152
    OleObjectBlob   =   "ViewImport.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -49,18 +49,29 @@ Public Sub Initialize()
     End With
 End Sub
 
-Private Sub btnConfigureCalendar_Click()
-    ' 將所有日期覆寫
-    '//TODO:要先檢查所有日期(Holidays, MakeupDays, Weekend)的狀態
-    RaiseEvent UpdateDateDimensionRequested
-End Sub
-
 Private Sub btnApplyDateConfig_Click()
-    '收集並套用日期設定
-    Dim MakeupDaysDates As New Collection
-    Dim HolidaysDates As New Collection
+    '//TODO:點擊按鈕後，應該可以產出預設日期表，並代入默認參數的日期
+    '//TODO:要先檢查所有日期(Holidays, MakeupDays, Weekend)的狀態
+    ' 先收集週末設定
+    Dim weekendIndices As New Collection
+    Dim i As Long
+    For i = 0 To Me.lstWeekend.ListCount - 1
+        If Me.lstWeekend.Selected(i) Then
+            weekendIndices.Add i + 1
+        End If
+    Next i
     
-    'RaiseEvent UpdateDateDimensionRequested
+    ' 驗證必填項目
+    If weekendIndices.Count = 0 Then
+        MsgBox "請至少選擇一個週末日", vbExclamation, "日期設定"
+        Exit Sub
+    End If
+    
+    ' 儲存至模組層級變數供後續使用
+    Set m_Weekend = weekendIndices
+    
+    ' 觸發事件
+    RaiseEvent UpdateDateDimensionRequested
 End Sub
 
 Private Sub btnConfigureHolidays_Click()
@@ -77,7 +88,7 @@ Private Sub btnConfigureHolidays_Click()
     ws.Range("A1:B1").Font.Bold = True
 End Sub
 
-Private Sub btnConfigureMakeupDays_Click()
+Private Sub btnConfigureMakeUpDays_Click()
     Dim ws As Worksheet
     Set ws = MakeupDaysSheet
     '開啟工作表讓用戶填入補班日資料
@@ -92,7 +103,7 @@ Private Sub btnConfigureMakeupDays_Click()
 End Sub
 
 Private Sub btnConfigureWeekend_Click()
-    '設定非工作日
+    ' 顯示目前選取的週末設定
     Dim weekendIndices As New Collection
     Dim i As Long
     For i = 0 To Me.lstWeekend.ListCount - 1
@@ -101,7 +112,7 @@ Private Sub btnConfigureWeekend_Click()
         End If
     Next i
     Set m_Weekend = weekendIndices
-    Debug.Print "m_Weekend.Count: " & m_Weekend.Count
+    Debug.Print "已設定週末: " & m_Weekend.Count & " 天"
 End Sub
 
 Private Sub btnImportJe_Click()
@@ -163,8 +174,8 @@ Private Sub btnExit_Click()
     '組裝 DTO 物件以回傳資料
     Dim dto As New DataTransferObject
     dto.CompanyName = CStr(Me.txtbCompanyName.Value)
-    dto.PeriodStart = CDate(Me.txtbPeriodStart.Value)
-    dto.PeriodEnd = CDate(Me.txtbPeriodEnd.Value)
+    dto.periodStart = CDate(Me.txtbPeriodStart.Value)
+    dto.periodEnd = CDate(Me.txtbPeriodEnd.Value)
     dto.PrepStartDate = CDate(Me.txtbPrepStartDate.Value)
     Me.Hide
     RaiseEvent Submitted(dto)
@@ -172,6 +183,12 @@ End Sub
 
 Private Sub btnTestDefault_Click()
     '//WARNING: ONLY FOR TESTING
+    '填上控制項
+    Me.txtbCompanyName.Text = "台塑寧波"
+    Me.txtbPeriodStart.Text = "2024/01/01"
+    Me.txtbPeriodEnd.Text = "2024/12/31"
+    Me.txtbPrepStartDate = "2024/12/31"
+    RaiseEvent TestDefaultRequested
     '填上假期
     Call btnConfigureHolidays_Click
     Dim ws As Worksheet
@@ -180,17 +197,11 @@ Private Sub btnTestDefault_Click()
     ws.Range("B2").Value = "國慶日"
     ws.Columns("A:B").AutoFit
     '填上補班日
-    Call btnConfigureMakeupDays_Click
+    Call btnConfigureMakeUpDays_Click
     Set ws = MakeupDaysSheet
     ws.Range("A2").Value = DateSerial(2024, 11, 4)
     ws.Range("B2").Value = "補班日"
     ws.Columns("A:B").AutoFit
-    '填上控制項
-    Me.txtbCompanyName.Text = "台塑寧波"
-    Me.txtbPeriodStart.Text = "2024/01/01"
-    Me.txtbPeriodEnd.Text = "2024/12/31"
-    Me.txtbPrepStartDate = "2024/12/31"
-    RaiseEvent TestDefaultRequested
 End Sub
 
 Private Sub optCsv_Click()

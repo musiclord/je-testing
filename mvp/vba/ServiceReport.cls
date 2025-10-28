@@ -49,8 +49,8 @@ Public Function GenerateEngagementOverview() As Boolean
           "    '" & m_Context.info.CompanyName & "' AS [" & FLD_CLIENT & "], " & vbCrLf & _
           "    '" & m_Context.info.UserName & "' AS [" & FLD_PREPARED_BY & "], " & vbCrLf & _
           "    #" & m_Context.info.PrepStartDate & "# AS [" & FLD_PREP_START_DATE & "], " & vbCrLf & _
-          "    #" & m_Context.info.PeriodStart & "# AS [" & FLD_PERIOD_START & "], " & vbCrLf & _
-          "    #" & m_Context.info.PeriodEnd & "# AS [" & FLD_PERIOD_END & "], " & vbCrLf & _
+          "    #" & m_Context.info.periodStart & "# AS [" & FLD_PERIOD_START & "], " & vbCrLf & _
+          "    #" & m_Context.info.periodEnd & "# AS [" & FLD_PERIOD_END & "], " & vbCrLf & _
           "    #" & Date & "# AS [" & FLD_PREPARED_DATE & "] " & vbCrLf & _
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
           "FROM " & m_Context.je.name & " IN '" & m_Context.DbInput.path & "';"

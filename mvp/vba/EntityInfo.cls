@@ -51,17 +51,17 @@ Public Property Get UserFullName() As String
     Let UserFullName = m_UserFullName
 End Property
 '--測試資料期間開始日
-Public Property Get PeriodStart() As Date
-    Let PeriodStart = m_PeriodStart
+Public Property Get periodStart() As Date
+    Let periodStart = m_PeriodStart
 End Property
-Public Property Let PeriodStart(ByVal Value As Date)
+Public Property Let periodStart(ByVal Value As Date)
     Let m_PeriodStart = Value
 End Property
 '--測試資料期間結束日
-Public Property Get PeriodEnd() As Date
-    Let PeriodEnd = m_PeriodEnd
+Public Property Get periodEnd() As Date
+    Let periodEnd = m_PeriodEnd
 End Property
-Public Property Let PeriodEnd(ByVal Value As Date)
+Public Property Let periodEnd(ByVal Value As Date)
     Let m_PeriodEnd = Value
 End Property
 '--財報準備期間開始日
