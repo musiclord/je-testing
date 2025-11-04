@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapJe 
    Caption         =   "處理 JE 欄位映射"
    ClientHeight    =   8820.001
-   ClientLeft      =   108
-   ClientTop       =   408
-   ClientWidth     =   9168.001
+   ClientLeft      =   105
+   ClientTop       =   405
+   ClientWidth     =   9165.001
    OleObjectBlob   =   "ViewImportMapJe.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -25,9 +25,9 @@ Private m_Method As Long
 Public Sub Initialize(ByRef db As DbAccess)
     Dim Fields As Collection
     Set Fields = db.GetTableFields("JE")
-    UpdateFields Fields
-    DisableControls
-    btnMethod1_Click
+    Call UpdateFields(Fields)
+    Call DisableControls
+    Call btnMethod1_Click
 End Sub
 
 '--公開方法供外部調用(用於測試)

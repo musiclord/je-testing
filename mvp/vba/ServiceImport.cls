@@ -289,17 +289,54 @@ Public Function ImportFromSheet( _
     Optional ByVal fieldNames As Variant _
 ) As DAO.Recordset
     '---------------------------------------------------------------------------
-    ' 通用方法：從工作表範圍匯入資料至暫存表
+    ' 通用方法：從工作表範圍匯入資料至 Access 暫存表
+    ' 目的:
+    '   將 Excel 工作表轉換為 Access 資料表，供後續業務邏輯處理。
+    '   此方法支援自動偵測欄位名稱或使用自訂欄位名稱，並強制指定欄位型別以確保
+    '   資料完整性。適用於 Holidays/MakeUpDays/CustomData 等各類工作表匯入需求。
+    '
     ' 參數說明:
     '   ws              - [必要] 來源工作表物件
-    '   dataRange       - [必要] 資料範圍（含標題列），例如 "A1:B100"）
-    '   fieldTypes      - [必要] 欄位型別陣列，例如 Array("DATE", "TEXT(50)", "SHORT")
-    ' 回傳:
-    '   DAO.Recordset - 指向暫存表的記錄集（可直接傳給 Service 層）
-    ' 範例:
+    '                     範例: HolidaySheet, MakeupDaySheet
+    '
+    '   dataRange       - [必要] 資料範圍（含標題列或純資料區域）
+    '                     格式: "A1:B100" 或 "A2:C50"（若 fieldNames 已提供則不含標題列）
+    '
+    '   fieldTypes      - [必要] 欄位型別陣列，定義每個欄位的 Access 資料型別
+    '                     支援型別: "DATE", "TEXT(n)", "SHORT", "LONG", "CURRENCY", "YESNO"
+    '                     範例: Array("DATE", "TEXT(50)", "YESNO")
+    '
+    '   fieldNames      - [選填] 自訂欄位名稱陣列（若不提供則從 dataRange 第 1 列讀取）
+    '                     範例: Array("Date", "Description", "IsActive")
+    '                     用途: 當工作表無標題列或需重新命名欄位時使用
+    '
+    ' 回傳值:
+    '   DAO.Recordset   - 指向暫存表的記錄集（已開啟且可直接遍歷）
+    '                     失敗時回傳 Nothing
+    ' 使用範例:
+    '   ' 範例 1: 從工作表自動偵測欄位名稱
+    '   Dim types As Variant
+    '   types = Array("DATE", "TEXT(50)")
+    '   Set rs = importer.ImportFromSheet(HolidaySheet, "A1:B100", types)
+    '   ' → 將 A1:B100 匯入，A1/B1 為欄位名稱，A2:B100 為資料
+    '
+    '   ' 範例 2: 使用自訂欄位名稱（工作表無標題列）
+    '   Dim names As Variant, types As Variant
+    '   names = Array("Date", "Description")
+    '   types = Array("DATE", "TEXT(100)")
+    '   Set rs = importer.ImportFromSheet(MakeupDaySheet, "A2:B50", types, names)
+    '   ' → 將 A2:B50 匯入，欄位名稱為 Date/Description
+    '
+    '   ' 範例 3: 混合型別（日期 + 文字 + 布林 + 數字）
     '   Dim types As Variant
     '   types = Array("DATE", "TEXT(50)", "YESNO", "LONG")
-    '   Set rs = importer.ImportFromSheetEx(CustomSheet, "A1:D100", types)
+    '   Set rs = importer.ImportFromSheet(CustomSheet, "A1:D100", types)
+    '
+    ' 錯誤處理:
+    '   - fieldNames 與 fieldTypes 數量不符 → 拋出錯誤 514
+    '   - fieldTypes 與實際欄位數量不符 → 拋出錯誤 514
+    '   - 日期格式錯誤 → 該儲存格寫入 NULL
+    '   - SQL 執行失敗 → 回傳 Nothing
     '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     
@@ -377,8 +414,18 @@ Public Function ImportFromSheet( _
             If Not allBlank Then db.ExecuteNonQuery sql
         Next row
     End If
-
     Set ImportFromSheet = db.ExecuteQuery("SELECT * FROM [" & tempTableName & "];")
+    '確認記錄集狀態
+    If Not ImportFromSheet Is Nothing Then
+        If Not ImportFromSheet.EOF Then
+            If ImportFromSheet.RecordCount = -1 Then ImportFromSheet.MoveLast
+            Debug.Print "  - [" & tempTableName & "] 已匯入 " & ImportFromSheet.RecordCount & " 筆資料"
+            ImportFromSheet.MoveFirst
+        Else
+            Debug.Print "  - [" & tempTableName & "]" & tempTableName & " 無資料"
+            ImportFromSheet.Close
+        End If
+    End If
     Exit Function
 ErrorHandler:
     Debug.Print "ImportFromSheet(): " & Err.Number & " - " & Err.Description

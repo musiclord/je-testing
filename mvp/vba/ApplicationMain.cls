@@ -192,78 +192,29 @@ Private Sub vImport_TbFieldMappingRequested()
     Call vMapTb.Initialize(context.DbInput)
     vMapTb.Show vbModeless
 End Sub
-Private Sub vImport_UpdateDateDimensionRequested()
+Private Sub vImport_UpdateDateDimensionRequested(ByVal dto As DataTransferObject)
     '---------------------------------------------------------------------------
     ' 更新/覆寫日期維度表
     '---------------------------------------------------------------------------
-    On Error GoTo ErrorHandler
-    ' 驗證並寫入期間資訊
-    Dim periodStart As Date
-    Dim periodEnd As Date
-    If context.info.periodStart = 0 Or context.info.periodEnd = 0 Then
-        If Not IsDate(vImport.txtbPeriodStart.Value) Or Not IsDate(vImport.txtbPeriodEnd.Value) Then
-            MsgBox "請先於畫面填寫會計期間起訖日後再更新日期維度表。", vbExclamation, "日期維度"
-            Exit Sub
-        End If
-        periodStart = CDate(vImport.txtbPeriodStart.Value)
-        periodEnd = CDate(vImport.txtbPeriodEnd.Value)
-        context.info.periodStart = periodStart
-        context.info.periodEnd = periodEnd
-    Else
-        periodStart = context.info.periodStart
-        periodEnd = context.info.periodEnd
-    End If
-    If periodStart = 0 Or periodEnd = 0 Or periodStart > periodEnd Then
-        MsgBox "會計期間設定不正確，請重新確認。", vbExclamation, "日期維度"
-        Exit Sub
-    End If
     ' 先建立日期維度表
+    context.info.periodStart = dto.periodStart
+    context.info.periodEnd = dto.periodEnd
     Call calendar.CreateDateDimensionTable
-    Debug.Print "已建立日期維度表 (範圍: " & periodStart & " ~ " & periodEnd & ")"
+    '初始化物件
     Dim rsHolidays As DAO.Recordset
     Dim rsMakeupDays As DAO.Recordset
     Dim types As Variant
     types = Array("DATE", "TEXT(50)")
+    '匯入假日資料
     Set rsHolidays = importer.ImportFromSheet(HolidaysSheet, "A2:B200", types, Array("DateValue", "Description"))
-    If Not rsHolidays Is Nothing Then
-        If Not rsHolidays.EOF Then
-            If rsHolidays.RecordCount = -1 Then rsHolidays.MoveLast
-            Debug.Print "  - 已匯入 " & rsHolidays.RecordCount & " 筆假日資料"
-            rsHolidays.MoveFirst
-            calendar.MergeHolidays rsHolidays
-        Else
-            Debug.Print "  - HolidaysSheet 無資料"
-            rsHolidays.Close
-        End If
-    End If
+    Call calendar.MergeHolidays(rsHolidays)
+    '匯入補班日資料
     Set rsMakeupDays = importer.ImportFromSheet(MakeupDaysSheet, "A2:B200", types, Array("DateValue", "Description"))
-    If Not rsMakeupDays Is Nothing Then
-        If Not rsMakeupDays.EOF Then
-            If rsMakeupDays.RecordCount = -1 Then rsMakeupDays.MoveLast
-            Debug.Print "  - 已匯入 " & rsMakeupDays.RecordCount & " 筆補班日資料"
-            rsMakeupDays.MoveFirst
-            calendar.MergeMakeupDays rsMakeupDays
-        Else
-            Debug.Print "  - MakeupDaysSheet 無資料"
-            rsMakeupDays.Close
-        End If
-    End If
-    Dim weekendIndices As New Collection
-    Dim i As Long
-    For i = 0 To vImport.lstWeekend.ListCount - 1
-        If vImport.lstWeekend.Selected(i) Then
-            weekendIndices.Add i + 1
-        End If
-    Next i
-    If weekendIndices.Count > 0 Then
-        calendar.MergeWeekends weekendIndices
-        Debug.Print "  - 已套用 " & weekendIndices.Count & " 個週末設定"
-    End If
+    Call calendar.MergeMakeupDays(rsMakeupDays)
+    '匯入週末資料
+    Call calendar.MergeWeekends(dto.weekendIndices)
+    '結束
     MsgBox "日期維度表更新完成", vbInformation, "日期設置"
-    Exit Sub
-ErrorHandler:
-    Debug.Print "vImport_UpdateDateDimensionRequested(): " & Err.Number & " - " & Err.Description
-    MsgBox "日期維度表更新失敗: " & Err.Description, vbCritical, "日期設置"
 End Sub
 Private Sub vImport_TestDefaultRequested()
     '---------------------------------------------------------------------------
@@ -281,10 +232,6 @@ Private Sub vImport_Submitted(ByVal dto As DataTransferObject)
     '---------------------------------------------------------------------------
     context.info.CompanyName = dto.CompanyName
     context.info.PrepStartDate = dto.PrepStartDate
-    context.info.periodStart = dto.periodStart
-    context.info.periodEnd = dto.periodEnd
-    'context.info.NonBusinessDay = dto.NonBusinessDay -> Collection
-    
 End Sub
 
 '-- vMapJe

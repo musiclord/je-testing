@@ -10,18 +10,13 @@ Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
 ' Class: DataTransferObject
-' Purpose: 用於在 View 和 Service 之間傳遞參數
-'          並解藕 View 和 Entity 之間的直接依賴
+' Purpose:  封裝資料以便在不同層級傳輸，而不暴露內部實體的細節。
+'           用於在 View 和 Service 之間傳遞參數
+'           並解藕 View 和 Entity 之間的直接依賴
 '
-' Usage Pattern:
-'   [ViewImport] → (建立臨時 DTO) → [RaiseEvent Submitted(dto)]
-'        ↓
-'   [ApplicationMain] → (驗證 dto) → (dto.CopyTo context.ProjectDto)
-'        ↓
-'   [ContextManager] → (context.SyncDtoToEntity) → [EntityInfo]
 '===============================================================================
 '-- 成員
-Public DateWeekend As Collection
+Public weekendIndices As Collection
 Public DateHolidays As Collection
 Public DateMakeupDays As Collection
 Public CompanyName As String
@@ -30,7 +25,10 @@ Public periodEnd As Date
 Public PrepStartDate As Date
 
 Public Sub Initialize()
-    Set DateWeekend = New Collection
+    '---------------------------------------------------------------------------
+    ' 初始化 DTO 物件
+    '---------------------------------------------------------------------------
+    Set weekendIndices = New Collection
     Set DateHolidays = New Collection
     Set DateMakeupDays = New Collection
     CompanyName = ""

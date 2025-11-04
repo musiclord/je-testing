@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImport 
    Caption         =   "Import"
-   ClientHeight    =   8424.001
-   ClientLeft      =   108
-   ClientTop       =   408
-   ClientWidth     =   7152
+   ClientHeight    =   8430.001
+   ClientLeft      =   105
+   ClientTop       =   405
+   ClientWidth     =   7155
    OleObjectBlob   =   "ViewImport.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -23,14 +23,16 @@ Public Event ImportJournalEntries(ByVal Format As String)
 Public Event ImportTrialBalance(ByVal Format As String)
 Public Event JeFieldMappingRequested()
 Public Event TbFieldMappingRequested()
-Public Event UpdateDateDimensionRequested()
+Public Event UpdateDateDimensionRequested(ByVal dto As DataTransferObject)
 Public Event TestDefaultRequested() '僅作測試用途
 Public Event Submitted(ByVal dto As DataTransferObject)
 '--
-Private m_Weekend As Collection
 Private m_Format As String
 
 Public Sub Initialize()
+    '---------------------------------------------------------------------------
+    ' ...
+    '---------------------------------------------------------------------------
     '預設匯入格式為 XLSX
     Me.optXlsx.Value = True
     Call optXlsx_Click
@@ -49,35 +51,12 @@ Public Sub Initialize()
     End With
 End Sub
 
-Private Sub btnApplyDateConfig_Click()
-    '//TODO:點擊按鈕後，應該可以產出預設日期表，並代入默認參數的日期
-    '//TODO:要先檢查所有日期(Holidays, MakeupDays, Weekend)的狀態
-    ' 先收集週末設定
-    Dim weekendIndices As New Collection
-    Dim i As Long
-    For i = 0 To Me.lstWeekend.ListCount - 1
-        If Me.lstWeekend.Selected(i) Then
-            weekendIndices.Add i + 1
-        End If
-    Next i
-    
-    ' 驗證必填項目
-    If weekendIndices.Count = 0 Then
-        MsgBox "請至少選擇一個週末日", vbExclamation, "日期設定"
-        Exit Sub
-    End If
-    
-    ' 儲存至模組層級變數供後續使用
-    Set m_Weekend = weekendIndices
-    
-    ' 觸發事件
-    RaiseEvent UpdateDateDimensionRequested
-End Sub
-
 Private Sub btnConfigureHolidays_Click()
+    '---------------------------------------------------------------------------
+    ' 開啟 HolidaysSheet 讓用戶填入假期資料
+    '---------------------------------------------------------------------------
     Dim ws As Worksheet
     Set ws = HolidaysSheet
-    '開啟工作表讓用戶填入假期資料
     ws.Activate
     '清空並初始化
     ws.Cells.Clear
@@ -89,9 +68,11 @@ Private Sub btnConfigureHolidays_Click()
 End Sub
 
 Private Sub btnConfigureMakeUpDays_Click()
+    '---------------------------------------------------------------------------
+    ' 開啟 MakeupDaysSheet 讓用戶填入補班日資料
+    '---------------------------------------------------------------------------
     Dim ws As Worksheet
     Set ws = MakeupDaysSheet
-    '開啟工作表讓用戶填入補班日資料
     ws.Activate
     '清空並初始化
     ws.Cells.Clear
@@ -103,52 +84,107 @@ Private Sub btnConfigureMakeUpDays_Click()
 End Sub
 
 Private Sub btnConfigureWeekend_Click()
-    ' 顯示目前選取的週末設定
-    Dim weekendIndices As New Collection
-    Dim i As Long
-    For i = 0 To Me.lstWeekend.ListCount - 1
-        If Me.lstWeekend.Selected(i) Then
-            weekendIndices.Add i + 1
-        End If
-    Next i
-    Set m_Weekend = weekendIndices
-    Debug.Print "已設定週末: " & m_Weekend.Count & " 天"
+    '---------------------------------------------------------------------------
+    ' 設定選取的週末日期
+    '---------------------------------------------------------------------------
+
 End Sub
 
 Private Sub btnImportJe_Click()
-    '激活事件來開啟資料庫匯入精靈
+    '---------------------------------------------------------------------------
+    ' 交由觸發事件打開資料庫匯入精靈處理 JE
+    '---------------------------------------------------------------------------
     RaiseEvent ImportJournalEntries(m_Format)
 End Sub
 
 Private Sub btnImportTb_Click()
-    '激活事件來開啟資料庫匯入精靈
+    '---------------------------------------------------------------------------
+    ' 交由觸發事件打開資料庫匯入精靈處理 TB
+    '---------------------------------------------------------------------------
     RaiseEvent ImportTrialBalance(m_Format)
 End Sub
 
 Private Sub btnMapJe_Click()
+    '---------------------------------------------------------------------------
+    ' 交由觸發事件打開 MapJe 表單
+    '---------------------------------------------------------------------------
     RaiseEvent JeFieldMappingRequested
 End Sub
 
 Private Sub btnMapTb_Click()
+    '---------------------------------------------------------------------------
+    ' 交由觸發事件打開 MapTb 表單
+    '---------------------------------------------------------------------------
     RaiseEvent TbFieldMappingRequested
 End Sub
 
-Private Sub btnExit_Click()
-    '檢查必填欄位
+Private Sub btnApplyDateConfig_Click()
+    '---------------------------------------------------------------------------
+    ' 將日期設定流程獨立出來處理
+    ' //TODO:要先檢查所有日期(Holidays, MakeupDays, Weekend)的狀態
+    '---------------------------------------------------------------------------
+    ' 觸發事件
+    ' 檢查必填欄位
+    Dim i As Long
     Dim errors As New Collection
-    If Trim(Me.txtbCompanyName.Value & "") = "" Then
-        errors.Add "請填寫公司名稱"
-    End If
+    '檢查輸入 - 期間開始日
     If Trim(Me.txtbPeriodStart.Value & "") = "" Then
         errors.Add "請填寫會計期間開始日"
     ElseIf Not IsDate(Me.txtbPeriodStart.Value) Then
         errors.Add "會計期間開始日格式錯誤，請使用 yyyy/mm/dd 格式"
     End If
-    If Trim(Me.txtbPeriodEnd.Value & "") = "" Then
+    '檢查輸入 - 期間結束日
+    If Trim(Me.txtbPeriodStart.Value & "") = "" Then
         errors.Add "請填寫會計期間結束日"
     ElseIf Not IsDate(Me.txtbPeriodEnd.Value) Then
         errors.Add "會計期間結束日格式錯誤，請使用 yyyy/mm/dd 格式"
     End If
+    '顯示錯誤訊息(若有)
+    If errors.Count > 0 Then
+        Dim errMsg As String
+        errMsg = "請修正以下問題:" & vbCrLf & vbCrLf
+        For i = 1 To errors.Count
+            errMsg = errMsg & i & ". " & errors(i) & vbCrLf
+        Next i
+        MsgBox errMsg, vbExclamation, "資料設定失敗"
+        Exit Sub
+    End If
+    '驗證資料邏輯
+    If CDate(Me.txtbPeriodStart.Value) > CDate(Me.txtbPeriodEnd.Value) Then
+        MsgBox "會計期間開始日不能晚於結束日", vbExclamation, "日期邏輯錯誤"
+        Me.txtbPeriodStart.SetFocus
+        Exit Sub
+    End If
+    '取得週末設定集合
+    Dim weekendIndices As New Collection
+    For i = 0 To Me.lstWeekend.ListCount - 1
+        If Me.lstWeekend.Selected(i) Then
+            weekendIndices.Add i + 1
+        End If
+    Next i
+    ' 驗證週末設定
+    If weekendIndices.Count = 0 Then
+        MsgBox "請至少選擇一個週末日", vbExclamation, "日期設定"
+        Exit Sub
+    End If
+    '組裝 DTO 物件交給 Presenter 處理
+    Dim dto As New DataTransferObject
+    dto.periodStart = CDate(Me.txtbPeriodStart.Value)
+    dto.periodEnd = CDate(Me.txtbPeriodEnd.Value)
+    Set dto.weekendIndices = weekendIndices
+    RaiseEvent UpdateDateDimensionRequested(dto)
+End Sub
+
+Private Sub btnExit_Click()
+    '---------------------------------------------------------------------------
+    ' 退出視窗前執行資料輸入檢查
+    '---------------------------------------------------------------------------
+    Dim errors As New Collection
+    '檢查輸入 - 公司名稱
+    If Trim(Me.txtbCompanyName.Value & "") = "" Then
+        errors.Add "請填寫公司名稱"
+    End If
+    '檢查輸入 - 財報準備期間開始日
     If Trim(Me.txtbPrepStartDate.Value & "") = "" Then
         errors.Add "請填寫財報準備期間開始日"
     ElseIf Not IsDate(Me.txtbPrepStartDate.Value) Then
@@ -165,24 +201,18 @@ Private Sub btnExit_Click()
         MsgBox errMsg, vbExclamation, "資料設定失敗"
         Exit Sub
     End If
-    '驗證資料邏輯
-    If CDate(Me.txtbPeriodStart.Value) > CDate(Me.txtbPeriodEnd.Value) Then
-        MsgBox "會計期間開始日不能晚於結束日", vbExclamation, "日期邏輯錯誤"
-        Me.txtbPeriodStart.SetFocus
-        Exit Sub
-    End If
-    '組裝 DTO 物件以回傳資料
+    '組裝 DTO 物件交給 Presenter 處理
     Dim dto As New DataTransferObject
     dto.CompanyName = CStr(Me.txtbCompanyName.Value)
-    dto.periodStart = CDate(Me.txtbPeriodStart.Value)
-    dto.periodEnd = CDate(Me.txtbPeriodEnd.Value)
     dto.PrepStartDate = CDate(Me.txtbPrepStartDate.Value)
     Me.Hide
     RaiseEvent Submitted(dto)
 End Sub
 
 Private Sub btnTestDefault_Click()
-    '//WARNING: ONLY FOR TESTING
+    '---------------------------------------------------------------------------
+    ' //WARNING: ONLY FOR TESTING
+    '---------------------------------------------------------------------------
     '填上控制項
     Me.txtbCompanyName.Text = "台塑寧波"
     Me.txtbPeriodStart.Text = "2024/01/01"

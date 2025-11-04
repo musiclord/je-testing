@@ -47,6 +47,7 @@ Public Sub MergeWeekends(ByVal selectedDays As Variant)
     '---------------------------------------------------------------------------
     Dim dayList As String
     Dim item As Variant
+    Dim affectedCount As Long
     '將使用者勾選的星期數字組合成逗號分隔字串
     For Each item In selectedDays
         If dayList <> "" Then dayList = dayList & ","
@@ -60,7 +61,8 @@ Public Sub MergeWeekends(ByVal selectedDays As Variant)
     sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
           "SET [" & FLD_IS_WEEKEND & "] = True " & vbCrLf & _
           "WHERE Weekday([" & FLD_DATEKEY & "]) IN (" & dayList & ");"
-    Call m_Db.ExecuteNonQuery(sql)
+    affectedCount = m_Db.ExecuteNonQuery(sql)
+    Debug.Print "  - 已套用 " & selectedDays.Count & " 個週末設定 (共影響 " & affectedCount & " 筆記錄)"
 End Sub
 
 Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
@@ -69,7 +71,15 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
     '---------------------------------------------------------------------------
     If rsHolidays Is Nothing Then Exit Sub
     If rsHolidays.EOF Then Exit Sub
+    
+    Dim totalCount As Long
+    Dim affectedCount As Long
+    
     rsHolidays.MoveFirst
+    If rsHolidays.RecordCount = -1 Then rsHolidays.MoveLast
+    totalCount = rsHolidays.RecordCount
+    rsHolidays.MoveFirst
+    
     Do While Not rsHolidays.EOF
         '預期 rsHolidays 有欄位 Date(DATE), Description(TEXT)
         Dim holidayDate As Variant
@@ -86,11 +96,12 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
                   "SET [" & FLD_IS_HOLIDAYS & "] = True, " & vbCrLf & _
                   "    [" & FLD_HOLIDAYS_DESC & "] = '" & Replace(holidayDesc, "'", "''") & "' " & vbCrLf & _
                   "WHERE [" & FLD_DATEKEY & "] = #" & Format(CDate(holidayDate), "mm/dd/yyyy") & "#;"
-            Call m_Db.ExecuteNonQuery(sql)
+            affectedCount = affectedCount + m_Db.ExecuteNonQuery(sql)
         End If
         rsHolidays.MoveNext
     Loop
     rsHolidays.Close
+    Debug.Print "  - 已匯入 " & totalCount & " 筆假日資料 (共影響 " & affectedCount & " 筆記錄)"
 End Sub
 
 Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
@@ -99,7 +110,15 @@ Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
     '---------------------------------------------------------------------------
     If rsMakeupDays Is Nothing Then Exit Sub
     If rsMakeupDays.EOF Then Exit Sub
+    
+    Dim totalCount As Long
+    Dim affectedCount As Long
+    
     rsMakeupDays.MoveFirst
+    If rsMakeupDays.RecordCount = -1 Then rsMakeupDays.MoveLast
+    totalCount = rsMakeupDays.RecordCount
+    rsMakeupDays.MoveFirst
+    
     Do While Not rsMakeupDays.EOF
         ' 預期 rsMakeupDays 有欄位 Date(DATE), Description(TEXT)
         Dim makeupDate As Variant
@@ -116,11 +135,12 @@ Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
                   "SET [" & FLD_IS_MAKEUP_DAYS & "] = True, " & vbCrLf & _
                   "    [" & FLD_MAKEUP_DAYS_DESC & "] = '" & Replace(makeupDesc, "'", "''") & "' " & vbCrLf & _
                   "WHERE [" & FLD_DATEKEY & "] = #" & Format(CDate(makeupDate), "mm/dd/yyyy") & "#;"
-            Call m_Db.ExecuteNonQuery(sql)
+            affectedCount = affectedCount + m_Db.ExecuteNonQuery(sql)
         End If
         rsMakeupDays.MoveNext
     Loop
     rsMakeupDays.Close
+    Debug.Print "  - 已匯入 " & totalCount & " 筆補班日資料 (共影響 " & affectedCount & " 筆記錄)"
 End Sub
 
 Public Sub CreateDateDimensionTable()
@@ -178,6 +198,7 @@ Public Sub CreateDateDimensionTable()
         '遞增下一日
         currentDate = DateAdd("d", 1, currentDate)
     Loop
+    Debug.Print "已建立日期維度表 (範圍: " & dateStart & " ~ " & dateEnd & ")"
     rs.Close
     Set rs = Nothing
 End Sub

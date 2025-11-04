@@ -18,6 +18,9 @@ Private m_Fields As New Dictionary
 
 '-- 方法
 Private Sub Class_Initialize()
+    '---------------------------------------------------------------------------
+    ' 初始化 TB 資料實體物件
+    '---------------------------------------------------------------------------
     m_Name = "TB"
     Dim Fields As Variant
     Dim i As Long
@@ -41,12 +44,18 @@ Private Sub Class_Initialize()
 End Sub
 
 Public Sub SetField(ByVal key As String, ByVal Value As String)
+    '---------------------------------------------------------------------------
+    ' 設定指定欄位鍵值對，僅在欄位已存在且值不為空字串時更新
+    '---------------------------------------------------------------------------
     If m_Fields.Exists(key) And Len(Value) > 0 Then
         m_Fields(key) = Value
     End If
 End Sub
 
 Public Sub PrintFields()
+    '---------------------------------------------------------------------------
+    ' 將 TB 欄位映射集合 m_Fields 鍵值對輸出至即時視窗
+    '---------------------------------------------------------------------------
     Dim key As Variant
     Debug.Print "********** [ TB 欄位映射 ] **********"
     Debug.Print String(60, "-")
