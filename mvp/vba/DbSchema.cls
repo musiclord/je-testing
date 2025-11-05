@@ -40,7 +40,7 @@ Private m_Fields As TypeFields
 Private m_Reports As TypeReports
 
 Private Sub Class_Initialize()
-    With Tables
+    With m_Tables
         .JE = "JE"
         .TB = "TB"
     End With
