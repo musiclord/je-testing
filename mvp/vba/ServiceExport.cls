@@ -27,7 +27,7 @@ End Sub
 
 '-- 資料預覽方法
 Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
-                                    ByVal tables As Variant, _
+                                    ByVal Tables As Variant, _
                                     Optional ByVal startRow As Long = 1)
     '---------------------------------------------------------------------------
     ' 方法: 將多個資料表依序渲染至指定工作表
@@ -45,9 +45,9 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
     currentRow = startRow
     ws.Cells.Clear
     '遍歷所有資料表
-    For idx = LBound(tables) To UBound(tables)
+    For idx = LBound(Tables) To UBound(Tables)
         Dim tableName As String
-        tableName = CStr(tables(idx))
+        tableName = CStr(Tables(idx))
         '檢查資料表是否存在
         If Not m_Db.TableExists(tableName) Then
             ws.Cells(currentRow, 1).Value = "資料表 [" & tableName & "] 不存在"
@@ -122,8 +122,8 @@ Public Function ShowEngagementOverview() As Boolean
     '---------------------------------------------------------------------------
     ShowEngagementOverview = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array(RPT_ENGAGEMENT_OVERVIEW)
+    Dim Tables As Variant
+    Tables = Array(RPT_ENGAGEMENT_OVERVIEW)
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-1-1|資料預先整理之說明"
@@ -132,7 +132,7 @@ Public Function ShowEngagementOverview() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowEngagementOverview = True
 End Function
 
@@ -146,8 +146,8 @@ Public Function ShowValidationReport() As Boolean
     '---------------------------------------------------------------------------
     ShowValidationReport = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_DATA_OVERVIEW, RPT_VALIDATION_OVERVIEW)
+    Dim Tables As Variant
+    Tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_DATA_OVERVIEW, RPT_VALIDATION_OVERVIEW)
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-1|驗證測試報告"
@@ -156,7 +156,7 @@ Public Function ShowValidationReport() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowValidationReport = True
 End Function
 
@@ -166,8 +166,8 @@ Public Function ShowCompletenessReport() As Boolean
     '---------------------------------------------------------------------------
     ShowCompletenessReport = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_COMPLETENESS_DETAIL)
+    Dim Tables As Variant
+    Tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_COMPLETENESS_DETAIL)
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-2|完整性測試報告"
@@ -176,7 +176,7 @@ Public Function ShowCompletenessReport() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessReport = True
 End Function
 
@@ -186,8 +186,8 @@ Public Function ShowDocumentBalanceReport() As Boolean
     '---------------------------------------------------------------------------
     ShowDocumentBalanceReport = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_DOCUMENT_BALANCE_DETAIL)
+    Dim Tables As Variant
+    Tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_DOCUMENT_BALANCE_DETAIL)
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-3|借貸不平測試報告"
@@ -196,7 +196,7 @@ Public Function ShowDocumentBalanceReport() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowDocumentBalanceReport = True
 End Function
 
@@ -207,8 +207,8 @@ Public Function ShowPreparerSummary() As Boolean
     '---------------------------------------------------------------------------
     ShowPreparerSummary = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array()
+    Dim Tables As Variant
+    Tables = Array()
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-4|分錄編制人員說明"
@@ -227,8 +227,8 @@ Public Function ShowCompletenessDiffSummary() As Boolean
     '---------------------------------------------------------------------------
     ShowCompletenessDiffSummary = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array()
+    Dim Tables As Variant
+    Tables = Array()
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-5|完整性測試之差異說明"
@@ -237,7 +237,7 @@ Public Function ShowCompletenessDiffSummary() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessDiffSummary = True
 End Function
 
@@ -247,8 +247,8 @@ Public Function ShowCompletenessReconciliationReport() As Boolean
     '---------------------------------------------------------------------------
     ShowCompletenessReconciliationReport = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array()
+    Dim Tables As Variant
+    Tables = Array()
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-6|完整性差異調節報告"
@@ -257,7 +257,7 @@ Public Function ShowCompletenessReconciliationReport() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessReconciliationReport = True
 End Function
 
@@ -267,8 +267,8 @@ Public Function ShowINFReport() As Boolean
     '---------------------------------------------------------------------------
     ShowINFReport = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array()
+    Dim Tables As Variant
+    Tables = Array()
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-3-1|INF可靠性測試"
@@ -277,7 +277,7 @@ Public Function ShowINFReport() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowINFReport = True
 End Function
 
@@ -287,8 +287,8 @@ Public Function ShowHRCSummary() As Boolean
     '---------------------------------------------------------------------------
     ShowHRCSummary = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array()
+    Dim Tables As Variant
+    Tables = Array()
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-4-1|高風險條件 (HRC) 說明"
@@ -297,7 +297,7 @@ Public Function ShowHRCSummary() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCSummary = True
     '...
 End Function
@@ -308,8 +308,8 @@ Public Function ShowHRCReport() As Boolean
     '---------------------------------------------------------------------------
     ShowHRCReport = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array()
+    Dim Tables As Variant
+    Tables = Array()
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-4-2|符合高風險條件傳票報告"
@@ -318,7 +318,7 @@ Public Function ShowHRCReport() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCReport = True
 End Function
 
@@ -328,8 +328,8 @@ Public Function ShowHRCDetails() As Boolean
     '---------------------------------------------------------------------------
     ShowHRCDetails = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array()
+    Dim Tables As Variant
+    Tables = Array()
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-4-3|符合高風險條件傳票之明細"
@@ -338,7 +338,7 @@ Public Function ShowHRCDetails() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCDetails = True
 End Function
 
@@ -348,8 +348,8 @@ Public Function PostClosingEntries() As Boolean
     '---------------------------------------------------------------------------
     PostClosingEntries = False
     '設置資料表陣列
-    Dim tables As Variant
-    tables = Array()
+    Dim Tables As Variant
+    Tables = Array()
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-5-1|財務報表關帳後調整之分錄"
@@ -358,7 +358,7 @@ Public Function PostClosingEntries() As Boolean
     Set ws = PreviewSheet
     ws.name = sheetName
     '預覽記錄集於工作表
-    Call RenderTablesToWorksheet(ws, tables)
+    Call RenderTablesToWorksheet(ws, Tables)
     PostClosingEntries = True
 End Function
 

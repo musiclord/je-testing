@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewValidation 
    Caption         =   "驗證資料"
-   ClientHeight    =   4170
+   ClientHeight    =   5085
    ClientLeft      =   105
    ClientTop       =   405
    ClientWidth     =   2115
@@ -43,6 +43,22 @@ End Sub
 
 Private Sub btnNullRecords_Click()
     RaiseEvent NullRecords
+End Sub
+
+Private Sub btnConfigureAccountMapping_Click()
+    '科目配對
+    Dim ws As Worksheet
+    Set ws = AccountMappingSheet
+    ws.Activate
+    '清空並初始化
+    ws.Cells.Clear
+    ws.Columns("A").NumberFormat = "@"
+    ws.Columns("B").NumberFormat = "@"
+    ws.Columns("C").NumberFormat = "@"
+    ws.Range("A1").Value = "Account Number"
+    ws.Range("B1").Value = "Account Name"
+    ws.Range("C1").Value = "Standardized Class"
+    ws.Range("A1:C1").Font.Bold = True
 End Sub
 
 Private Sub btnExit_Click()

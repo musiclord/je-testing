@@ -25,8 +25,12 @@ Private WithEvents vMapTb As ViewImportMapTb
 Attribute vMapTb.VB_VarHelpID = -1
 Private WithEvents vValidation As ViewValidation
 Attribute vValidation.VB_VarHelpID = -1
-Private WithEvents vFilter As ViewFilter
-Attribute vFilter.VB_VarHelpID = -1
+Private WithEvents vFilterRouter As ViewFilterRouter
+Attribute vFilterRouter.VB_VarHelpID = -1
+Private WithEvents vFilterCurrent As ViewFilterCurrent
+Attribute vFilterCurrent.VB_VarHelpID = -1
+Private WithEvents vFilterLegacy As ViewFilterLegacy
+Attribute vFilterLegacy.VB_VarHelpID = -1
 Private WithEvents vAddCriteria As ViewFilterAddCriteria
 Attribute vAddCriteria.VB_VarHelpID = -1
 Private WithEvents vExport As ViewExport
@@ -42,8 +46,9 @@ Private reporter As ServiceReport
 Private validator As ServiceValidation
 Private filter As ServiceFilter
 
+'===============================================================================
 '-- Application
-'-------------------------------------------------------------------------------
+'===============================================================================
 Public Sub Initialize()
     Set vProject = New ViewProject
     Set vMain = New ViewMain
@@ -51,7 +56,9 @@ Public Sub Initialize()
     Set vMapJe = New ViewImportMapJe
     Set vMapTb = New ViewImportMapTb
     Set vValidation = New ViewValidation
-    Set vFilter = New ViewFilter
+    Set vFilterRouter = New ViewFilterRouter
+    Set vFilterCurrent = New ViewFilterCurrent
+    Set vFilterLegacy = New ViewFilterLegacy
     Set vAddCriteria = New ViewFilterAddCriteria
     Set vExport = New ViewExport
     '--
@@ -73,7 +80,9 @@ Public Sub Run()
     vProject.Show vbModeless
 End Sub
 
+'===============================================================================
 '-- vProject
+'===============================================================================
 Private Sub vProject_NewProject(ByVal path As String)
     '---------------------------------------------------------------------------
     ' 依據輸入路徑創建專案目錄
@@ -90,7 +99,9 @@ Private Sub vProject_SelectProject(ByVal path As String)
     vMain.Show vbModeless
 End Sub
 
+'===============================================================================
 '-- vMain
+'===============================================================================
 Private Sub vMain_DoStep1()
     '---------------------------------------------------------------------------
     ' 初始化步驟一所需的物件並開啟表單介面 ViewImport
@@ -112,12 +123,11 @@ Private Sub vMain_DoStep2()
 End Sub
 Private Sub vMain_DoStep3()
     '---------------------------------------------------------------------------
-    ' 初始化步驟三所需的物件並開啟臨時的表單介面 ViewFilterTemp 來選取篩選模式
+    ' 初始化步驟三所需的物件並開啟臨時表單介面 ViewFilterRouter 來路由篩選模式
     '---------------------------------------------------------------------------
     Call filter.Initialize(context)
     '--
-    Call vFilter.Initialize
-    vFilter.Show vbModeless
+    vFilterRouter.Show vbModeless
 End Sub
 Private Sub vMain_DoStep4()
     '---------------------------------------------------------------------------
@@ -147,14 +157,25 @@ Private Sub vMain_ExitApplication()
     Application.Quit
 End Sub
 
+'===============================================================================
 '-- vImport
+'===============================================================================
+Private Sub vImport_BeepBoop()
+    '//WARNING: BEEP BOOP
+    '//WARNING: BEEP BOOP
+    '//WARNING: BEEP BOOP
+    Dim testString As String
+    testString = context.DbSchema.Tables.JE
+    Debug.Print "BEEP BOOP:" & context.DbSchema.Tables.JE
+    MsgBox testString, vbInformation, testString
+End Sub
 Private Sub vImport_ImportJournalEntries(ByVal Format As String)
     '---------------------------------------------------------------------------
     ' 使用資料庫匯入精靈處理 JE 匯入
     '---------------------------------------------------------------------------
     importer.dType = Format
     importer.OpenWizard "je"
-    vImport.lblImportStatus.Caption = "匯入資料表: " & context.je.name
+    vImport.lblImportStatus.Caption = "匯入資料表: " & context.JE.name
 End Sub
 Private Sub vImport_ImportTrialBalance(ByVal Format As String)
     '---------------------------------------------------------------------------
@@ -162,14 +183,14 @@ Private Sub vImport_ImportTrialBalance(ByVal Format As String)
     '---------------------------------------------------------------------------
     importer.dType = Format
     importer.OpenWizard "tb"
-    vImport.lblImportStatus.Caption = "匯入資料表: " & context.tb.name
+    vImport.lblImportStatus.Caption = "匯入資料表: " & context.TB.name
 End Sub
 Private Sub vImport_JeFieldMappingRequested()
     '---------------------------------------------------------------------------
     ' 開啟JE欄位映射的介面
     '---------------------------------------------------------------------------
     '檢查是否有匯入 JE 資料表
-    If Not context.DbInput.TableExists(context.je.name) Then
+    If Not context.DbInput.TableExists(context.JE.name) Then
         MsgBox "尚未匯入 JE 資料表", vbExclamation, "JE欄位映射"
         vImport.btnImportJe.SetFocus
         Exit Sub
@@ -183,7 +204,7 @@ Private Sub vImport_TbFieldMappingRequested()
     ' 開啟TB欄位映射的介面
     '---------------------------------------------------------------------------
     '檢查是否有匯入 TB 資料表
-    If Not context.DbInput.TableExists(context.tb.name) Then
+    If Not context.DbInput.TableExists(context.TB.name) Then
         MsgBox "尚未匯入 TB 資料表", vbExclamation, "TB欄位映射"
         vImport.btnImportTb.SetFocus
         Exit Sub
@@ -196,24 +217,46 @@ Private Sub vImport_UpdateDateDimensionRequested(ByVal dto As DataTransferObject
     '---------------------------------------------------------------------------
     ' 更新/覆寫日期維度表
     '---------------------------------------------------------------------------
-    ' 先建立日期維度表
+    '-- 先建立日期維度表
     context.info.periodStart = dto.periodStart
     context.info.periodEnd = dto.periodEnd
     Call calendar.CreateDateDimensionTable
-    '初始化物件
-    Dim rsHolidays As DAO.Recordset
+    '-- 準備物件
+    Dim dataRange As String
+    Dim Types As Variant
+    Dim fieldNames As Variant
+    dataRange = "A2:B200"
+    Types = Array("DATE", "TEXT(50)")
+    fieldNames = Array("DateValue", "Description")
+    '-- 匯入補班日資料
     Dim rsMakeupDays As DAO.Recordset
-    Dim types As Variant
-    types = Array("DATE", "TEXT(50)")
-    '匯入假日資料
-    Set rsHolidays = importer.ImportFromSheet(HolidaysSheet, "A2:B200", types, Array("DateValue", "Description"))
-    Call calendar.MergeHolidays(rsHolidays)
-    '匯入補班日資料
-    Set rsMakeupDays = importer.ImportFromSheet(MakeupDaysSheet, "A2:B200", types, Array("DateValue", "Description"))
-    Call calendar.MergeMakeupDays(rsMakeupDays)
-    '匯入週末資料
+    Set rsMakeupDays = importer.ImportFromSheet( _
+                                    MakeupDaysSheet, _
+                                    dataRange, _
+                                    Types, _
+                                    fieldNames _
+                                )
+    If Not rsMakeupDays Is Nothing And Not rsMakeupDays.EOF Then
+        Call calendar.MergeMakeupDays(rsMakeupDays)
+    Else
+        Debug.Print "  - MakeupDaySheet 無資料或匯入失敗"
+    End If
+    '-- 匯入假日資料
+    Dim rsHolidays As DAO.Recordset
+    Set rsHolidays = importer.ImportFromSheet( _
+                                    HolidaysSheet, _
+                                    dataRange, _
+                                    Types, _
+                                    fieldNames _
+                                )
+    If Not rsHolidays Is Nothing And Not rsHolidays.EOF Then
+        Call calendar.MergeHolidays(rsHolidays)
+    Else
+        Debug.Print "  - HolidaySheet 無資料或匯入失敗"
+    End If
+    '-- 匯入週末資料
     Call calendar.MergeWeekends(dto.weekendIndices)
-    '結束
+    '-- 更新結束
     MsgBox "日期維度表更新完成", vbInformation, "日期設置"
 End Sub
 Private Sub vImport_TestDefaultRequested()
@@ -234,13 +277,14 @@ Private Sub vImport_Submitted(ByVal dto As DataTransferObject)
     context.info.PrepStartDate = dto.PrepStartDate
 End Sub
 
+'===============================================================================
 '-- vMapJe
-'-------------------------------------------------------------------------------
+'===============================================================================
 Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
     '---------------------------------------------------------------------------
     ' 套用表單 MapJe 的欄位映射
     '---------------------------------------------------------------------------
-    context.je.Method = amountMethod
+    context.JE.Method = amountMethod
     If Not importer.ApplyJe(dict) Then
         vImport.lblFieldMappingStatus.Caption = " JE FAILED"
         MsgBox "JE 套用欄位失敗", vbExclamation, "JE 套用欄位"
@@ -249,13 +293,14 @@ Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Lo
     End If
 End Sub
 
+'===============================================================================
 '-- vMapTb
-'-------------------------------------------------------------------------------
+'===============================================================================
 Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
     '---------------------------------------------------------------------------
     ' 套用表單 MapTb 的欄位映射
     '---------------------------------------------------------------------------
-    context.tb.Method = amountMethod
+    context.TB.Method = amountMethod
     If Not importer.ApplyTb(dict) Then
         vImport.lblFieldMappingStatus.Caption = "TB FAILED"
         MsgBox "TB套用欄位失敗", vbExclamation, "TB套用欄位"
@@ -264,8 +309,9 @@ Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Lo
     End If
 End Sub
 
+'===============================================================================
 '-- vValidation
-'-------------------------------------------------------------------------------
+'===============================================================================
 Private Sub vValidation_Completeness()
     '---------------------------------------------------------------------------
     ' 執行完整性測試
@@ -300,8 +346,58 @@ Private Sub vValidation_Submitted(ByVal dto As DataTransferObject)
     '...
 End Sub
 
+'===============================================================================
+'-- vFilterRouter
+'===============================================================================
+Private Sub vFilterRouter_RouteToCurrent()
+    Call vFilterCurrent.Initialize
+    vFilterCurrent.Show vbModeless
+End Sub
+
+Private Sub vFilterRouter_RouteToLegacy()
+    Call vFilterLegacy.Initialize
+    vFilterLegacy.Show vbModeless
+End Sub
+
+'===============================================================================
+'-- vFilterLegacy
+'===============================================================================
+Private Sub vFilterLegacy_ExecuteCriterion()
+    '---------------------------------------------------------------------------
+    '...
+    '---------------------------------------------------------------------------
+End Sub
+
+Private Sub vFilterLegacy_ShowCriteria()
+    '---------------------------------------------------------------------------
+    '...
+    '---------------------------------------------------------------------------
+End Sub
+
+Private Sub vFilterLegacy_Submitted(ByVal dto As DataTransferObject)
+    '---------------------------------------------------------------------------
+    '...
+    '---------------------------------------------------------------------------
+End Sub
+
+'===============================================================================
+'-- vFilterCurrent
+'===============================================================================
+Private Sub vAddCriteria_AddCriteria()
+    '---------------------------------------------------------------------------
+    '...
+    '---------------------------------------------------------------------------
+End Sub
+
+Private Sub vFilterCurrent_OverviewCriteria()
+    '---------------------------------------------------------------------------
+    '...
+    '---------------------------------------------------------------------------
+End Sub
+
+'===============================================================================
 '-- vExport
-'-------------------------------------------------------------------------------
+'===============================================================================
 Private Sub vExport_ExportWp()
     '---------------------------------------------------------------------------
     ' 匯出全部完整的報表至專案目錄

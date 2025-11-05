@@ -53,7 +53,7 @@ Public Function GenerateEngagementOverview() As Boolean
           "    #" & m_Context.info.periodEnd & "# AS [" & FLD_PERIOD_END & "], " & vbCrLf & _
           "    #" & Date & "# AS [" & FLD_PREPARED_DATE & "] " & vbCrLf & _
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-          "FROM " & m_Context.je.name & " IN '" & m_Context.DbInput.path & "';"
+          "FROM " & m_Context.JE.name & " IN '" & m_Context.DbInput.path & "';"
     m_Db.ExecuteNonQuery sql
     GenerateEngagementOverview = True
     Exit Function
@@ -92,13 +92,13 @@ Public Function GenerateDataOverview() As Boolean
     Dim jeRecordCount As Long
     Dim tbName As String
     Dim tbAccountCount As Long
-    jeName = m_Context.je.name
-    jeNetAmount = m_Context.DbInput.GetTotal(m_Context.je.name, m_Context.je.K_Amount, "NetValue")
-    jeDebitSum = m_Context.DbInput.GetTotal(m_Context.je.name, m_Context.je.K_Amount, "PositiveValue")
-    jeCreditSum = m_Context.DbInput.GetTotal(m_Context.je.name, m_Context.je.K_Amount, "NegativeValue")
-    jeRecordCount = m_Context.DbInput.GetTotal(m_Context.je.name, "", "DBCount")
-    tbName = m_Context.tb.name
-    tbAccountCount = m_Context.DbInput.GetTotal(m_Context.tb.name, "", "DBCount")
+    jeName = m_Context.JE.name
+    jeNetAmount = m_Context.DbInput.GetTotal(m_Context.JE.name, m_Context.JE.K_Amount, "NetValue")
+    jeDebitSum = m_Context.DbInput.GetTotal(m_Context.JE.name, m_Context.JE.K_Amount, "PositiveValue")
+    jeCreditSum = m_Context.DbInput.GetTotal(m_Context.JE.name, m_Context.JE.K_Amount, "NegativeValue")
+    jeRecordCount = m_Context.DbInput.GetTotal(m_Context.JE.name, "", "DBCount")
+    tbName = m_Context.TB.name
+    tbAccountCount = m_Context.DbInput.GetTotal(m_Context.TB.name, "", "DBCount")
     '處理資料庫查詢
     Dim sql As String
     sql = "SELECT TOP 1 " & vbCrLf & _
@@ -110,7 +110,7 @@ Public Function GenerateDataOverview() As Boolean
           "    '" & tbName & "' AS [" & FLD_TB_NAME & "], " & vbCrLf & _
           "    '" & tbAccountCount & "' AS [" & FLD_TB_ACCOUNT_COUNT & "] " & vbCrLf & _
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-          "FROM " & m_Context.je.name & " IN '" & m_Context.DbInput.path & "';"
+          "FROM " & m_Context.JE.name & " IN '" & m_Context.DbInput.path & "';"
     m_Db.ExecuteNonQuery sql
     GenerateDataOverview = True
     Exit Function
@@ -163,7 +163,7 @@ Public Function GenerateValidationOverview() As Boolean
           "    '" & completenessDiffCount & "' AS [" & FLD_COMEPLETENESS_DIFF_COUNT & "], " & vbCrLf & _
           "    '" & documentDiffCount & "' AS [" & FLD_DOCUMENT_BALANCE_DIFF_COUNT & "] " & vbCrLf & _
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-          "FROM " & m_Context.je.name & " IN '" & m_Context.DbInput.path & "';"
+          "FROM " & m_Context.JE.name & " IN '" & m_Context.DbInput.path & "';"
     m_Db.ExecuteNonQuery sql
     GenerateValidationOverview = True
     Exit Function

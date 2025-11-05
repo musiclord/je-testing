@@ -14,8 +14,8 @@ Option Explicit
 '===============================================================================
 Private dbSource As DbAccess
 Private dbTarget As DbAccess
-Private je As EntityJe
-Private tb As EntityTb
+Private JE As EntityJe
+Private TB As EntityTb
 Private info As EntityInfo
 
 Public Sub Initialize(ByRef context As ContextManager)
@@ -23,8 +23,8 @@ Public Sub Initialize(ByRef context As ContextManager)
     Set dbSource = context.DbInput
     '目標資料庫為存放驗證結果的 valid.accdb
     Set dbTarget = context.DbValid
-    Set je = context.je
-    Set tb = context.tb
+    Set JE = context.JE
+    Set TB = context.TB
     Set info = context.info
 End Sub
 
@@ -71,7 +71,7 @@ Public Function CheckCompleteness() As Boolean
     CheckCompleteness = False
     Debug.Print "********** 開始完整性檢查流程 **********"
     Debug.Print "檢查期間: " & info.periodStart & " ~ " & info.periodEnd
-    Call CleanupTempTables(dbTarget, Array(tb.name, TBL_JE_IN_PERIOD, TBL_JE_NOT_IN_PERIOD, TBL_JE_ACCOUNT_SUM, TBL_COMPLETENESS_CALCULATED, TBL_COMPLETENESS_DIFF, TBL_COMPLETENESS_DETAIL))
+    Call CleanupTempTables(dbTarget, Array(TB.name, TBL_JE_IN_PERIOD, TBL_JE_NOT_IN_PERIOD, TBL_JE_ACCOUNT_SUM, TBL_COMPLETENESS_CALCULATED, TBL_COMPLETENESS_DIFF, TBL_COMPLETENESS_DETAIL))
     
     ' ----------------------------------------------------------------------------
     ' 複製 TB 至目標資料庫
@@ -79,8 +79,8 @@ Public Function CheckCompleteness() As Boolean
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 複製 TB **********"
     sql = "SELECT * " & vbCrLf & _
-          "INTO " & tb.name & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & tb.name & " IN '" & dbSource.path & "';"
+          "INTO " & TB.name & " IN '" & dbTarget.path & "' " & vbCrLf & _
+          "FROM " & TB.name & " IN '" & dbSource.path & "';"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -90,8 +90,8 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** 篩選期間內資料 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_JE_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
-          "WHERE [" & je.PostDate & "] " & vbCrLf & _
+          "FROM " & JE.name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "WHERE [" & JE.PostDate & "] " & vbCrLf & _
           "BETWEEN #" & info.periodStart & "# AND #" & info.periodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
     
@@ -102,9 +102,9 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** 篩選期間外資料 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_JE_NOT_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
-          "WHERE [" & je.PostDate & "] < #" & info.periodStart & "# " & vbCrLf & _
-          "   OR [" & je.PostDate & "] > #" & info.periodEnd & "#;"
+          "FROM " & JE.name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "WHERE [" & JE.PostDate & "] < #" & info.periodStart & "# " & vbCrLf & _
+          "   OR [" & JE.PostDate & "] > #" & info.periodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -113,11 +113,11 @@ Public Function CheckCompleteness() As Boolean
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 依會計科目彙總金額 **********"
     sql = "SELECT " & vbCrLf & _
-          "    [" & je.AccountNumber & "], " & vbCrLf & _
-          "    SUM([" & je.K_Amount & "]) AS [" & je.K_Amount_Sum & "] " & vbCrLf & _
+          "    [" & JE.AccountNumber & "], " & vbCrLf & _
+          "    SUM([" & JE.K_Amount & "]) AS [" & JE.K_Amount_Sum & "] " & vbCrLf & _
           "INTO " & TBL_JE_ACCOUNT_SUM & " " & vbCrLf & _
           "FROM " & TBL_JE_IN_PERIOD & " " & vbCrLf & _
-          "GROUP BY [" & je.AccountNumber & "];"
+          "GROUP BY [" & JE.AccountNumber & "];"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -130,14 +130,14 @@ Public Function CheckCompleteness() As Boolean
           "    SELECT" & vbCrLf & _
           "        P.*, S.* " & vbCrLf & _
           "    FROM " & TBL_JE_ACCOUNT_SUM & " AS P " & vbCrLf & _
-          "    LEFT JOIN " & tb.name & " AS S " & vbCrLf & _
-          "        ON P.[" & je.AccountNumber & "] = S.[" & tb.AccountNumber & "] " & vbCrLf & _
+          "    LEFT JOIN " & TB.name & " AS S " & vbCrLf & _
+          "        ON P.[" & JE.AccountNumber & "] = S.[" & TB.AccountNumber & "] " & vbCrLf & _
           "    UNION " & vbCrLf & _
           "    SELECT " & vbCrLf & _
           "        P.*, S.* " & vbCrLf & _
           "    FROM " & TBL_JE_ACCOUNT_SUM & " AS P " & vbCrLf & _
-          "    RIGHT JOIN " & tb.name & " AS S " & vbCrLf & _
-          "        ON P.[" & je.AccountNumber & "] = S.[" & tb.AccountNumber & "] " & vbCrLf & _
+          "    RIGHT JOIN " & TB.name & " AS S " & vbCrLf & _
+          "        ON P.[" & JE.AccountNumber & "] = S.[" & TB.AccountNumber & "] " & vbCrLf & _
           ");"
     dbTarget.ExecuteNonQuery sql
     
@@ -161,7 +161,7 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** 計算統一科目編號 **********"
     sql = "UPDATE " & TBL_COMPLETENESS_CALCULATED & " " & vbCrLf & _
           "SET [" & FLD_ACCOUNT_MERGED & "] = " & vbCrLf & _
-          "    IIF(ISNULL([" & je.AccountNumber & "]), [" & tb.AccountNumber & "], [" & je.AccountNumber & "]);"
+          "    IIF(ISNULL([" & JE.AccountNumber & "]), [" & TB.AccountNumber & "], [" & JE.AccountNumber & "]);"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -170,7 +170,7 @@ Public Function CheckCompleteness() As Boolean
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 計算差異金額 **********"
     sql = "UPDATE " & TBL_COMPLETENESS_CALCULATED & " " & vbCrLf & _
-          "SET [" & FLD_TB_JE_DIFF & "] = " & Nz(tb.K_Amount) & " - " & Nz(je.K_Amount_Sum) & ";"
+          "SET [" & FLD_TB_JE_DIFF & "] = " & Nz(TB.K_Amount) & " - " & Nz(JE.K_Amount_Sum) & ";"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -191,9 +191,9 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** 產生最終結果 **********"
     sql = "SELECT " & vbCrLf & _
           "    [" & FLD_ACCOUNT_MERGED & "], " & vbCrLf & _
-          "    [" & tb.AccountName & "], " & vbCrLf & _
-          "    [" & tb.K_Amount & "], " & vbCrLf & _
-          "    [" & je.K_Amount_Sum & "], " & vbCrLf & _
+          "    [" & TB.AccountName & "], " & vbCrLf & _
+          "    [" & TB.K_Amount & "], " & vbCrLf & _
+          "    [" & JE.K_Amount_Sum & "], " & vbCrLf & _
           "    [" & FLD_TB_JE_DIFF & "] " & vbCrLf & _
           "INTO " & TBL_COMPLETENESS_DETAIL & " " & vbCrLf & _
           "FROM " & TBL_COMPLETENESS_CALCULATED & ";"
@@ -249,11 +249,11 @@ Public Function CheckDocumentBalance() As Boolean
     '---------------------------------------------------------------------------
     Debug.Print "********** 依傳票號碼彙總金額 **********"
     sql = "SELECT " & vbCrLf & _
-          "    [" & je.DocumentNumber & "], " & vbCrLf & _
-          "    SUM([" & je.K_Amount & "]) AS [" & je.K_Amount_Sum & "] " & vbCrLf & _
+          "    [" & JE.DocumentNumber & "], " & vbCrLf & _
+          "    SUM([" & JE.K_Amount & "]) AS [" & JE.K_Amount_Sum & "] " & vbCrLf & _
           "INTO " & TBL_DOCUMENT_BALANCE_SUM & " " & vbCrLf & _
           "FROM " & TBL_JE_IN_PERIOD & " " & vbCrLf & _
-          "GROUP BY [" & je.DocumentNumber & "];"
+          "GROUP BY [" & JE.DocumentNumber & "];"
     dbTarget.ExecuteNonQuery sql
     
     '---------------------------------------------------------------------------
@@ -264,7 +264,7 @@ Public Function CheckDocumentBalance() As Boolean
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_DOCUMENT_BALANCE_DIFF & " " & vbCrLf & _
           "FROM " & TBL_DOCUMENT_BALANCE_SUM & " " & vbCrLf & _
-          "WHERE [" & je.K_Amount_Sum & "] <> 0;"
+          "WHERE [" & JE.K_Amount_Sum & "] <> 0;"
     dbTarget.ExecuteNonQuery sql
     
     '---------------------------------------------------------------------------
@@ -272,13 +272,16 @@ Public Function CheckDocumentBalance() As Boolean
     ' 邏輯: JoinDatabase, WI_JOIN_MATCH_ONLY
     '---------------------------------------------------------------------------
     Debug.Print "********** 配對(若有)不平衡分錄之明細 **********"
+    '//FIXME: 明細表應該確實包含所有資料，並以計算欄位顯示差異結果
+    '//       對此，需要調整 [借貸不平] 的資料表輸出流程
+    '//       使其符合資料表名稱所屬定義
     sql = "SELECT " & vbCrLf & _
           "    P.*, " & vbCrLf & _
-          "    S.[" & je.K_Amount_Sum & "] " & vbCrLf & _
+          "    S.[" & JE.K_Amount_Sum & "] " & vbCrLf & _
           "INTO " & TBL_DOCUMENT_BALANCE_DETAIL & " " & vbCrLf & _
           "FROM " & TBL_JE_IN_PERIOD & " AS P" & vbCrLf & _
           "INNER JOIN " & TBL_DOCUMENT_BALANCE_DIFF & " AS S " & vbCrLf & _
-          "    ON p.[" & je.DocumentNumber & "] = S.[" & je.DocumentNumber & "];"
+          "    ON p.[" & JE.DocumentNumber & "] = S.[" & JE.DocumentNumber & "];"
     dbTarget.ExecuteNonQuery sql
     
     CheckDocumentBalance = True
@@ -326,8 +329,8 @@ Public Function CheckINF() As Boolean
     Debug.Print "********** 篩選期間內資料 **********"
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_JE_IN_PERIOD & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & je.name & " IN '" & dbSource.path & "' " & vbCrLf & _
-          "WHERE [" & je.PostDate & "] " & vbCrLf & _
+          "FROM " & JE.name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "WHERE [" & JE.PostDate & "] " & vbCrLf & _
           "BETWEEN #" & info.periodStart & "# AND #" & info.periodEnd & "#;"
     dbTarget.ExecuteNonQuery sql
     
@@ -340,7 +343,7 @@ Public Function CheckINF() As Boolean
     sql = "SELECT TOP 60 * " & vbCrLf & _
           "INTO " & TBL_INF_RANDOM & " " & vbCrLf & _
           "FROM " & TBL_JE_IN_PERIOD & " " & vbCrLf & _
-          "ORDER BY Rnd([" & je.K_UID & "]);"
+          "ORDER BY Rnd([" & JE.K_UID & "]);"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -351,7 +354,7 @@ Public Function CheckINF() As Boolean
     sql = "SELECT * " & vbCrLf & _
           "INTO " & TBL_INF_SORTED & " " & vbCrLf & _
           "FROM " & TBL_INF_RANDOM & " " & vbCrLf & _
-          "ORDER BY [" & je.DocumentNumber & "] ASC;"
+          "ORDER BY [" & JE.DocumentNumber & "] ASC;"
     dbTarget.ExecuteNonQuery sql
     
     CheckINF = True
@@ -384,17 +387,17 @@ Public Function CheckNullRecords() As Boolean
     Debug.Print "********** 開始空值記錄檢查 **********"
     Call CleanupTempTables(dbTarget, Array(TBL_NULL_ACCOUNT, TBL_NULL_DOCUMENT, TBL_NULL_DESCRIPTION))
     Debug.Print "********** 檢查會計科目編號空值 **********"
-    If Not dbSource.ExtractNullRecords(je.name, je.AccountNumber, TBL_NULL_ACCOUNT, destinationDb:=dbTarget.path) Then
+    If Not dbSource.ExtractNullRecords(JE.name, JE.AccountNumber, TBL_NULL_ACCOUNT, destinationDb:=dbTarget.path) Then
         Debug.Print "會計科目編號空值檢查失敗"
         Exit Function
     End If
     Debug.Print "********** 檢查傳票號碼空值 **********"
-    If Not dbSource.ExtractNullRecords(je.name, je.DocumentNumber, TBL_NULL_DOCUMENT, destinationDb:=dbTarget.path) Then
+    If Not dbSource.ExtractNullRecords(JE.name, JE.DocumentNumber, TBL_NULL_DOCUMENT, destinationDb:=dbTarget.path) Then
         Debug.Print "傳票號碼空值檢查失敗"
         Exit Function
     End If
     Debug.Print "********** 檢查傳票摘要空值 **********"
-    If Not dbSource.ExtractNullRecords(je.name, je.EntryDescription, TBL_NULL_DESCRIPTION, destinationDb:=dbTarget.path) Then
+    If Not dbSource.ExtractNullRecords(JE.name, JE.EntryDescription, TBL_NULL_DESCRIPTION, destinationDb:=dbTarget.path) Then
         Debug.Print "傳票摘要空值檢查失敗"
         Exit Function
     End If

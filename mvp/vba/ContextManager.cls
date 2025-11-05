@@ -13,13 +13,26 @@ Option Explicit
 ' Purpose:  上下文管理器，用於在各模組間傳遞專案運作所需的物件
 ' Methods:
 '===============================================================================
+Private m_DbSchema As DbSchema
+'--
 Private m_DbInput As DbAccess
 Private m_DbValid As DbAccess
 Private m_DbCriteria As DbAccess
 Private m_DbReport As DbAccess
+'--
 Private m_Info As EntityInfo
 Private m_Je As EntityJe
 Private m_Tb As EntityTb
+'------------------------------------------------------------------------------
+' 屬性：m_DbSchema
+' 功能：提供資料表與欄位的名稱定義
+' 型別：DatabaseSchema (用戶自定義型別物件)
+' 存取：Get – 唯讀
+' 備註：
+'------------------------------------------------------------------------------
+Public Property Get DbSchema() As DbSchema
+    Set DbSchema = m_DbSchema
+End Property
 '------------------------------------------------------------------------------
 ' 屬性：DbInput
 ' 功能：提供輸入資料的資料庫存取物件
@@ -79,8 +92,8 @@ End Property
 ' 存取：Get – 唯讀
 ' 備註：由外部模組初始化後傳入
 '------------------------------------------------------------------------------
-Public Property Get je() As EntityJe
-    Set je = m_Je
+Public Property Get JE() As EntityJe
+    Set JE = m_Je
 End Property
 '------------------------------------------------------------------------------
 ' 屬性：Tb
@@ -89,8 +102,8 @@ End Property
 ' 存取：Get – 唯讀
 ' 備註：由外部模組初始化後傳入
 '------------------------------------------------------------------------------
-Public Property Get tb() As EntityTb
-    Set tb = m_Tb
+Public Property Get TB() As EntityTb
+    Set TB = m_Tb
 End Property
 '------------------------------------------------------------------------------
 ' 屬性：Info
@@ -110,6 +123,7 @@ End Property
 ' 備註：呼叫後，所有 DbAccess 與實體物件皆已建立，可直接使用
 '------------------------------------------------------------------------------
 Public Sub Initialize()
+    Set m_DbSchema = New DbSchema
     Set m_DbInput = New DbAccess
     Set m_DbValid = New DbAccess
     Set m_DbCriteria = New DbAccess
@@ -118,3 +132,4 @@ Public Sub Initialize()
     Set m_Tb = New EntityTb
     Set m_Info = New EntityInfo
 End Sub
+

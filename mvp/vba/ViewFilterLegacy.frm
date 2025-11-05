@@ -14,7 +14,11 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-
+'===============================================================================
+' Form:     ViewFilterLegacy
+' Purpose:
+' Methods:
+'===============================================================================
 Public Event ExecuteCriterion()
 Public Event ShowCriteria()
 Public Event Submitted(ByVal dto As DataTransferObject)
@@ -88,16 +92,18 @@ Private Sub btnExecuteCriterion_Click()
     End If
 End Sub
 
-Private Sub btnExit_Click()
-    '...
-    '檢查並驗證
-    '...
-    Dim dto As New DataTransferObject
-    RaiseEvent Submitted(dto)
-End Sub
-
 Private Sub btnShowCriteria_Click()
     '...
     RaiseEvent ShowCriteria
 End Sub
 
+Private Sub btnExit_Click()
+    '...
+    '檢查並驗證
+    '...
+    Dim dto As New DataTransferObject
+    '...
+    Me.Hide
+    Unload Me
+    RaiseEvent Submitted(dto)
+End Sub

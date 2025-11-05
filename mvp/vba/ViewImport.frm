@@ -26,6 +26,7 @@ Public Event TbFieldMappingRequested()
 Public Event UpdateDateDimensionRequested(ByVal dto As DataTransferObject)
 Public Event TestDefaultRequested() '¶È§@´ú¸Õ¥Î³~
 Public Event Submitted(ByVal dto As DataTransferObject)
+Public Event BeepBoop()
 '--
 Private m_Format As String
 
@@ -49,6 +50,13 @@ Public Sub Initialize()
         .Selected(0) = True
         .Selected(6) = True
     End With
+End Sub
+
+Private Sub btnBeepBoop_Click()
+    '//WARNING: BEEP BOOP
+    '//WARNING: BEEP BOOP
+    '//WARNING: BEEP BOOP
+    RaiseEvent BeepBoop
 End Sub
 
 Private Sub btnConfigureHolidays_Click()

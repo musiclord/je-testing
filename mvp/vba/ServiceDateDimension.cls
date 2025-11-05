@@ -25,12 +25,12 @@ Option Explicit
 Private m_Context As ContextManager
 Private m_Db As DbAccess
 '--
-Private Const FLD_DATEKEY As String = "DateKey"                 '[DATE]   唯一主鍵，格式: YYYYMMDD
-Private Const FLD_YEAR As String = "Year"                       '[NUM]    西元年 (1900-?)
-Private Const FLD_MONTH As String = "Month"                     '[NUM]    月份 (1-12)
-Private Const FLD_DAY As String = "Day"                         '[NUM]    日 (1-31)
-Private Const FLD_DAY_OF_WEEK As String = "DayOfWeek"           '[NUM]    天 (1-7)
-Private Const FLD_IS_WEEKEND As String = "IsWeekend"            '[Y/N]    -1/0 (系統自動產生)
+Private Const FLD_DATEKEY As String = "DateKey"                   '[DATE]   唯一主鍵，格式: YYYYMMDD
+Private Const FLD_YEAR As String = "Year"                         '[NUM]    西元年 (1900-?)
+Private Const FLD_MONTH As String = "Month"                       '[NUM]    月份 (1-12)
+Private Const FLD_DAY As String = "Day"                           '[NUM]    日 (1-31)
+Private Const FLD_DAY_OF_WEEK As String = "DayOfWeek"             '[NUM]    天 (1-7)
+Private Const FLD_IS_WEEKEND As String = "IsWeekend"              '[Y/N]    -1/0 (系統自動產生)
 Private Const FLD_IS_HOLIDAYS As String = "IsHolidays"            '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
 Private Const FLD_IS_MAKEUP_DAYS As String = "IsMakeupDays"       '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
 Private Const FLD_HOLIDAYS_DESC As String = "HolidaysDesc"        '[CHAR]   假期說明 (選填)
@@ -101,7 +101,7 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
         rsHolidays.MoveNext
     Loop
     rsHolidays.Close
-    Debug.Print "  - 已匯入 " & totalCount & " 筆假日資料 (共影響 " & affectedCount & " 筆記錄)"
+    Debug.Print "  - 已套用 " & totalCount & " 筆假日資料 (共影響 " & affectedCount & " 筆記錄)"
 End Sub
 
 Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
@@ -140,7 +140,7 @@ Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
         rsMakeupDays.MoveNext
     Loop
     rsMakeupDays.Close
-    Debug.Print "  - 已匯入 " & totalCount & " 筆補班日資料 (共影響 " & affectedCount & " 筆記錄)"
+    Debug.Print "  - 已套用 " & totalCount & " 筆補班日資料 (共影響 " & affectedCount & " 筆記錄)"
 End Sub
 
 Public Sub CreateDateDimensionTable()
