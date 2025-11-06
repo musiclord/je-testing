@@ -14,10 +14,12 @@ Option Explicit
 ' Methods:
 '===============================================================================
 Private m_Db As DbAccess
+Private m_Schema As DbSchema
 Private m_Context As ContextManager
 
 Public Sub Initialize(context As ContextManager)
-    Set m_Db = context.DbReport
+    Set m_Db = context.DbReport     '資料庫物件
+    Set m_Schema = context.DbSchema '資料庫綱要
     Set m_Context = context
 End Sub
 
@@ -49,11 +51,11 @@ Public Function GenerateEngagementOverview() As Boolean
           "    '" & m_Context.info.CompanyName & "' AS [" & FLD_CLIENT & "], " & vbCrLf & _
           "    '" & m_Context.info.UserName & "' AS [" & FLD_PREPARED_BY & "], " & vbCrLf & _
           "    #" & m_Context.info.PrepStartDate & "# AS [" & FLD_PREP_START_DATE & "], " & vbCrLf & _
-          "    #" & m_Context.info.periodStart & "# AS [" & FLD_PERIOD_START & "], " & vbCrLf & _
-          "    #" & m_Context.info.periodEnd & "# AS [" & FLD_PERIOD_END & "], " & vbCrLf & _
+          "    #" & m_Context.info.PeriodStart & "# AS [" & FLD_PERIOD_START & "], " & vbCrLf & _
+          "    #" & m_Context.info.PeriodEnd & "# AS [" & FLD_PERIOD_END & "], " & vbCrLf & _
           "    #" & Date & "# AS [" & FLD_PREPARED_DATE & "] " & vbCrLf & _
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-          "FROM " & m_Context.JE.name & " IN '" & m_Context.DbInput.path & "';"
+          "FROM " & m_Schema.JE.Name & " IN '" & m_Context.DbInput.path & "';"
     m_Db.ExecuteNonQuery sql
     GenerateEngagementOverview = True
     Exit Function
@@ -70,6 +72,9 @@ Public Function GenerateDataOverview() As Boolean
     On Error GoTo ErrorHandler
     GenerateDataOverview = False
     '指定欄位名稱常數
+    '//
+    '//TODO: 這裡的常數應該刪掉，並歸給 DbSchema
+    '//
     Const FLD_JE_NAME As String = "分錄檔案名稱"
     Const FLD_JE_NET_AMOUNT As String = "分錄借貸淨額"
     Const FLD_JE_DEBIT_SUM As String = "分錄借方合計金額"
@@ -85,32 +90,32 @@ Public Function GenerateDataOverview() As Boolean
         Call m_Db.DropTable(tableName)
     End If
     '取得報表所需資料
-    Dim jeName As String
-    Dim jeNetAmount As Double
-    Dim jeDebitSum As Double
-    Dim jeCreditSum As Double
-    Dim jeRecordCount As Long
-    Dim tbName As String
-    Dim tbAccountCount As Long
-    jeName = m_Context.JE.name
-    jeNetAmount = m_Context.DbInput.GetTotal(m_Context.JE.name, m_Context.JE.K_Amount, "NetValue")
-    jeDebitSum = m_Context.DbInput.GetTotal(m_Context.JE.name, m_Context.JE.K_Amount, "PositiveValue")
-    jeCreditSum = m_Context.DbInput.GetTotal(m_Context.JE.name, m_Context.JE.K_Amount, "NegativeValue")
-    jeRecordCount = m_Context.DbInput.GetTotal(m_Context.JE.name, "", "DBCount")
-    tbName = m_Context.TB.name
-    tbAccountCount = m_Context.DbInput.GetTotal(m_Context.TB.name, "", "DBCount")
+    Dim JeName As String
+    Dim JeNetAmount As Double
+    Dim JeDebitSum As Double
+    Dim JeCreditSum As Double
+    Dim JeRecordCount As Long
+    Dim TbName As String
+    Dim TbAccountCount As Long
+    JeName = m_Context.DbSchema.JE.Name
+    JeNetAmount = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.JE.K_Amount, "NetValue")
+    JeDebitSum = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.JE.K_Amount, "PositiveValue")
+    JeCreditSum = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.JE.K_Amount, "NegativeValue")
+    JeRecordCount = m_Context.DbInput.GetTotal(m_Schema.JE.Name, "", "DBCount")
+    TbName = m_Schema.TB.Name
+    TbAccountCount = m_Context.DbInput.GetTotal(m_Schema.TB.Name, "", "DBCount")
     '處理資料庫查詢
     Dim sql As String
     sql = "SELECT TOP 1 " & vbCrLf & _
-          "    '" & jeName & "' AS [" & FLD_JE_NAME & "], " & vbCrLf & _
-          "    '" & jeNetAmount & "' AS [" & FLD_JE_NET_AMOUNT & "], " & vbCrLf & _
-          "    '" & jeDebitSum & "' AS [" & FLD_JE_DEBIT_SUM & "], " & vbCrLf & _
-          "    '" & jeCreditSum & "' AS [" & FLD_JE_CREDIT_SUM & "], " & vbCrLf & _
-          "    '" & jeRecordCount & "' AS [" & FLD_JE_RECORD_COUNT & "], " & vbCrLf & _
-          "    '" & tbName & "' AS [" & FLD_TB_NAME & "], " & vbCrLf & _
-          "    '" & tbAccountCount & "' AS [" & FLD_TB_ACCOUNT_COUNT & "] " & vbCrLf & _
+          "    '" & JeName & "' AS [" & FLD_JE_NAME & "], " & vbCrLf & _
+          "    '" & JeNetAmount & "' AS [" & FLD_JE_NET_AMOUNT & "], " & vbCrLf & _
+          "    '" & JeDebitSum & "' AS [" & FLD_JE_DEBIT_SUM & "], " & vbCrLf & _
+          "    '" & JeCreditSum & "' AS [" & FLD_JE_CREDIT_SUM & "], " & vbCrLf & _
+          "    '" & JeRecordCount & "' AS [" & FLD_JE_RECORD_COUNT & "], " & vbCrLf & _
+          "    '" & TbName & "' AS [" & FLD_TB_NAME & "], " & vbCrLf & _
+          "    '" & TbAccountCount & "' AS [" & FLD_TB_ACCOUNT_COUNT & "] " & vbCrLf & _
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-          "FROM " & m_Context.JE.name & " IN '" & m_Context.DbInput.path & "';"
+          "FROM " & m_Schema.JE.Name & " IN '" & m_Context.DbInput.path & "';"
     m_Db.ExecuteNonQuery sql
     GenerateDataOverview = True
     Exit Function
@@ -135,6 +140,10 @@ Public Function GenerateValidationOverview() As Boolean
     Const FLD_DOCUMENT_BALANCE_DIFF_COUNT As String = "借貸不平差異筆數"
     '指定資料表名稱至全域常數
     Dim tableName As String
+    '//
+    '//TODO: 下面所有 RPT_ 的常數也要歸給 DbSchema，但還需要
+    '//      看要怎麼設計，是否應該歸一為 m_Schema.Report 就好
+    '//
     tableName = RPT_VALIDATION_OVERVIEW
     '檢查已存在資料表
     If m_Context.DbReport.TableExists(tableName) Then
@@ -144,26 +153,26 @@ Public Function GenerateValidationOverview() As Boolean
     Dim nullAccountCount As Double
     Dim nullDocumentCount As Double
     Dim nullDescriptionCount As Double
-    Dim notInPeriodCount As Double
-    Dim completenessDiffCount As Double
+    Dim NotInPeriodCount As Double
+    Dim CompletenessDiffCount As Double
     Dim documentDiffCount As Double
-    nullAccountCount = m_Context.DbValid.GetTotal(TBL_NULL_ACCOUNT, "", "DBCount")
-    nullDocumentCount = m_Context.DbValid.GetTotal(TBL_NULL_DOCUMENT, "", "DBCount")
-    nullDescriptionCount = m_Context.DbValid.GetTotal(TBL_NULL_DESCRIPTION, "", "DBCount")
-    notInPeriodCount = m_Context.DbValid.GetTotal(TBL_JE_NOT_IN_PERIOD, "", "DBCount")
-    completenessDiffCount = m_Context.DbValid.GetTotal(TBL_COMPLETENESS_DIFF, "", "DBCount")
-    documentDiffCount = m_Context.DbValid.GetTotal(TBL_DOCUMENT_BALANCE_DIFF, "", "DBCount")
+    nullAccountCount = m_Context.DbValid.GetTotal(m_Schema.Tables.NullAccount, "", "DBCount")
+    nullDocumentCount = m_Context.DbValid.GetTotal(m_Schema.Tables.NullDocument, "", "DBCount")
+    nullDescriptionCount = m_Context.DbValid.GetTotal(m_Schema.Tables.NullDescription, "", "DBCount")
+    NotInPeriodCount = m_Context.DbValid.GetTotal(m_Schema.Tables.JeNotInPeriod, "", "DBCount")
+    CompletenessDiffCount = m_Context.DbValid.GetTotal(m_Schema.Tables.CompletenessDiff, "", "DBCount")
+    documentDiffCount = m_Context.DbValid.GetTotal(m_Schema.Tables.DocumentBalanceDiff, "", "DBCount")
     '處理資料庫查詢
     Dim sql As String
     sql = "SELECT TOP 1 " & vbCrLf & _
           "    '" & nullAccountCount & "' AS [" & FLD_NULL_ACCOUNT_RECORD_COUNT & "], " & vbCrLf & _
           "    '" & nullDocumentCount & "' AS [" & FLD_NULL_DOCUMENT_RECORD_COUNT & "], " & vbCrLf & _
           "    '" & nullDescriptionCount & "' AS [" & FLD_NULL_DESCRIPTION_RECORD_COUNT & "], " & vbCrLf & _
-          "    '" & notInPeriodCount & "' AS [" & FLD_NOT_IN_PERIOD_COUNT & "], " & vbCrLf & _
-          "    '" & completenessDiffCount & "' AS [" & FLD_COMEPLETENESS_DIFF_COUNT & "], " & vbCrLf & _
+          "    '" & NotInPeriodCount & "' AS [" & FLD_NOT_IN_PERIOD_COUNT & "], " & vbCrLf & _
+          "    '" & CompletenessDiffCount & "' AS [" & FLD_COMEPLETENESS_DIFF_COUNT & "], " & vbCrLf & _
           "    '" & documentDiffCount & "' AS [" & FLD_DOCUMENT_BALANCE_DIFF_COUNT & "] " & vbCrLf & _
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-          "FROM " & m_Context.JE.name & " IN '" & m_Context.DbInput.path & "';"
+          "FROM " & m_Schema.JE.Name & " IN '" & m_Context.DbInput.path & "';"
     m_Db.ExecuteNonQuery sql
     GenerateValidationOverview = True
     Exit Function
@@ -189,7 +198,7 @@ Public Function GenerateCompletenessDetail() As Boolean
     Dim sql As String
     sql = "SELECT * " & vbCrLf & _
           "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-          "FROM " & TBL_COMPLETENESS_DETAIL & " IN '" & m_Context.DbValid.path & "';"
+          "FROM " & m_Schema.Tables.CompletenessDetail & " IN '" & m_Context.DbValid.path & "';"
     m_Db.ExecuteNonQuery sql
     GenerateCompletenessDetail = True
     Exit Function
@@ -206,7 +215,7 @@ Public Function GenerateDocumentBalanceDetail() As Boolean
     GenerateDocumentBalanceDetail = False
     '指定資料表名稱至全域常數
     Dim tableName As String
-    tableName = RPT_DOCUMENT_BALANCE_DETAIL
+    tableName = m_Schema.ReportDocumentBalanceDetail.Name
     '檢查已存在資料表
     If m_Context.DbReport.TableExists(tableName) Then
         Call m_Context.DbReport.DropTable(tableName)

@@ -82,6 +82,8 @@ Public Function ExportTemplate() As Boolean
     End If
     '查詢科目
     Dim sql As String
+    '//TODO: 從這裡分支出問題，因為這裡要跨服務使用資料表欄位
+    '//      因此需先設計好 DbSchema 和 Entity 間的邏輯
     sql = "SELECT * " & vbCrLf & _
           "    []," & vbCrLf & _
           "" & vbCrLf & _

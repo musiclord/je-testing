@@ -16,7 +16,7 @@ Option Explicit
 Private Const MAX_ROWS As Long = 1000
 Private m_Context As ContextManager
 Private m_Db As DbAccess
-Private m_Info As EntityInfo
+Private m_Info As ProjectConfiguration
 Private m_Ace As New Access.Application
 
 Public Sub Initialize(context As ContextManager)
@@ -63,7 +63,7 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
             '寫入欄位名稱列
             Dim col As Long
             For col = 0 To rs.Fields.Count - 1
-                ws.Cells(currentRow, col + 1).Value = rs.Fields(col).name
+                ws.Cells(currentRow, col + 1).Value = rs.Fields(col).Name
             Next col
             '格式化欄位名稱列
             With ws.Range(ws.Cells(currentRow, 1), ws.Cells(currentRow, rs.Fields.Count))
@@ -130,7 +130,7 @@ Public Function ShowEngagementOverview() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowEngagementOverview = True
@@ -154,7 +154,7 @@ Public Function ShowValidationReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowValidationReport = True
@@ -174,7 +174,7 @@ Public Function ShowCompletenessReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessReport = True
@@ -194,7 +194,7 @@ Public Function ShowDocumentBalanceReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowDocumentBalanceReport = True
@@ -215,7 +215,7 @@ Public Function ShowPreparerSummary() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     'Call RenderTablesToWorksheet(ws, tables)
     ShowPreparerSummary = True
@@ -235,7 +235,7 @@ Public Function ShowCompletenessDiffSummary() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessDiffSummary = True
@@ -255,7 +255,7 @@ Public Function ShowCompletenessReconciliationReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessReconciliationReport = True
@@ -275,7 +275,7 @@ Public Function ShowINFReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowINFReport = True
@@ -295,7 +295,7 @@ Public Function ShowHRCSummary() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCSummary = True
@@ -316,7 +316,7 @@ Public Function ShowHRCReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCReport = True
@@ -336,7 +336,7 @@ Public Function ShowHRCDetails() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCDetails = True
@@ -356,7 +356,7 @@ Public Function PostClosingEntries() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = PreviewSheet
-    ws.name = sheetName
+    ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     PostClosingEntries = True

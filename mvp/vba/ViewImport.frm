@@ -177,8 +177,8 @@ Private Sub btnApplyDateConfig_Click()
     End If
     '組裝 DTO 物件交給 Presenter 處理
     Dim dto As New DataTransferObject
-    dto.periodStart = CDate(Me.txtbPeriodStart.Value)
-    dto.periodEnd = CDate(Me.txtbPeriodEnd.Value)
+    dto.PeriodStart = CDate(Me.txtbPeriodStart.Value)
+    dto.PeriodEnd = CDate(Me.txtbPeriodEnd.Value)
     Set dto.weekendIndices = weekendIndices
     RaiseEvent UpdateDateDimensionRequested(dto)
 End Sub

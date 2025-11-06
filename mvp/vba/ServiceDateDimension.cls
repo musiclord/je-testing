@@ -24,17 +24,7 @@ Option Explicit
 '--
 Private m_Context As ContextManager
 Private m_Db As DbAccess
-'--
-Private Const FLD_DATEKEY As String = "DateKey"                   '[DATE]   唯一主鍵，格式: YYYYMMDD
-Private Const FLD_YEAR As String = "Year"                         '[NUM]    西元年 (1900-?)
-Private Const FLD_MONTH As String = "Month"                       '[NUM]    月份 (1-12)
-Private Const FLD_DAY As String = "Day"                           '[NUM]    日 (1-31)
-Private Const FLD_DAY_OF_WEEK As String = "DayOfWeek"             '[NUM]    天 (1-7)
-Private Const FLD_IS_WEEKEND As String = "IsWeekend"              '[Y/N]    -1/0 (系統自動產生)
-Private Const FLD_IS_HOLIDAYS As String = "IsHolidays"            '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
-Private Const FLD_IS_MAKEUP_DAYS As String = "IsMakeupDays"       '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
-Private Const FLD_HOLIDAYS_DESC As String = "HolidaysDesc"        '[CHAR]   假期說明 (選填)
-Private Const FLD_MAKEUP_DAYS_DESC As String = "MakeupDaysDesc"   '[CHAR]   補班日說明 (選填)
+Private m_Schema As DbSchema
 
 Public Sub Initialize(context As ContextManager)
     Set m_Context = context
@@ -55,12 +45,12 @@ Public Sub MergeWeekends(ByVal selectedDays As Variant)
     Next item
     '清除欄位資料
     Dim sql As String
-    sql = "UPDATE " & TBL_DATE_DIMENSION & " SET [" & FLD_IS_WEEKEND & "] = False;"
+    sql = "UPDATE " & TBL_DATE_DIMENSION & " SET [" & m_Schema.DateDimension.IsWeekend & "] = False;"
     Call m_Db.ExecuteNonQuery(sql)
     'Weekday(d) 默認星期日為第一天，回傳編碼
     sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
-          "SET [" & FLD_IS_WEEKEND & "] = True " & vbCrLf & _
-          "WHERE Weekday([" & FLD_DATEKEY & "]) IN (" & dayList & ");"
+          "SET [" & m_Schema.DateDimension.IsWeekend & "] = True " & vbCrLf & _
+          "WHERE Weekday([" & m_Schema.DateDimension.DateKey & "]) IN (" & dayList & ");"
     affectedCount = m_Db.ExecuteNonQuery(sql)
     Debug.Print "  - 已套用 " & selectedDays.Count & " 個週末設定 (共影響 " & affectedCount & " 筆記錄)"
 End Sub
@@ -83,19 +73,19 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
     Do While Not rsHolidays.EOF
         '預期 rsHolidays 有欄位 Date(DATE), Description(TEXT)
         Dim holidayDate As Variant
-        Dim holidayDesc As String
+        Dim HolidayDesc As String
         holidayDate = rsHolidays.Fields(0).Value
         If rsHolidays.Fields.Count > 1 And Not IsNull(rsHolidays.Fields(1).Value) Then
-            holidayDesc = rsHolidays.Fields(1).Value
+            HolidayDesc = rsHolidays.Fields(1).Value
         Else
-            holidayDesc = vbNullString
+            HolidayDesc = vbNullString
         End If
         If IsDate(holidayDate) Then
             Dim sql As String
             sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
-                  "SET [" & FLD_IS_HOLIDAYS & "] = True, " & vbCrLf & _
-                  "    [" & FLD_HOLIDAYS_DESC & "] = '" & Replace(holidayDesc, "'", "''") & "' " & vbCrLf & _
-                  "WHERE [" & FLD_DATEKEY & "] = #" & Format(CDate(holidayDate), "mm/dd/yyyy") & "#;"
+                  "SET [" & m_Schema.DateDimension.IsHolidays & "] = True, " & vbCrLf & _
+                  "    [" & m_Schema.DateDimension.HolidaysDesc & "] = '" & Replace(HolidayDesc, "'", "''") & "' " & vbCrLf & _
+                  "WHERE [" & m_Schema.DateDimension.DateKey & "] = #" & Format(CDate(holidayDate), "mm/dd/yyyy") & "#;"
             affectedCount = affectedCount + m_Db.ExecuteNonQuery(sql)
         End If
         rsHolidays.MoveNext
@@ -131,10 +121,10 @@ Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
         End If
         If IsDate(makeupDate) Then
             Dim sql As String
-            sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
-                  "SET [" & FLD_IS_MAKEUP_DAYS & "] = True, " & vbCrLf & _
-                  "    [" & FLD_MAKEUP_DAYS_DESC & "] = '" & Replace(makeupDesc, "'", "''") & "' " & vbCrLf & _
-                  "WHERE [" & FLD_DATEKEY & "] = #" & Format(CDate(makeupDate), "mm/dd/yyyy") & "#;"
+            sql = "UPDATE " & m_Schema.DateDimension.Name & " " & vbCrLf & _
+                  "SET [" & m_Schema.DateDimension.IsMakeupDays & "] = True, " & vbCrLf & _
+                  "    [" & m_Schema.DateDimension.MakeupDaysDesc & "] = '" & Replace(makeupDesc, "'", "''") & "' " & vbCrLf & _
+                  "WHERE [" & m_Schema.DateDimension.DateKey & "] = #" & Format(CDate(makeupDate), "mm/dd/yyyy") & "#;"
             affectedCount = affectedCount + m_Db.ExecuteNonQuery(sql)
         End If
         rsMakeupDays.MoveNext
@@ -149,8 +139,8 @@ Public Sub CreateDateDimensionTable()
     '---------------------------------------------------------------------------
     Dim dateStart As Date
     Dim dateEnd As Date
-    dateStart = m_Context.info.periodStart
-    dateEnd = m_Context.info.periodEnd
+    dateStart = m_Context.info.PeriodStart
+    dateEnd = m_Context.info.PeriodEnd
     '檢查日期邏輯
     If dateStart = 0 Or dateEnd = 0 Or dateStart > dateEnd Then Exit Sub
     '檢查資料表是否存在
@@ -160,40 +150,41 @@ Public Sub CreateDateDimensionTable()
     '建立日期維度表
     Dim sql As String
     sql = "CREATE TABLE " & TBL_DATE_DIMENSION & " ( " & vbCrLf & _
-          "    [" & FLD_DATEKEY & "] DATE, " & vbCrLf & _
-          "    [" & FLD_YEAR & "] SHORT, " & vbCrLf & _
-          "    [" & FLD_MONTH & "] SHORT, " & vbCrLf & _
-          "    [" & FLD_DAY & "] SHORT, " & vbCrLf & _
-          "    [" & FLD_DAY_OF_WEEK & "] SHORT, " & vbCrLf & _
-          "    [" & FLD_IS_WEEKEND & "] YESNO, " & vbCrLf & _
-          "    [" & FLD_IS_HOLIDAYS & "] YESNO," & vbCrLf & _
-          "    [" & FLD_IS_MAKEUP_DAYS & "] YESNO," & vbCrLf & _
-          "    [" & FLD_HOLIDAYS_DESC & "] TEXT(50)," & vbCrLf & _
-          "    [" & FLD_MAKEUP_DAYS_DESC & "] TEXT(50)," & vbCrLf & _
-          "    CONSTRAINT PK_" & TBL_DATE_DIMENSION & " PRIMARY KEY ([" & FLD_DATEKEY & "])" & vbCrLf & _
+          "    [" & m_Schema.DateDimension.DateKey & "] DATE, " & vbCrLf & _
+          "    [" & m_Schema.DateDimension.Year & "] SHORT, " & vbCrLf & _
+          "    [" & m_Schema.DateDimension.Month & "] SHORT, " & vbCrLf & _
+          "    [" & m_Schema.DateDimension.Day & "] SHORT, " & vbCrLf & _
+          "    [" & m_Schema.DateDimension.DayOfWeek & "] SHORT, " & vbCrLf & _
+          "    [" & m_Schema.DateDimension.IsWeekend & "] YESNO, " & vbCrLf & _
+          "    [" & m_Schema.DateDimension.IsHolidays & "] YESNO," & vbCrLf & _
+          "    [" & m_Schema.DateDimension.IsMakeupDays & "] YESNO," & vbCrLf & _
+          "    [" & m_Schema.DateDimension.HolidaysDesc & "] TEXT(50)," & vbCrLf & _
+          "    [" & m_Schema.DateDimension.MakeupDaysDesc & "] TEXT(50)," & vbCrLf & _
+          "    CONSTRAINT PK_" & m_Schema.DateDimension.Name & " PRIMARY KEY ([" & m_Schema.DateDimension.DateKey & "])" & vbCrLf & _
           ");"
     Call m_Db.ExecuteNonQuery(sql)
     '遍歷新增日期表
     Dim rs As DAO.Recordset
     Set rs = m_Db.Database.OpenRecordset(TBL_DATE_DIMENSION, dbOpenDynaset)
+    '將 currentDate 設為 dateStart 的前一年，擴充可查詢之日期範圍
     Dim currentDate As Date
-    currentDate = dateStart
+    currentDate = DateSerial(Year(dateStart) - 1, Month(dateStart), Day(dateStart))
     '逐日產生日期記錄，直到期間結束日
     Do While currentDate <= dateEnd
         Dim dow As Integer
         dow = Weekday(currentDate, vbSunday)
         '新增記錄並填入欄位值
         rs.AddNew
-        rs(FLD_DATEKEY).Value = currentDate
-        rs(FLD_YEAR).Value = Year(currentDate)
-        rs(FLD_MONTH).Value = Month(currentDate)
-        rs(FLD_DAY).Value = Day(currentDate)
-        rs(FLD_DAY_OF_WEEK).Value = dow
-        rs(FLD_IS_WEEKEND).Value = (dow = vbSunday Or dow = vbSaturday)
-        rs(FLD_IS_HOLIDAYS).Value = False
-        rs(FLD_IS_MAKEUP_DAYS).Value = False
-        rs(FLD_HOLIDAYS_DESC).Value = vbNullString
-        rs(FLD_MAKEUP_DAYS_DESC).Value = vbNullString
+        rs(m_Schema.DateDimension.DateKey).Value = currentDate
+        rs(m_Schema.DateDimension.Year).Value = Year(currentDate)
+        rs(m_Schema.DateDimension.Month).Value = Month(currentDate)
+        rs(m_Schema.DateDimension.Day).Value = Day(currentDate)
+        rs(m_Schema.DateDimension.DayOfWeek).Value = dow
+        rs(m_Schema.DateDimension.IsWeekend).Value = (dow = vbSunday Or dow = vbSaturday)
+        rs(m_Schema.DateDimension.IsHolidays).Value = False
+        rs(m_Schema.DateDimension.IsMakeupDays).Value = False
+        rs(m_Schema.DateDimension.HolidaysDesc).Value = vbNullString
+        rs(m_Schema.DateDimension.MakeupDaysDesc).Value = vbNullString
         rs.Update
         '遞增下一日
         currentDate = DateAdd("d", 1, currentDate)

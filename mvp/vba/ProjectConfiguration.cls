@@ -2,15 +2,27 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "EntityInfo"
+Attribute VB_Name = "ProjectConfiguration"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Class: EntityInfo
+' Class: ProjectConfiguration
 ' Purpose: 用來處理專案所需各類資訊的資料實體
+'
+' Responsibility:
+'   - 儲存專案基本資訊（公司名稱、測試期間）
+'   - 管理使用者資訊（姓名、網域）
+'   - 提供工作日設定
+'
+' Usage:
+'   Dim info As ProjectConfiguration
+'   Set info = context.ProjectConfig
+'
+'   MsgBox "公司: " & info.CompanyName & vbCrLf & _
+'          "期間: " & info.PeriodStart & " ~ " & info.PeriodEnd
 '===============================================================================
 '--使用者資訊
 Private m_WSHnet As WshNetwork
@@ -23,14 +35,6 @@ Private m_CompanyName As String     '--公司名稱
 Private m_PeriodStart As Date       '--測試資料期間開始日
 Private m_PeriodEnd As Date         '--測試資料期間結束日
 Private m_PrepStartDate As Date     '--財報準備期間開始日
-'--工作日設定
-Private m_Monday As Boolean
-Private m_Tuesday As Boolean
-Private m_Wednesday As Boolean
-Private m_Thursday As Boolean
-Private m_Friday As Boolean
-Private m_Saturday As Boolean
-Private m_Sunday As Boolean
 
 Public Sub Initialize()
     Set m_WSHnet = New WshNetwork
@@ -51,17 +55,17 @@ Public Property Get UserFullName() As String
     Let UserFullName = m_UserFullName
 End Property
 '--測試資料期間開始日
-Public Property Get periodStart() As Date
-    Let periodStart = m_PeriodStart
+Public Property Get PeriodStart() As Date
+    Let PeriodStart = m_PeriodStart
 End Property
-Public Property Let periodStart(ByVal Value As Date)
+Public Property Let PeriodStart(ByVal Value As Date)
     Let m_PeriodStart = Value
 End Property
 '--測試資料期間結束日
-Public Property Get periodEnd() As Date
-    Let periodEnd = m_PeriodEnd
+Public Property Get PeriodEnd() As Date
+    Let PeriodEnd = m_PeriodEnd
 End Property
-Public Property Let periodEnd(ByVal Value As Date)
+Public Property Let PeriodEnd(ByVal Value As Date)
     Let m_PeriodEnd = Value
 End Property
 '--財報準備期間開始日

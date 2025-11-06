@@ -54,7 +54,7 @@ Private Sub UpdateProjectList()
     Set rootFolder = fso.GetFolder(ThisWorkbook.path)
     '收集子目錄
     For Each subFolder In rootFolder.SubFolders
-        projects.Add subFolder.name
+        projects.Add subFolder.Name
     Next subFolder
     '更新目錄清單
     Me.lstProjectList.Clear

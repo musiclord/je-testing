@@ -20,9 +20,9 @@ Private m_DbValid As DbAccess
 Private m_DbCriteria As DbAccess
 Private m_DbReport As DbAccess
 '--
-Private m_Info As EntityInfo
-Private m_Je As EntityJe
-Private m_Tb As EntityTb
+Private m_Info As ProjectConfiguration
+Private m_JE As FieldMapperJe
+Private m_TB As FieldMapperTb
 '------------------------------------------------------------------------------
 ' 屬性：m_DbSchema
 ' 功能：提供資料表與欄位的名稱定義
@@ -86,33 +86,13 @@ Public Property Set DbReport(ByVal db As DbAccess)
     Set m_DbReport = db
 End Property
 '------------------------------------------------------------------------------
-' 屬性：Je
-' 功能：提供 JE (分錄) 資料實體
-' 型別：EntityJe (物件)
-' 存取：Get – 唯讀
-' 備註：由外部模組初始化後傳入
-'------------------------------------------------------------------------------
-Public Property Get JE() As EntityJe
-    Set JE = m_Je
-End Property
-'------------------------------------------------------------------------------
-' 屬性：Tb
-' 功能：提供 TB (試算表/總帳) 資料實體
-' 型別：EntityTb (物件)
-' 存取：Get – 唯讀
-' 備註：由外部模組初始化後傳入
-'------------------------------------------------------------------------------
-Public Property Get TB() As EntityTb
-    Set TB = m_Tb
-End Property
-'------------------------------------------------------------------------------
 ' 屬性：Info
-' 功能：提供專案資訊的資料實體 (EntityInfo)
-' 型別：EntityInfo (物件)
+' 功能：提供專案資訊的資料實體 (ProjectConfiguration)
+' 型別：ProjectConfiguration (物件)
 ' 存取：Get – 唯讀
 ' 備註：由外部模組初始化後傳入，用於存放專案層級的基本資訊
 '------------------------------------------------------------------------------
-Public Property Get info() As EntityInfo
+Public Property Get info() As ProjectConfiguration
     Set info = m_Info
 End Property
 '------------------------------------------------------------------------------
@@ -128,8 +108,10 @@ Public Sub Initialize()
     Set m_DbValid = New DbAccess
     Set m_DbCriteria = New DbAccess
     Set m_DbReport = New DbAccess
-    Set m_Je = New EntityJe
-    Set m_Tb = New EntityTb
-    Set m_Info = New EntityInfo
+    Set m_JE = New FieldMapperJe
+    Set m_TB = New FieldMapperTb
+    Set m_Info = New ProjectConfiguration
+    '-- 封裝至 Schema，使外部呼叫皆以 Schema 為主
+    Call m_DbSchema.Initialize(m_JE, m_TB)
 End Sub
 

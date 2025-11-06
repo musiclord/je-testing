@@ -2,69 +2,160 @@ Attribute VB_Name = "SchemaTypes"
 Option Explicit
 '===============================================================================
 ' Module: SchemaTypes
-' Purpose: 定義 DatabaseSchema 使用的使用者自訂類型
+' Purpose: 定義 DbSchema 使用的使用者自訂類型 (User-Defined Type)
 '
-' Note: VBA 不允許在類別模組中定義 Public Type，
-'       因此將類型定義移至標準模組
+' Note:
+'   - VBA 不允許在類別模組中定義 Public Type，因此將類型定義移至標準模組。
+'   - 只定義「系統產生」的標準化欄位（如 K_Amount, ACCOUNT_MERGED）
+'   - 不定義「使用者自訂」的欄位（如 DebitAmount, AccountNumber）
+'   - 使用者自訂欄位由 FieldMapper 管理
+'
+' Naming Convention:
+'   - Type 名稱: TypeTable{TableName} / TypeReport{ReportName}
+'   - 欄位名稱: PascalCase（與實際資料庫欄位名稱一致）
+'
+' Dependencies:
+'   - DbSchema.cls: 使用這些 UDT 建立階層式結構
 '===============================================================================
 
+'===============================================================================
+' 資料表類型定義
 '-------------------------------------------------------------------------------
-' 巢狀類別：Tables (資料表名稱)
+' 資料表: DATE_DIMENSION
 '-------------------------------------------------------------------------------
-Public Type TypeTables
-    '-- 通用暫存表
-    Temp As String                      ' 通用暫存表
-    '-- 核心主資料表
-    JE As String                        ' JE - 分錄明細資料
-    TB As String                        ' TB - 試算表資料
-    DateDimension As String             ' 日期維度表
-    '-- JE 衍生資料表
+Public Type TypeTableDateDimension
+    Name As String                      ' 資料表名稱
+    '-- 欄位
+    DateKey As String                   '[DATE]   唯一主鍵，格式: YYYYMMDD
+    Year As String                      '[NUM]    西元年 (1900-?)
+    Month As String                     '[NUM]    月份 (1-12)
+    Day As String                       '[NUM]    日 (1-31)
+    DayOfWeek As String                 '[NUM]    天 (1-7)
+    IsWeekend As String                 '[Y/N]    -1/0 (系統自動產生)
+    IsHolidays As String                '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
+    IsMakeupDays As String              '[Y/N]    -1/0 (由使用者上傳的資料覆寫)
+    HolidaysDesc As String              '[CHAR]   假期說明 (選填)
+    MakeupDaysDesc As String            '[CHAR]   補班日說明 (選填)
+End Type
+'-------------------------------------------------------------------------------
+' 資料表: ACCOUNT_MAPPING
+'-------------------------------------------------------------------------------
+Public Type TypeTableAccountMapping
+    Name As String                      ' 資料表名稱
+    '-- 欄位
+    AccountCode As String               ' 科目編號
+    AccountName As String               ' 科目名稱
+    AccountStandardized As String       ' 科目分類名稱
+    IsActive As String                  ' 是否啟用
+    CreatedDate As String               ' 建立日期
+End Type
+'-------------------------------------------------------------------------------
+' 資料表: 系統衍生資料表集合
+'-------------------------------------------------------------------------------
+Public Type TypeSystemTables
     JeInPeriod As String                ' 期間內的 JE
     JeNotInPeriod As String             ' 期間外的 JE
     JeAccountSum As String              ' JE 按科目彙總
-    '-- 完整性測試
-    CompletenessCalculated As String    ' 計算結果
-    CompletenessDiff As String          ' 差異明細
-    CompletenessDetail As String        ' 完整性測試明細表
-    '-- 借貸平衡測試
-    DocumentBalanceSum As String        ' 按傳票號碼彙總金額
-    DocumentBalanceDiff As String       ' 不平衡明細
-    DocumentBalanceDetail As String     ' 借貸不平測試明細表
-    '-- INF 測試
-    InfRandom As String                 ' 隨機抽樣
-    InfSorted As String                 ' 排序後資料
-    '-- 空值檢查
+    CompletenessCalculated As String    ' 完整性計算結果
+    CompletenessDiff As String          ' 完整性差異結果
+    CompletenessDetail As String        ' 完整性測試明細
+    DocumentBalanceSum As String        ' 傳票彙總
+    DocumentBalanceDiff As String       ' 借貸不平結果
+    DocumentBalanceDetail As String     ' 借貸不平明細
+    InfRandom As String                 ' INF 隨機抽樣
+    InfSorted As String                 ' INF 排序資料
     NullAccount As String               ' 空白科目記錄
     NullDocument As String              ' 空白傳票記錄
     NullDescription As String           ' 空白摘要記錄
-    '-- 科目配對
-    AccountMapping As String            ' 科目對應主表
 End Type
 '-------------------------------------------------------------------------------
-' 巢狀類別：Fields (共用欄位名稱)
+' 欄位表: 系統衍生欄位表集合
 '-------------------------------------------------------------------------------
-Public Type TypeFields
-    '-- 通用欄位
-    AccountMerged As String             ' 統一的科目編號
-    DateKey As String                   ' 日期鍵值 (YYYYMMDD)
-    Amount As String                    ' 金額
-    '-- 完整性檢查專用
-    TbJeDiff As String                  ' TB 與 JE 差異金額
-    '-- 科目對應專用
-    AccountCode As String               ' 科目編號
-    AccountName As String               ' 科目名稱
-    CategoryName As String              ' 標準分類名稱
+Public Type TypeSystemFields
+    '-- 系統產生的標準化欄位
+    JeUid As String                     ' JE 的唯一主鍵
+    JeAmount As String                  ' JE 的計算金額
+    JeAmountSum As String               ' JE 的計算金額彙總
+    TbAmount As String                  ' TB 的計算金額
+    AccountMerged As String             ' 合併 JE 和 TB 科目編號
+    TbJeDiff As String                  ' JE 和 TB 差異金額
+End Type
+'===============================================================================
+' 報表
+'-------------------------------------------------------------------------------
+' 報表: ENGAGEMENT_OVERVIEW
+'-------------------------------------------------------------------------------
+Public Type TypeReportEngagementOverview
+    Name As String                      ' 報表名稱
+    '-- 欄位
+    Client As String                    ' 客戶
+    PrepStartDate As String             ' 財報準備期間開始日
+    PeriodStart As String               ' 資料期間開始日
+    PeriodEnd As String                 ' 資料期間結束日
+    PreparedBy As String                ' 報表生產人
+    PreparedDate As String              ' 報表生產時間
 End Type
 '-------------------------------------------------------------------------------
-' 巢狀類別：Reports (報表名稱)
+' 報表：DATA_OVERVIEW
 '-------------------------------------------------------------------------------
-Public Type TypeReports
-    EngagementOverview As String        ' 專案總覽
-    DataOverview As String              ' 資料總覽
-    ValidationOverview As String        ' 驗證總覽
-    CompletenessDetail As String        ' 完整性明細
-    DocumentBalanceDetail As String     ' 借貸平衡明細
-    InfSampleDetail As String           ' INF 抽樣明細
-    AccountMappingInfo As String        ' 科目對應資訊
-    FieldMappingInfo As String          ' 欄位對應資訊
+Public Type TypeReportDataOverview
+    Name As String                      ' 報表名稱
+    '-- 欄位
+    JeName As String                    ' 分錄檔案名稱
+    JeNetAmount As String               ' 分錄借貸淨額
+    JeDebitSum As String                ' 分錄借方合計金額
+    JeCreditSum As String               ' 分錄貸方合計金額
+    JeRecordCount As String             ' 分錄筆數
+    TbName As String                    ' 試算表檔案名稱
+    TbAccountCount As String            ' 試算表科目數量
 End Type
+'-------------------------------------------------------------------------------
+' 報表：VALIDATION_OVERVIEW
+'-------------------------------------------------------------------------------
+Public Type TypeReportValidationOverview
+    Name As String                      ' 報表名稱
+    '-- 欄位
+    NullAccountRecordCount As String    ' 無會計科目編號筆數
+    NullDocumentRecordCount As String   ' 無傳票號碼筆數
+    NullDescriptionRecordCount As String ' 無傳票摘要筆數
+    NotInPeriodCount As String          ' 傳票核准日不在會計期間內筆數
+    CompletenessDiffCount As String     ' 完整性差異筆數
+    DocumentBalanceDiffCount As String  ' 借貸不平差異筆數
+End Type
+'-------------------------------------------------------------------------------
+' 報表：COMPLETENESS_DETAIL
+'-------------------------------------------------------------------------------
+Public Type TypeReportCompletenessDetail
+    Name As String                      ' 報表名稱
+    '-- 此報表直接複製 COMPLETENESS_DETAIL 表，欄位與來源表相同
+    '-- 因此不需要額外定義欄位（或參考 TypeTableCompletenessDetail）
+End Type
+'-------------------------------------------------------------------------------
+' 報表：DOCUMENT_BALANCE_DETAIL
+'-------------------------------------------------------------------------------
+Public Type TypeReportDocumentBalanceDetail
+    Name As String                      ' 報表名稱
+    '-- 此報表直接複製 DOCUMENT_BALANCE_DETAIL 表
+End Type
+'-------------------------------------------------------------------------------
+' 報表：INF_SAMPLE_DETAIL
+'-------------------------------------------------------------------------------
+Public Type TypeReportInfSampleDetail
+    Name As String                      ' 報表名稱
+    '-- 欄位待定義（根據實際需求）
+End Type
+'-------------------------------------------------------------------------------
+' 報表：ACCOUNT_MAPPING_INFO
+'-------------------------------------------------------------------------------
+Public Type TypeReportAccountMappingInfo
+    Name As String                      ' 報表名稱
+    '-- 欄位待定義（根據實際需求）
+End Type
+'-------------------------------------------------------------------------------
+' 報表：FIELD_MAPPING_INFO
+'-------------------------------------------------------------------------------
+Public Type TypeReportFieldMappingInfo
+    Name As String                      ' 報表名稱
+    '-- 欄位待定義（根據實際需求）
+End Type
+

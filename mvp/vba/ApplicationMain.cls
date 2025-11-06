@@ -95,7 +95,7 @@ Private Sub vProject_SelectProject(ByVal path As String)
     '---------------------------------------------------------------------------
     projector.SelectProject path
     vProject.Hide
-    Call vMain.Initialize(fso.GetFolder(path).name)
+    Call vMain.Initialize(fso.GetFolder(path).Name)
     vMain.Show vbModeless
 End Sub
 
@@ -165,8 +165,8 @@ Private Sub vImport_BeepBoop()
     '//WARNING: BEEP BOOP
     '//WARNING: BEEP BOOP
     Dim testString As String
-    testString = context.DbSchema.Tables.JE
-    Debug.Print "BEEP BOOP:" & context.DbSchema.Tables.JE
+    testString = context.DbSchema.JE.Name
+    Debug.Print "BEEP BOOP:" & context.DbSchema.JE.Name
     MsgBox testString, vbInformation, testString
 End Sub
 Private Sub vImport_ImportJournalEntries(ByVal Format As String)
@@ -175,7 +175,7 @@ Private Sub vImport_ImportJournalEntries(ByVal Format As String)
     '---------------------------------------------------------------------------
     importer.dType = Format
     importer.OpenWizard "je"
-    vImport.lblImportStatus.Caption = "匯入資料表: " & context.JE.name
+    vImport.lblImportStatus.Caption = "匯入資料表: " & context.DbSchema.JE.Name
 End Sub
 Private Sub vImport_ImportTrialBalance(ByVal Format As String)
     '---------------------------------------------------------------------------
@@ -183,14 +183,14 @@ Private Sub vImport_ImportTrialBalance(ByVal Format As String)
     '---------------------------------------------------------------------------
     importer.dType = Format
     importer.OpenWizard "tb"
-    vImport.lblImportStatus.Caption = "匯入資料表: " & context.TB.name
+    vImport.lblImportStatus.Caption = "匯入資料表: " & context.DbSchema.TB.Name
 End Sub
 Private Sub vImport_JeFieldMappingRequested()
     '---------------------------------------------------------------------------
     ' 開啟JE欄位映射的介面
     '---------------------------------------------------------------------------
     '檢查是否有匯入 JE 資料表
-    If Not context.DbInput.TableExists(context.JE.name) Then
+    If Not context.DbInput.TableExists(context.DbSchema.JE.Name) Then
         MsgBox "尚未匯入 JE 資料表", vbExclamation, "JE欄位映射"
         vImport.btnImportJe.SetFocus
         Exit Sub
@@ -204,7 +204,7 @@ Private Sub vImport_TbFieldMappingRequested()
     ' 開啟TB欄位映射的介面
     '---------------------------------------------------------------------------
     '檢查是否有匯入 TB 資料表
-    If Not context.DbInput.TableExists(context.TB.name) Then
+    If Not context.DbInput.TableExists(context.DbSchema.TB.Name) Then
         MsgBox "尚未匯入 TB 資料表", vbExclamation, "TB欄位映射"
         vImport.btnImportTb.SetFocus
         Exit Sub
@@ -218,8 +218,8 @@ Private Sub vImport_UpdateDateDimensionRequested(ByVal dto As DataTransferObject
     ' 更新/覆寫日期維度表
     '---------------------------------------------------------------------------
     '-- 先建立日期維度表
-    context.info.periodStart = dto.periodStart
-    context.info.periodEnd = dto.periodEnd
+    context.info.PeriodStart = dto.PeriodStart
+    context.info.PeriodEnd = dto.PeriodEnd
     Call calendar.CreateDateDimensionTable
     '-- 準備物件
     Dim dataRange As String
@@ -284,7 +284,7 @@ Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Lo
     '---------------------------------------------------------------------------
     ' 套用表單 MapJe 的欄位映射
     '---------------------------------------------------------------------------
-    context.JE.Method = amountMethod
+    context.DbSchema.JE.Method = amountMethod
     If Not importer.ApplyJe(dict) Then
         vImport.lblFieldMappingStatus.Caption = " JE FAILED"
         MsgBox "JE 套用欄位失敗", vbExclamation, "JE 套用欄位"
@@ -300,7 +300,7 @@ Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Lo
     '---------------------------------------------------------------------------
     ' 套用表單 MapTb 的欄位映射
     '---------------------------------------------------------------------------
-    context.TB.Method = amountMethod
+    context.DbSchema.TB.Method = amountMethod
     If Not importer.ApplyTb(dict) Then
         vImport.lblFieldMappingStatus.Caption = "TB FAILED"
         MsgBox "TB套用欄位失敗", vbExclamation, "TB套用欄位"

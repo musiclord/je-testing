@@ -65,7 +65,7 @@ Public Sub Disconnect()
         Call RollbackTx
     End If
     Dim wsName As String
-    If Not m_Ws Is Nothing Then wsName = m_Ws.name
+    If Not m_Ws Is Nothing Then wsName = m_Ws.Name
     If Not m_Db Is Nothing Then
         m_Db.Close
         Set m_Db = Nothing
@@ -96,10 +96,10 @@ Public Sub Refresh(Optional forceDeep As Boolean = False)
         Dim tdf As DAO.TableDef
         For Each tdf In m_Db.TableDefs
             '跳過系統表和臨時表
-            If Not (tdf.name Like "MSys*" Or tdf.name Like "~TMPCLP*") Then
+            If Not (tdf.Name Like "MSys*" Or tdf.Name Like "~TMPCLP*") Then
                 tdf.Fields.Refresh
                 If Err.Number <> 0 Then
-                    Debug.Print "警告: 無法刷新資料表欄位: " & tdf.name & " (錯誤: " & Err.Number & ")"
+                    Debug.Print "警告: 無法刷新資料表欄位: " & tdf.Name & " (錯誤: " & Err.Number & ")"
                     Err.Clear
                 End If
             End If
@@ -247,7 +247,7 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
     Debug.Print String(60, "-")
-    Debug.Print "<<" & Dir(m_Db.name) & ">> : "
+    Debug.Print "<<" & Dir(m_Db.Name) & ">> : "
     Debug.Print sql
     Debug.Print String(60, "-")
     '刷新快取
@@ -262,7 +262,7 @@ Public Function ExecuteNonQuery(ByVal sql As String) As Long
     '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
     Debug.Print String(60, "-")
-    Debug.Print "<<" & Dir(m_Db.name) & ">> : "
+    Debug.Print "<<" & Dir(m_Db.Name) & ">> : "
     Debug.Print sql
     Debug.Print String(60, "-")
     m_Db.Execute sql, dbFailOnError
@@ -307,10 +307,10 @@ Public Function GetTableFields(ByVal tableName As String) As Collection
     Dim Fields As New Collection
     Dim fld As DAO.Field
     Dim rs As DAO.Recordset
-    Set rs = m_Db.OpenRecordset(name:=tableName, Type:=dbOpenDynaset)
+    Set rs = m_Db.OpenRecordset(Name:=tableName, Type:=dbOpenDynaset)
     '遍歷 RS 的欄位
     For Each fld In rs.Fields
-        Fields.Add fld.name
+        Fields.Add fld.Name
     Next fld
     rs.Close
     Set rs = Nothing

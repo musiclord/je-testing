@@ -20,8 +20,8 @@ Public weekendIndices As Collection
 Public DateHolidays As Collection
 Public DateMakeupDays As Collection
 Public CompanyName As String
-Public periodStart As Date
-Public periodEnd As Date
+Public PeriodStart As Date
+Public PeriodEnd As Date
 Public PrepStartDate As Date
 
 Public Sub Initialize()
@@ -32,7 +32,7 @@ Public Sub Initialize()
     Set DateHolidays = New Collection
     Set DateMakeupDays = New Collection
     CompanyName = ""
-    periodStart = DateSerial(Year(Date), 1, 1)
-    periodEnd = DateSerial(Year(Date), 12, 31)
+    PeriodStart = DateSerial(Year(Date), 1, 1)
+    PeriodEnd = DateSerial(Year(Date), 12, 31)
     PrepStartDate = Date
 End Sub

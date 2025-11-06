@@ -2,15 +2,26 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "EntityTb"
+Attribute VB_Name = "FieldMapperTb"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Class: EntityTb
-' Purpose: 用來處理 TB (Trial Balance) 的資料實體
+' Class: FieldMapperTb
+' Purpose: 管理 TB (Trial Balance) 資料表的欄位映射
+'
+' Responsibility:
+'   - 儲存「邏輯欄位名稱 → 實際欄位名稱」的對應關係
+'   - 處理使用者自訂欄位映射
+'   - 提供統一的欄位名稱存取介面
+'
+' Usage:
+'   Dim TB As JeFieldMapper
+'   Set TB = New JeFieldMapper
+'   Call TB.SetField("DebitAmount", "借方金額")
+'   sql = "SELECT [" & TB.DebitAmount & "] FROM TB"
 '===============================================================================
 Private m_Name As String
 Private m_Method As Long
@@ -35,8 +46,7 @@ Private Sub Class_Initialize()
         "DebitAmount", _
         "CreditAmount", _
         "AccountNumber", _
-        "AccountName", _
-        "AMOUNT_TB" _
+        "AccountName" _
     )
     For i = LBound(Fields) To UBound(Fields)
         m_Fields(Fields(i)) = Fields(i)
@@ -66,10 +76,10 @@ Public Sub PrintFields()
 End Sub
 
 '-- 屬性訪問
-Public Property Get name() As String
-    name = m_Name
+Public Property Get Name() As String
+    Name = m_Name
 End Property
-Public Property Let name(ByVal Value As String)
+Public Property Let Name(ByVal Value As String)
     m_Name = Value
 End Property
 Public Property Get Method() As Long
