@@ -148,7 +148,7 @@ Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
         m_Schema.TB.SetField key, dict(key)
     Next key
     m_Schema.TB.PrintFields
-    '@TODO: 檢查欄位型別
+    '//TODO: 檢查欄位型別
     If Not ProcessTbAmount(m_Schema.TB.Method) Then
         'error
         Debug.Print "********** TB 欄位映射及金額處理失敗 **********"
