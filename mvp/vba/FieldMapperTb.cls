@@ -92,12 +92,6 @@ Public Property Get Fields() As Dictionary
     Set Fields = m_Fields
 End Property
 
-'-- 屬性自訂欄位
-Public Property Get K_Amount() As String
-    '計算用的的金額欄位
-    K_Amount = m_Fields("AMOUNT_TB")
-End Property
-
 '-- 屬性快速補全
 Public Property Get ChangeAmount() As String
     ChangeAmount = m_Fields("ChangeAmount")

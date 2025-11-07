@@ -97,20 +97,6 @@ Public Property Get Fields() As Dictionary
     Set Fields = m_Fields
 End Property
 
-'-- 屬性自訂欄位
-Public Property Get K_Amount() As String
-    '計算用的金額欄位
-    K_Amount = m_Fields("AMOUNT_JE")
-End Property
-Public Property Get K_Amount_Sum() As String
-    '依科目彙總後的總金額
-    K_Amount_Sum = m_Fields("AMOUNT_SUM_JE")
-End Property
-Public Property Get K_UID() As String
-    '主鍵
-    K_UID = m_Fields("UID")
-End Property
-
 '-- 屬性快速補全
 Public Property Get Amount() As String
     '傳票金額

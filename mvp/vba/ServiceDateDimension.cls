@@ -29,6 +29,7 @@ Private m_Schema As DbSchema
 Public Sub Initialize(context As ContextManager)
     Set m_Context = context
     Set m_Db = context.DbInput
+    Set m_Schema = context.DbSchema
 End Sub
 
 Public Sub MergeWeekends(ByVal selectedDays As Variant)

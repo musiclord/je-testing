@@ -98,9 +98,9 @@ Public Function GenerateDataOverview() As Boolean
     Dim TbName As String
     Dim TbAccountCount As Long
     JeName = m_Context.DbSchema.JE.Name
-    JeNetAmount = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.JE.K_Amount, "NetValue")
-    JeDebitSum = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.JE.K_Amount, "PositiveValue")
-    JeCreditSum = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.JE.K_Amount, "NegativeValue")
+    JeNetAmount = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.Fields.JeAmount, "NetValue")
+    JeDebitSum = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.Fields.JeAmount, "PositiveValue")
+    JeCreditSum = m_Context.DbInput.GetTotal(m_Schema.JE.Name, m_Schema.Fields.JeAmount, "NegativeValue")
     JeRecordCount = m_Context.DbInput.GetTotal(m_Schema.JE.Name, "", "DBCount")
     TbName = m_Schema.TB.Name
     TbAccountCount = m_Context.DbInput.GetTotal(m_Schema.TB.Name, "", "DBCount")

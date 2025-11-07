@@ -177,24 +177,24 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     Debug.Print "********** 開始 JE 金額處理 **********"
     Select Case amountMethod
         Case 1 '直接使用原始金額欄位
-            Set fld = CreateOrReplace(tdf, m_Schema.JE.K_Amount)
+            Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.JE.K_Amount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.Amount) & ";"
             db.ExecuteNonQuery sql
             
         Case 2 '傳票金額 = 借方金額 - 貸方金額
-            Set fld = CreateOrReplace(tdf, m_Schema.JE.K_Amount)
+            Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.JE.K_Amount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.DebitAmount) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.CreditAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 3 '依借貸別決定金額正負號
-            Set fld = CreateOrReplace(tdf, m_Schema.JE.K_Amount)
+            Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.JE.K_Amount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
                   "IIF(" & vbCrLf & _
                   "    [" & m_Schema.JE.DrCr & "] = '" & m_Schema.JE.IsDebit & "', " & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.JE.Amount) & "," & vbCrLf & _
@@ -228,35 +228,35 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
     Select Case amountMethod
         Case 1
             '直接使用變動金額
-            Set fld = CreateOrReplace(tdf, m_Schema.TB.K_Amount)
+            Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.TB.K_Amount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.ChangeAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 2
             '期末 - 期初 = 變動金額
-            Set fld = CreateOrReplace(tdf, m_Schema.TB.K_Amount)
+            Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.TB.K_Amount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.ClosingBalance) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.OpeningBalance) & ";"
             db.ExecuteNonQuery sql
             
         Case 3
             '借方 - 貸方 = 變動金額
-            Set fld = CreateOrReplace(tdf, m_Schema.TB.K_Amount)
+            Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.TB.K_Amount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.DebitAmount) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.CreditAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 4
             '(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
-            Set fld = CreateOrReplace(tdf, m_Schema.TB.K_Amount)
+            Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.TB.K_Amount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   "(" & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.TB.ClosingDebitBalance) & " - " & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.TB.OpeningDebitBalance) & vbCrLf & _

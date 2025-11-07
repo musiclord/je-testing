@@ -120,7 +120,7 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** 依會計科目彙總金額 **********"
     sql = "SELECT " & vbCrLf & _
           "    [" & m_Schema.JE.AccountNumber & "], " & vbCrLf & _
-          "    SUM([" & m_Schema.JE.K_Amount & "]) AS [" & m_Schema.JE.K_Amount_Sum & "] " & vbCrLf & _
+          "    SUM([" & m_Schema.Fields.JeAmount & "]) AS [" & m_Schema.Fields.JeAmountSum & "] " & vbCrLf & _
           "INTO " & m_Schema.Tables.JeAccountSum & " " & vbCrLf & _
           "FROM " & m_Schema.Tables.JeInPeriod & " " & vbCrLf & _
           "GROUP BY [" & m_Schema.JE.AccountNumber & "];"
@@ -176,7 +176,7 @@ Public Function CheckCompleteness() As Boolean
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 計算差異金額 **********"
     sql = "UPDATE " & m_Schema.Tables.CompletenessCalculated & " " & vbCrLf & _
-          "SET [" & m_Schema.Fields.TbJeDiff & "] = " & Nz(m_Schema.TB.K_Amount) & " - " & Nz(m_Schema.JE.K_Amount_Sum) & ";"
+          "SET [" & m_Schema.Fields.TbJeDiff & "] = " & Nz(m_Schema.Fields.TbAmount) & " - " & Nz(m_Schema.Fields.JeAmountSum) & ";"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -198,8 +198,8 @@ Public Function CheckCompleteness() As Boolean
     sql = "SELECT " & vbCrLf & _
           "    [" & m_Schema.Fields.AccountMerged & "], " & vbCrLf & _
           "    [" & m_Schema.TB.AccountName & "], " & vbCrLf & _
-          "    [" & m_Schema.TB.K_Amount & "], " & vbCrLf & _
-          "    [" & m_Schema.JE.K_Amount_Sum & "], " & vbCrLf & _
+          "    [" & m_Schema.Fields.TbAmount & "], " & vbCrLf & _
+          "    [" & m_Schema.Fields.JeAmountSum & "], " & vbCrLf & _
           "    [" & m_Schema.Fields.TbJeDiff & "] " & vbCrLf & _
           "INTO " & m_Schema.Tables.CompletenessDetail & " " & vbCrLf & _
           "FROM " & m_Schema.Tables.CompletenessCalculated & ";"
@@ -259,7 +259,7 @@ Public Function CheckDocumentBalance() As Boolean
     Debug.Print "********** 依傳票號碼彙總金額 **********"
     sql = "SELECT " & vbCrLf & _
           "    [" & m_Schema.JE.DocumentNumber & "], " & vbCrLf & _
-          "    SUM([" & m_Schema.JE.K_Amount & "]) AS [" & m_Schema.JE.K_Amount_Sum & "] " & vbCrLf & _
+          "    SUM([" & m_Schema.Fields.JeAmount & "]) AS [" & m_Schema.Fields.JeAmountSum & "] " & vbCrLf & _
           "INTO " & m_Schema.Tables.DocumentBalanceSum & " " & vbCrLf & _
           "FROM " & m_Schema.Tables.JeInPeriod & " " & vbCrLf & _
           "GROUP BY [" & m_Schema.JE.DocumentNumber & "];"
@@ -273,7 +273,7 @@ Public Function CheckDocumentBalance() As Boolean
     sql = "SELECT * " & vbCrLf & _
           "INTO " & m_Schema.Tables.DocumentBalanceDiff & " " & vbCrLf & _
           "FROM " & m_Schema.Tables.DocumentBalanceSum & " " & vbCrLf & _
-          "WHERE [" & m_Schema.JE.K_Amount_Sum & "] <> 0;"
+          "WHERE [" & m_Schema.Fields.JeAmountSum & "] <> 0;"
     dbTarget.ExecuteNonQuery sql
     
     '---------------------------------------------------------------------------
@@ -286,7 +286,7 @@ Public Function CheckDocumentBalance() As Boolean
     '//       使其符合資料表名稱所屬定義
     sql = "SELECT " & vbCrLf & _
           "    P.*, " & vbCrLf & _
-          "    S.[" & m_Schema.JE.K_Amount_Sum & "] " & vbCrLf & _
+          "    S.[" & m_Schema.Fields.JeAmountSum & "] " & vbCrLf & _
           "INTO " & m_Schema.Tables.DocumentBalanceDetail & " " & vbCrLf & _
           "FROM " & m_Schema.Tables.JeInPeriod & " AS P" & vbCrLf & _
           "INNER JOIN " & m_Schema.Tables.DocumentBalanceDiff & " AS S " & vbCrLf & _
@@ -353,7 +353,7 @@ Public Function CheckINF() As Boolean
     sql = "SELECT TOP 60 * " & vbCrLf & _
           "INTO " & m_Schema.Tables.InfRandom & " " & vbCrLf & _
           "FROM " & m_Schema.Tables.JeInPeriod & " " & vbCrLf & _
-          "ORDER BY Rnd([" & m_Schema.JE.K_UID & "]);"
+          "ORDER BY Rnd([" & m_Schema.Fields.JeUid & "]);"
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
