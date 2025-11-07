@@ -46,10 +46,10 @@ Public Sub MergeWeekends(ByVal selectedDays As Variant)
     Next item
     '清除欄位資料
     Dim sql As String
-    sql = "UPDATE " & TBL_DATE_DIMENSION & " SET [" & m_Schema.DateDimension.IsWeekend & "] = False;"
+    sql = "UPDATE " & m_Schema.DateDimension.Name & " SET [" & m_Schema.DateDimension.IsWeekend & "] = False;"
     Call m_Db.ExecuteNonQuery(sql)
     'Weekday(d) 默認星期日為第一天，回傳編碼
-    sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
+    sql = "UPDATE " & m_Schema.DateDimension.Name & " " & vbCrLf & _
           "SET [" & m_Schema.DateDimension.IsWeekend & "] = True " & vbCrLf & _
           "WHERE Weekday([" & m_Schema.DateDimension.DateKey & "]) IN (" & dayList & ");"
     affectedCount = m_Db.ExecuteNonQuery(sql)
@@ -83,7 +83,7 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
         End If
         If IsDate(holidayDate) Then
             Dim sql As String
-            sql = "UPDATE " & TBL_DATE_DIMENSION & " " & vbCrLf & _
+            sql = "UPDATE " & m_Schema.DateDimension.Name & " " & vbCrLf & _
                   "SET [" & m_Schema.DateDimension.IsHolidays & "] = True, " & vbCrLf & _
                   "    [" & m_Schema.DateDimension.HolidaysDesc & "] = '" & Replace(HolidayDesc, "'", "''") & "' " & vbCrLf & _
                   "WHERE [" & m_Schema.DateDimension.DateKey & "] = #" & Format(CDate(holidayDate), "mm/dd/yyyy") & "#;"
@@ -145,12 +145,12 @@ Public Sub CreateDateDimensionTable()
     '檢查日期邏輯
     If dateStart = 0 Or dateEnd = 0 Or dateStart > dateEnd Then Exit Sub
     '檢查資料表是否存在
-    If m_Db.TableExists(TBL_DATE_DIMENSION) Then
-        Call m_Db.DropTable(TBL_DATE_DIMENSION)
+    If m_Db.TableExists(m_Schema.DateDimension.Name) Then
+        Call m_Db.DropTable(m_Schema.DateDimension.Name)
     End If
     '建立日期維度表
     Dim sql As String
-    sql = "CREATE TABLE " & TBL_DATE_DIMENSION & " ( " & vbCrLf & _
+    sql = "CREATE TABLE " & m_Schema.DateDimension.Name & " ( " & vbCrLf & _
           "    [" & m_Schema.DateDimension.DateKey & "] DATE, " & vbCrLf & _
           "    [" & m_Schema.DateDimension.Year & "] SHORT, " & vbCrLf & _
           "    [" & m_Schema.DateDimension.Month & "] SHORT, " & vbCrLf & _
@@ -166,7 +166,7 @@ Public Sub CreateDateDimensionTable()
     Call m_Db.ExecuteNonQuery(sql)
     '遍歷新增日期表
     Dim rs As DAO.Recordset
-    Set rs = m_Db.Database.OpenRecordset(TBL_DATE_DIMENSION, dbOpenDynaset)
+    Set rs = m_Db.Database.OpenRecordset(m_Schema.DateDimension.Name, dbOpenDynaset)
     '將 currentDate 設為 dateStart 的前一年，擴充可查詢之日期範圍
     Dim currentDate As Date
     currentDate = DateSerial(Year(dateStart) - 1, Month(dateStart), Day(dateStart))

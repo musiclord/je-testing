@@ -16,6 +16,7 @@ Option Explicit
 Private Const MAX_ROWS As Long = 1000
 Private m_Context As ContextManager
 Private m_Db As DbAccess
+Private m_Schema As DbSchema
 Private m_Info As ProjectConfiguration
 Private m_Ace As New Access.Application
 
@@ -23,6 +24,7 @@ Public Sub Initialize(context As ContextManager)
     Set m_Context = context
     Set m_Info = context.info
     Set m_Db = context.DbReport 'DEFAULT-DB
+    Set m_Schema = context.DbSchema
 End Sub
 
 '-- 資料預覽方法
@@ -123,7 +125,7 @@ Public Function ShowEngagementOverview() As Boolean
     ShowEngagementOverview = False
     '設置資料表陣列
     Dim Tables As Variant
-    Tables = Array(RPT_ENGAGEMENT_OVERVIEW)
+    Tables = Array(m_Schema.Reports.EngagementOverview.Name)
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-1-1|資料預先整理之說明"
@@ -147,7 +149,11 @@ Public Function ShowValidationReport() As Boolean
     ShowValidationReport = False
     '設置資料表陣列
     Dim Tables As Variant
-    Tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_DATA_OVERVIEW, RPT_VALIDATION_OVERVIEW)
+    Tables = Array( _
+        m_Schema.Reports.EngagementOverview.Name, _
+        m_Schema.Reports.DataOverview.Name, _
+        m_Schema.Reports.ValidationOverview.Name _
+    )
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-1|驗證測試報告"
@@ -167,7 +173,10 @@ Public Function ShowCompletenessReport() As Boolean
     ShowCompletenessReport = False
     '設置資料表陣列
     Dim Tables As Variant
-    Tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_COMPLETENESS_DETAIL)
+    Tables = Array( _
+        m_Schema.Reports.EngagementOverview.Name, _
+        m_Schema.Reports.CompletenessDetail.Name _
+    )
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-2|完整性測試報告"
@@ -187,7 +196,10 @@ Public Function ShowDocumentBalanceReport() As Boolean
     ShowDocumentBalanceReport = False
     '設置資料表陣列
     Dim Tables As Variant
-    Tables = Array(RPT_ENGAGEMENT_OVERVIEW, RPT_DOCUMENT_BALANCE_DETAIL)
+    Tables = Array( _
+        m_Schema.Reports.EngagementOverview.Name, _
+        m_Schema.Reports.DocumentBalanceDetail.Name _
+    )
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-2-3|借貸不平測試報告"

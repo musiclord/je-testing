@@ -58,23 +58,13 @@ Option Explicit
 '===============================================================================
 ' 使用 SchemaTypes 模組定義的 UDT
 '===============================================================================
-'-- 資料表和欄位
 Private m_JE As FieldMapperJe
 Private m_TB As FieldMapperTb
 Private m_DateDimension As TypeTableDateDimension
 Private m_AccountMapping As TypeTableAccountMapping
 Private m_Tables As TypeSystemTables
 Private m_Fields As TypeSystemFields
-
-'-- 報表
-Private m_ReportEngagementOverview As TypeReportEngagementOverview
-Private m_ReportDataOverview As TypeReportDataOverview
-Private m_ReportValidationOverview As TypeReportValidationOverview
-Private m_ReportCompletenessDetail As TypeReportCompletenessDetail
-Private m_ReportDocumentBalanceDetail As TypeReportDocumentBalanceDetail
-Private m_ReportInfSampleDetail As TypeReportInfSampleDetail
-Private m_ReportAccountMappingInfo As TypeReportAccountMappingInfo
-Private m_ReportFieldMappingInfo As TypeReportFieldMappingInfo
+Private m_Reports As TypeSystemReports
 
 '===============================================================================
 ' 透過屬性回傳 UDT
@@ -98,31 +88,8 @@ End Property
 Public Property Get Fields() As TypeSystemFields
     Fields = m_Fields
 End Property
-
-'-- 報表
-Public Property Get ReportEngagementOverview() As TypeReportEngagementOverview
-    ReportEngagementOverview = m_ReportEngagementOverview
-End Property
-Public Property Get ReportDataOverview() As TypeReportDataOverview
-    ReportDataOverview = m_ReportDataOverview
-End Property
-Public Property Get ReportValidationOverview() As TypeReportValidationOverview
-    ReportValidationOverview = m_ReportValidationOverview
-End Property
-Public Property Get ReportCompletenessDetail() As TypeReportCompletenessDetail
-    ReportCompletenessDetail = m_ReportCompletenessDetail
-End Property
-Public Property Get ReportDocumentBalanceDetail() As TypeReportDocumentBalanceDetail
-    ReportDocumentBalanceDetail = m_ReportDocumentBalanceDetail
-End Property
-Public Property Get ReportInfSampleDetail() As TypeReportInfSampleDetail
-    ReportInfSampleDetail = m_ReportInfSampleDetail
-End Property
-Public Property Get ReportAccountMappingInfo() As TypeReportAccountMappingInfo
-    ReportAccountMappingInfo = m_ReportAccountMappingInfo
-End Property
-Public Property Get ReportFieldMappingInfo() As TypeReportFieldMappingInfo
-    ReportFieldMappingInfo = m_ReportFieldMappingInfo
+Public Property Get Reports() As TypeSystemReports
+    Reports = m_Reports
 End Property
 
 '===============================================================================
@@ -179,7 +146,12 @@ Private Sub InitializeTables()
     
     '-- 初始化衍生欄位表
     With m_Fields
-        .JeUid = "UID"
+        '//
+        '//NOTE: 由於 UDT 僅作為副本傳送，而不可修改狀態
+        '//      因此以下欄位名稱暫時可用，若後續有動態連結
+        '//      則應該交由 FieldMapper 處理
+        '//
+        .JeUid = "識別碼_JE"
         .JeAmount = "K_AMOUNT_JE"
         .JeAmountSum = "K_AMOUNT_SUM_JE"
         .TbAmount = "K_AMOUNT_TB"
@@ -192,7 +164,7 @@ Private Sub InitializeReports()
     ' 初始化所有報表的 Schema 映射定義
     '---------------------------------------------------------------------------
     '-- ENGAGEMENT_OVERVIEW
-    With m_ReportEngagementOverview
+    With m_Reports.EngagementOverview
         .Name = "ENGAGEMENT_OVERVIEW"
         '-- 欄位
         .Client = "客戶"
@@ -203,7 +175,7 @@ Private Sub InitializeReports()
         .PreparedDate = "報表生產時間"
     End With
     '-- DATA_OVERVIEW
-    With m_ReportDataOverview
+    With m_Reports.DataOverview
         .Name = "DATA_OVERVIEW"
         '-- 欄位
         .JeName = "分錄檔案名稱"
@@ -215,7 +187,7 @@ Private Sub InitializeReports()
         .TbAccountCount = "試算表科目數量"
     End With
     '-- VALIDATION_OVERVIEW
-    With m_ReportValidationOverview
+    With m_Reports.ValidationOverview
         .Name = "VALIDATION_OVERVIEW"
         '-- 欄位
         .NullAccountRecordCount = "無會計科目編號筆數"
@@ -226,19 +198,19 @@ Private Sub InitializeReports()
         .DocumentBalanceDiffCount = "借貸不平差異筆數"
     End With
     '-- COMPLETENESS_DETAIL
-    With m_ReportCompletenessDetail
+    With m_Reports.CompletenessDetail
         .Name = "COMPLETENESS_DETAIL"
     End With
     '-- DOCUMENT_BALANCE_DETAIL
-    With m_ReportDocumentBalanceDetail
+    With m_Reports.DocumentBalanceDetail
         .Name = "DOCUMENT_BALANCE_DETAIL"
     End With
     '-- ACCOUNT_MAPPING_INFO
-    With m_ReportAccountMappingInfo
+    With m_Reports.AccountMappingInfo
         .Name = "ACCOUNT_MAPPING_INFO"
     End With
     '-- FIELD_MAPPING_INFO
-    With m_ReportFieldMappingInfo
+    With m_Reports.FieldMappingInfo
         .Name = "FIELD_MAPPING_INFO"
     End With
 End Sub

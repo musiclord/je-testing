@@ -60,10 +60,12 @@ Private Const FLD_STANDARDIZED As String = "Standardized"
 Private m_Context As ContextManager
 Private m_DbValid As DbAccess
 Private m_Db As DbAccess
+Private m_Schema As DbSchema
 
 Public Sub Initialize(context As ContextManager)
     Set m_Context = context
     Set m_Db = context.DbInput
+    Set m_Schema = context.DbSchema
     Set m_DbValid = context.DbValid
 End Sub
 
@@ -76,7 +78,7 @@ Public Function ExportTemplate() As Boolean
     '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     '檢查前置條件
-    If Not m_DbValid.TableExists(TBL_COMPLETENESS_DETAIL) Then
+    If Not m_DbValid.TableExists(m_Schema.Tables.CompletenessDetail) Then
         Debug.Print "ServiceAccountMapping: COMPLETENESS_DETAIL 表不存在，請先執行完整性檢查"
         MsgBox "請先執行完整性檢查", vbExclamation, "科目配對"
     End If
