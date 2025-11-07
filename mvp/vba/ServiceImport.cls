@@ -168,6 +168,7 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     ProcessJeAmount = False
+    '宣告物件
     Dim sql As String
     Dim dbs As DAO.Database
     Dim tdf As DAO.TableDef
@@ -218,6 +219,7 @@ End Function
 Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
     On Error GoTo ErrorHandler
     ProcessTbAmount = False
+    '宣告物件
     Dim sql As String
     Dim dbs As DAO.Database
     Dim tdf As DAO.TableDef

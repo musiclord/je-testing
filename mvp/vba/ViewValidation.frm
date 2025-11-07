@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewValidation 
    Caption         =   "驗證資料"
-   ClientHeight    =   5085
+   ClientHeight    =   5670
    ClientLeft      =   105
    ClientTop       =   405
    ClientWidth     =   2115
@@ -23,6 +23,8 @@ Public Event Completeness()
 Public Event DocumentBalance()
 Public Event INF()
 Public Event NullRecords()
+Public Event ShowAccountMapping()
+Public Event ImportAccountMapping()
 Public Event Submitted(ByVal dto As DataTransferObject)
 
 Public Sub Initialize()
@@ -46,7 +48,7 @@ Private Sub btnNullRecords_Click()
 End Sub
 
 Private Sub btnConfigureAccountMapping_Click()
-    '科目配對
+    '進行科目配對
     Dim ws As Worksheet
     Set ws = AccountMappingSheet
     ws.Activate
@@ -59,6 +61,12 @@ Private Sub btnConfigureAccountMapping_Click()
     ws.Range("B1").Value = "Account Name"
     ws.Range("C1").Value = "Standardized Class"
     ws.Range("A1:C1").Font.Bold = True
+    RaiseEvent ShowAccountMapping   '<-- 顯示科目配對工作表讓使用者輸入設定
+End Sub
+
+Private Sub btnApplyAccountMapping_Click()
+    '套用科目配對
+    RaiseEvent ImportAccountMapping
 End Sub
 
 Private Sub btnExit_Click()

@@ -22,13 +22,21 @@ Option Explicit
 '   - AccountMappingSheet: Excel 工作表物件
 '
 ' Workflow:
-'   1. ExportAccountMappingTemplate() - 從 COMPLETENESS_DETAIL 匯出科目清單
-'   2. [使用者手動標註分類]
-'   3. ImportAccountMapping() - 讀取工作表並儲存至資料庫
-'   4. ValidateAccountMapping() - 驗證對應關係的完整性
+'   1. ExportTemplate()
+'       ↓ 從 COMPLETENESS_DETAIL 匯出科目清單至 AccountMappingSheet
 '
-' AccountMapping
-'     - STANDARDIZED_ACCOUNT_NAME:
+'   2. [使用者手動標註]
+'       ↓ 審計人員在 Excel 中填寫 "Standardized Account Name"
+'
+'   3. ImportAccountMapping()
+'       ↓ 讀取 AccountMappingSheet 並儲存至 ACCOUNT_MAPPING 表
+'
+'   4. ValidateAccountMapping()
+'         驗證對應關係的完整性
+'
+'
+' [標準化科目分類選項]:
+'     - STANDARDIZED_ACCOUNT_NAME
 '         (1)Cash
 '         (2)Revenue
 '         (3)Receipt in advance
@@ -53,10 +61,6 @@ Option Explicit
 '-------------------------------------------------------------------------------
 '
 '===============================================================================
-Private Const FLD_ACCOUNT_NUMBER As String = "AccountNumber"
-Private Const FLD_ACCOUNT_NAME As String = "AccountName"
-Private Const FLD_STANDARDIZED As String = "Standardized"
-'--
 Private m_Context As ContextManager
 Private m_DbValid As DbAccess
 Private m_Db As DbAccess
@@ -69,34 +73,52 @@ Public Sub Initialize(context As ContextManager)
     Set m_DbValid = context.DbValid
 End Sub
 
+'-------------------------------------------------------------------------------
+' Method: ExportTemplate
+' Purpose: 從 COMPLETENESS_DETAIL 匯出科目清單至 AccountMappingSheet
+' Workflow:
+    '   1. 檢查 COMPLETENESS_DETAIL 是否存在（需先執行完整性測試）
+    '   2. 提取不重複的科目清單（ACCOUNT_MERGED + AccountName）
+'-------------------------------------------------------------------------------
 Public Function ExportTemplate() As Boolean
-    '---------------------------------------------------------------------------
-    ' 從 COMPLETENESS_DETAIL 匯出科目清單至 AccountMappingSheet
-    ' 資料來源欄位:
-    '   - ACCOUNT_MERGED: 統一的會計科目編號
-    '   - tb.AccountName: 試算表的科目名稱（可能為 NULL 或 "Not in TB"）
-    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
-    '檢查前置條件
+    '-- 檢查前置條件
     If Not m_DbValid.TableExists(m_Schema.Tables.CompletenessDetail) Then
         Debug.Print "ServiceAccountMapping: COMPLETENESS_DETAIL 表不存在，請先執行完整性檢查"
         MsgBox "請先執行完整性檢查", vbExclamation, "科目配對"
     End If
-    '查詢科目
+    '-- 建立查詢 SQL
     Dim sql As String
-    '//TODO: 從這裡分支出問題，因為這裡要跨服務使用資料表欄位
-    '//      因此需先設計好 DbSchema 和 Entity 間的邏輯
+    '//TODO: 這個查詢應該副本 COMPLETENESS_DETAIL 資料表
     sql = "SELECT * " & vbCrLf & _
           "    []," & vbCrLf & _
           "" & vbCrLf & _
           "" & vbCrLf & _
-          "" & vbCrLf & _
-          "" & vbCrLf & _
           ""
+    '-- 執行查詢並匯出至 Excel
+    Dim rs As DAO.Recordset
+    Set rs = m_DbValid.ExecuteQuery(sql)
+    
+    If rs.EOF Then
+        Debug.Print "  - 無科目資料匯出"
+        MsgBox "完整性測試結果沒有科目資料", vbInformation, "科目配對"
+        rs.Close
+        ExportTemplate = False
+        Exit Function
+    End If
+    
+    '-- 清空目標工作表並寫入標題列
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Worksheets(SHT_ACCOUNT_MAPPING)
+    ws.Cells.Clear
+    
     
     Exit Function
 ErrorHandler:
     Debug.Print ""
 End Function
 
+Public Function ImportAccountMapping() As Boolean
+
+End Function
 

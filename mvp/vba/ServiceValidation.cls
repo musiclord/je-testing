@@ -15,8 +15,6 @@ Option Explicit
 Private dbSource As DbAccess
 Private dbTarget As DbAccess
 Private m_Schema As DbSchema
-Private m_JE As FieldMapperJe
-Private m_TB As FieldMapperTb
 Private m_Info As ProjectConfiguration
 
 Public Sub Initialize(ByRef context As ContextManager)
@@ -25,8 +23,6 @@ Public Sub Initialize(ByRef context As ContextManager)
     '目標資料庫為存放驗證結果的 valid.accdb
     Set dbTarget = context.DbValid
     Set m_Schema = context.DbSchema
-    Set m_JE = context.DbSchema.JE
-    Set m_TB = context.DbSchema.TB
     Set m_Info = context.info
 End Sub
 
@@ -70,23 +66,30 @@ Public Function CheckCompleteness() As Boolean
     CheckCompleteness = False
     Debug.Print "********** 開始完整性檢查流程 **********"
     Debug.Print "檢查期間: " & m_Info.PeriodStart & " ~ " & m_Info.PeriodEnd
-    Call CleanupTempTables(dbTarget, Array( _
-                                        m_Schema.TB.Name, _
-                                        m_Schema.Tables.JeInPeriod, _
-                                        m_Schema.Tables.JeNotInPeriod, _
-                                        m_Schema.Tables.JeAccountSum, _
-                                        m_Schema.Tables.CompletenessCalculated, _
-                                        m_Schema.Tables.CompletenessDiff, _
-                                        m_Schema.Tables.CompletenessDetail _
-                                    ))
+    With m_Schema
+        Call CleanupTempTables( _
+            dbTarget, _
+            Array( _
+                .TB.Name, _
+                .Tables.JeInPeriod, _
+                .Tables.JeNotInPeriod, _
+                .Tables.JeAccountSum, _
+                .Tables.CompletenessCalculated, _
+                .Tables.CompletenessDiff, _
+                .Tables.CompletenessDetail _
+                ) _
+            )
+    End With
     ' ----------------------------------------------------------------------------
     ' 複製 TB 至目標資料庫
     ' 邏輯:
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 複製 TB **********"
+    With m_Schema
     sql = "SELECT * " & vbCrLf & _
-          "INTO " & m_Schema.TB.Name & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & m_Schema.TB.Name & " IN '" & dbSource.path & "';"
+          "INTO " & .TB.Name & " IN '" & dbTarget.path & "' " & vbCrLf & _
+          "FROM " & .TB.Name & " IN '" & dbSource.path & "';"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -94,11 +97,13 @@ Public Function CheckCompleteness() As Boolean
     ' 邏輯: @BetweenDate(je.[PostDate], info.PeriodStart, info.PeriodEnd)
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 篩選期間內資料 **********"
-    sql = "SELECT * " & vbCrLf & _
-          "INTO " & m_Schema.Tables.JeInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & m_Schema.JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
-          "WHERE [" & m_Schema.JE.PostDate & "] " & vbCrLf & _
-          "BETWEEN #" & m_Info.PeriodStart & "# AND #" & m_Info.PeriodEnd & "#;"
+    With m_Schema
+        sql = "SELECT * " & vbCrLf & _
+              "INTO " & .Tables.JeInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
+              "FROM " & .JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
+              "WHERE [" & .JE.PostDate & "] " & vbCrLf & _
+              "BETWEEN #" & m_Info.PeriodStart & "# AND #" & m_Info.PeriodEnd & "#;"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -106,11 +111,13 @@ Public Function CheckCompleteness() As Boolean
     ' 邏輯: NOT @BetweenDate(je.[PostDate], info.PeriodStart, info.PeriodEnd)
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 篩選期間外資料 **********"
+    With m_Schema
     sql = "SELECT * " & vbCrLf & _
-          "INTO " & m_Schema.Tables.JeNotInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & m_Schema.JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
-          "WHERE [" & m_Schema.JE.PostDate & "] < #" & m_Info.PeriodStart & "# " & vbCrLf & _
-          "   OR [" & m_Schema.JE.PostDate & "] > #" & m_Info.PeriodEnd & "#;"
+          "INTO " & .Tables.JeNotInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
+          "FROM " & .JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "WHERE [" & .JE.PostDate & "] < #" & m_Info.PeriodStart & "# " & vbCrLf & _
+          "   OR [" & .JE.PostDate & "] > #" & m_Info.PeriodEnd & "#;"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -118,12 +125,14 @@ Public Function CheckCompleteness() As Boolean
     ' 邏輯: SUM [K_Amount], GROUP BY [AccountNumber]
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 依會計科目彙總金額 **********"
-    sql = "SELECT " & vbCrLf & _
-          "    [" & m_Schema.JE.AccountNumber & "], " & vbCrLf & _
-          "    SUM([" & m_Schema.Fields.JeAmount & "]) AS [" & m_Schema.Fields.JeAmountSum & "] " & vbCrLf & _
-          "INTO " & m_Schema.Tables.JeAccountSum & " " & vbCrLf & _
-          "FROM " & m_Schema.Tables.JeInPeriod & " " & vbCrLf & _
-          "GROUP BY [" & m_Schema.JE.AccountNumber & "];"
+    With m_Schema
+        sql = "SELECT " & vbCrLf & _
+              "    [" & .JE.AccountNumber & "], " & vbCrLf & _
+              "    SUM([" & .Fields.JeAmount & "]) AS [" & .Fields.JeAmountSum & "] " & vbCrLf & _
+              "INTO " & .Tables.JeAccountSum & " " & vbCrLf & _
+              "FROM " & .Tables.JeInPeriod & " " & vbCrLf & _
+              "GROUP BY [" & .JE.AccountNumber & "];"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -131,20 +140,22 @@ Public Function CheckCompleteness() As Boolean
     ' 邏輯: JoinDatabase WI_JOIN_ALL_REC; je.[AccountNumber] = tb.[AccountNumber]
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 資料比對連結 (FULL OUTER JOIN) **********"
-    sql = "SELECT * INTO " & m_Schema.Tables.CompletenessCalculated & " " & _
-          "FROM( " & vbCrLf & _
-          "    SELECT" & vbCrLf & _
-          "        P.*, S.* " & vbCrLf & _
-          "    FROM " & m_Schema.Tables.JeAccountSum & " AS P " & vbCrLf & _
-          "    LEFT JOIN " & m_Schema.TB.Name & " AS S " & vbCrLf & _
-          "        ON P.[" & m_Schema.JE.AccountNumber & "] = S.[" & m_Schema.TB.AccountNumber & "] " & vbCrLf & _
-          "    UNION " & vbCrLf & _
-          "    SELECT " & vbCrLf & _
-          "        P.*, S.* " & vbCrLf & _
-          "    FROM " & m_Schema.Tables.JeAccountSum & " AS P " & vbCrLf & _
-          "    RIGHT JOIN " & m_Schema.TB.Name & " AS S " & vbCrLf & _
-          "        ON P.[" & m_Schema.JE.AccountNumber & "] = S.[" & m_Schema.TB.AccountNumber & "] " & vbCrLf & _
-          ");"
+    With m_Schema
+        sql = "SELECT * INTO " & .Tables.CompletenessCalculated & " " & _
+              "FROM( " & vbCrLf & _
+              "    SELECT" & vbCrLf & _
+              "        P.*, S.* " & vbCrLf & _
+              "    FROM " & .Tables.JeAccountSum & " AS P " & vbCrLf & _
+              "    LEFT JOIN " & .TB.Name & " AS S " & vbCrLf & _
+              "        ON P.[" & .JE.AccountNumber & "] = S.[" & .TB.AccountNumber & "] " & vbCrLf & _
+              "    UNION " & vbCrLf & _
+              "    SELECT " & vbCrLf & _
+              "        P.*, S.* " & vbCrLf & _
+              "    FROM " & .Tables.JeAccountSum & " AS P " & vbCrLf & _
+              "    RIGHT JOIN " & .TB.Name & " AS S " & vbCrLf & _
+              "        ON P.[" & .JE.AccountNumber & "] = S.[" & .TB.AccountNumber & "] " & vbCrLf & _
+              ");"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -152,22 +163,29 @@ Public Function CheckCompleteness() As Boolean
     ' 邏輯: ADD COLUMN [ACCOUNT_MERGED], [TB_JE_DIFF]
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 新增差異計算欄位 **********"
-    sql = "ALTER TABLE " & m_Schema.Tables.CompletenessCalculated & " " & vbCrLf & _
-          "ADD COLUMN [" & m_Schema.Fields.AccountMerged & "] TEXT(50);"
+    With m_Schema
+        sql = "ALTER TABLE " & .Tables.CompletenessCalculated & " " & vbCrLf & _
+              "ADD COLUMN [" & .Fields.AccountMerged & "] TEXT(50);"
+    End With
     dbTarget.ExecuteNonQuery sql
     
-    sql = "ALTER TABLE " & m_Schema.Tables.CompletenessCalculated & " " & vbCrLf & _
-          "ADD COLUMN [" & m_Schema.Fields.TbJeDiff & "] CURRENCY;"
+    With m_Schema
+        sql = "ALTER TABLE " & .Tables.CompletenessCalculated & " " & vbCrLf & _
+              "ADD COLUMN [" & .Fields.TbJeDiff & "] CURRENCY;"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
     ' 合併科目編號
     ' 邏輯: @If( je.[AccountNumber], je.[AccountNumber], tb.[AccountNumber])
     ' ----------------------------------------------------------------------------
+    
     Debug.Print "********** 計算統一科目編號 **********"
-    sql = "UPDATE " & m_Schema.Tables.CompletenessCalculated & " " & vbCrLf & _
-          "SET [" & m_Schema.Fields.AccountMerged & "] = " & vbCrLf & _
-          "    IIF(ISNULL([" & m_Schema.JE.AccountNumber & "]), [" & m_Schema.TB.AccountNumber & "], [" & m_Schema.JE.AccountNumber & "]);"
+    With m_Schema
+        sql = "UPDATE " & .Tables.CompletenessCalculated & " " & vbCrLf & _
+              "SET [" & .Fields.AccountMerged & "] = " & vbCrLf & _
+              "    IIF(ISNULL([" & .JE.AccountNumber & "]), [" & .TB.AccountNumber & "], [" & .JE.AccountNumber & "]);"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -175,8 +193,10 @@ Public Function CheckCompleteness() As Boolean
     ' 邏輯: [DIFF] = tb.[K_Amount] - je.[K_Amount_Sum]
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 計算差異金額 **********"
-    sql = "UPDATE " & m_Schema.Tables.CompletenessCalculated & " " & vbCrLf & _
-          "SET [" & m_Schema.Fields.TbJeDiff & "] = " & Nz(m_Schema.Fields.TbAmount) & " - " & Nz(m_Schema.Fields.JeAmountSum) & ";"
+    With m_Schema
+        sql = "UPDATE " & .Tables.CompletenessCalculated & " " & vbCrLf & _
+              "SET [" & .Fields.TbJeDiff & "] = " & Nz(.Fields.TbAmount) & " - " & Nz(.Fields.JeAmountSum) & ";"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -184,10 +204,12 @@ Public Function CheckCompleteness() As Boolean
     ' 邏輯: WHERE ABS([DIFF]) > 0
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 產生完整性檢查異常清單 **********"
-    sql = "SELECT * " & vbCrLf & _
-          "INTO " & m_Schema.Tables.CompletenessDiff & " " & vbCrLf & _
-          "FROM " & m_Schema.Tables.CompletenessCalculated & " " & vbCrLf & _
-          "WHERE ABS([" & m_Schema.Fields.TbJeDiff & "]) > 0;"
+    With m_Schema
+        sql = "SELECT * " & vbCrLf & _
+              "INTO " & .Tables.CompletenessDiff & " " & vbCrLf & _
+              "FROM " & .Tables.CompletenessCalculated & " " & vbCrLf & _
+              "WHERE ABS([" & .Fields.TbJeDiff & "]) > 0;"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -195,14 +217,16 @@ Public Function CheckCompleteness() As Boolean
     ' 邏輯: 匯出關鍵欄位
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 產生最終結果 **********"
-    sql = "SELECT " & vbCrLf & _
-          "    [" & m_Schema.Fields.AccountMerged & "], " & vbCrLf & _
-          "    [" & m_Schema.TB.AccountName & "], " & vbCrLf & _
-          "    [" & m_Schema.Fields.TbAmount & "], " & vbCrLf & _
-          "    [" & m_Schema.Fields.JeAmountSum & "], " & vbCrLf & _
-          "    [" & m_Schema.Fields.TbJeDiff & "] " & vbCrLf & _
-          "INTO " & m_Schema.Tables.CompletenessDetail & " " & vbCrLf & _
-          "FROM " & m_Schema.Tables.CompletenessCalculated & ";"
+    With m_Schema
+        sql = "SELECT " & vbCrLf & _
+              "    [" & .Fields.AccountMerged & "], " & vbCrLf & _
+              "    [" & .TB.AccountName & "], " & vbCrLf & _
+              "    [" & .Fields.TbAmount & "], " & vbCrLf & _
+              "    [" & .Fields.JeAmountSum & "], " & vbCrLf & _
+              "    [" & .Fields.TbJeDiff & "] " & vbCrLf & _
+              "INTO " & .Tables.CompletenessDetail & " " & vbCrLf & _
+              "FROM " & .Tables.CompletenessCalculated & ";"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     CheckCompleteness = True
@@ -247,22 +271,29 @@ Public Function CheckDocumentBalance() As Boolean
     CheckDocumentBalance = False
     Debug.Print "********** 開始完整性檢查流程 **********"
     Debug.Print "檢查期間: " & m_Info.PeriodStart & " ~ " & m_Info.PeriodEnd
-    Call CleanupTempTables(dbTarget, Array( _
-                                        m_Schema.Tables.DocumentBalanceSum, _
-                                        m_Schema.Tables.DocumentBalanceDiff, _
-                                        m_Schema.Tables.DocumentBalanceDetail _
-                                    ))
+    With m_Schema
+        Call CleanupTempTables( _
+            dbTarget, _
+            Array( _
+                .Tables.DocumentBalanceSum, _
+                .Tables.DocumentBalanceDiff, _
+                .Tables.DocumentBalanceDetail _
+                ) _
+            )
+    End With
     '---------------------------------------------------------------------------
     ' 依傳票號碼彙總 JE 金額
     ' 邏輯: SUM [K_Amount], GROUP BY [DocumentNumber]
     '---------------------------------------------------------------------------
     Debug.Print "********** 依傳票號碼彙總金額 **********"
-    sql = "SELECT " & vbCrLf & _
-          "    [" & m_Schema.JE.DocumentNumber & "], " & vbCrLf & _
-          "    SUM([" & m_Schema.Fields.JeAmount & "]) AS [" & m_Schema.Fields.JeAmountSum & "] " & vbCrLf & _
-          "INTO " & m_Schema.Tables.DocumentBalanceSum & " " & vbCrLf & _
-          "FROM " & m_Schema.Tables.JeInPeriod & " " & vbCrLf & _
-          "GROUP BY [" & m_Schema.JE.DocumentNumber & "];"
+    With m_Schema
+        sql = "SELECT " & vbCrLf & _
+              "    [" & .JE.DocumentNumber & "], " & vbCrLf & _
+              "    SUM([" & .Fields.JeAmount & "]) AS [" & .Fields.JeAmountSum & "] " & vbCrLf & _
+              "INTO " & .Tables.DocumentBalanceSum & " " & vbCrLf & _
+              "FROM " & .Tables.JeInPeriod & " " & vbCrLf & _
+              "GROUP BY [" & .JE.DocumentNumber & "];"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     '---------------------------------------------------------------------------
@@ -270,10 +301,12 @@ Public Function CheckDocumentBalance() As Boolean
     ' 邏輯: WHERE je.[K_Amount_Sum] <> 0
     '---------------------------------------------------------------------------
     Debug.Print "********** 篩選出借貸不平衡的分錄 **********"
-    sql = "SELECT * " & vbCrLf & _
-          "INTO " & m_Schema.Tables.DocumentBalanceDiff & " " & vbCrLf & _
-          "FROM " & m_Schema.Tables.DocumentBalanceSum & " " & vbCrLf & _
-          "WHERE [" & m_Schema.Fields.JeAmountSum & "] <> 0;"
+    With m_Schema
+        sql = "SELECT * " & vbCrLf & _
+              "INTO " & .Tables.DocumentBalanceDiff & " " & vbCrLf & _
+              "FROM " & .Tables.DocumentBalanceSum & " " & vbCrLf & _
+              "WHERE [" & .Fields.JeAmountSum & "] <> 0;"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     '---------------------------------------------------------------------------
@@ -284,13 +317,15 @@ Public Function CheckDocumentBalance() As Boolean
     '//FIXME: 明細表應該確實包含所有資料，並以計算欄位顯示差異結果
     '//       對此，需要調整 [借貸不平] 的資料表輸出流程
     '//       使其符合資料表名稱所屬定義
-    sql = "SELECT " & vbCrLf & _
-          "    P.*, " & vbCrLf & _
-          "    S.[" & m_Schema.Fields.JeAmountSum & "] " & vbCrLf & _
-          "INTO " & m_Schema.Tables.DocumentBalanceDetail & " " & vbCrLf & _
-          "FROM " & m_Schema.Tables.JeInPeriod & " AS P" & vbCrLf & _
-          "INNER JOIN " & m_Schema.Tables.DocumentBalanceDiff & " AS S " & vbCrLf & _
-          "    ON p.[" & m_Schema.JE.DocumentNumber & "] = S.[" & m_Schema.JE.DocumentNumber & "];"
+    With m_Schema
+        sql = "SELECT " & vbCrLf & _
+              "    P.*, " & vbCrLf & _
+              "    S.[" & .Fields.JeAmountSum & "] " & vbCrLf & _
+              "INTO " & .Tables.DocumentBalanceDetail & " " & vbCrLf & _
+              "FROM " & .Tables.JeInPeriod & " AS P" & vbCrLf & _
+              "INNER JOIN " & .Tables.DocumentBalanceDiff & " AS S " & vbCrLf & _
+              "    ON p.[" & .JE.DocumentNumber & "] = S.[" & .JE.DocumentNumber & "];"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     CheckDocumentBalance = True
@@ -327,21 +362,28 @@ Public Function CheckINF() As Boolean
     CheckINF = False
     Debug.Print "********** 開始隨機抽樣流程 **********"
     Debug.Print "檢查期間: " & m_Info.PeriodStart & " ~ " & m_Info.PeriodEnd
-    Call CleanupTempTables(dbTarget, Array( _
-                                        m_Schema.Tables.JeInPeriod, _
-                                        m_Schema.Tables.InfRandom, _
-                                        m_Schema.Tables.InfSorted _
-                                    ))
+    With m_Schema
+        Call CleanupTempTables( _
+            dbTarget, _
+            Array( _
+                .Tables.JeInPeriod, _
+                .Tables.InfRandom, _
+                .Tables.InfSorted _
+                ) _
+            )
+    End With
     '---------------------------------------------------------------------------
     ' 篩選指定期間內的 JE
     ' 邏輯: @BetweenDate(je.[PostDate], info.PeriodStart, info.PeriodEnd)
     '---------------------------------------------------------------------------
     Debug.Print "********** 篩選期間內資料 **********"
-    sql = "SELECT * " & vbCrLf & _
-          "INTO " & m_Schema.Tables.JeInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & m_Schema.JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
-          "WHERE [" & m_Schema.JE.PostDate & "] " & vbCrLf & _
-          "BETWEEN #" & m_Info.PeriodStart & "# AND #" & m_Info.PeriodEnd & "#;"
+    With m_Schema
+        sql = "SELECT * " & vbCrLf & _
+              "INTO " & .Tables.JeInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
+              "FROM " & .JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
+              "WHERE [" & .JE.PostDate & "] " & vbCrLf & _
+              "BETWEEN #" & m_Info.PeriodStart & "# AND #" & m_Info.PeriodEnd & "#;"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     '---------------------------------------------------------------------------
@@ -350,10 +392,12 @@ Public Function CheckINF() As Boolean
     '---------------------------------------------------------------------------
     Debug.Print "********** 隨機抽取 60 筆樣本 **********"
     Randomize
-    sql = "SELECT TOP 60 * " & vbCrLf & _
-          "INTO " & m_Schema.Tables.InfRandom & " " & vbCrLf & _
-          "FROM " & m_Schema.Tables.JeInPeriod & " " & vbCrLf & _
-          "ORDER BY Rnd([" & m_Schema.Fields.JeUid & "]);"
+    With m_Schema
+        sql = "SELECT TOP 60 * " & vbCrLf & _
+              "INTO " & .Tables.InfRandom & " " & vbCrLf & _
+              "FROM " & .Tables.JeInPeriod & " " & vbCrLf & _
+              "ORDER BY Rnd([" & .Fields.JeUid & "]);"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     ' ----------------------------------------------------------------------------
@@ -361,10 +405,12 @@ Public Function CheckINF() As Boolean
     ' 邏輯: ORDER BY je.[DocumentNumber] ASC
     ' ----------------------------------------------------------------------------
     Debug.Print "********** 依傳票號碼排序樣本 **********"
-    sql = "SELECT * " & vbCrLf & _
-          "INTO " & m_Schema.Tables.InfSorted & " " & vbCrLf & _
-          "FROM " & m_Schema.Tables.InfRandom & " " & vbCrLf & _
-          "ORDER BY [" & m_Schema.JE.DocumentNumber & "] ASC;"
+    With m_Schema
+        sql = "SELECT * " & vbCrLf & _
+              "INTO " & .Tables.InfSorted & " " & vbCrLf & _
+              "FROM " & .Tables.InfRandom & " " & vbCrLf & _
+              "ORDER BY [" & .JE.DocumentNumber & "] ASC;"
+    End With
     dbTarget.ExecuteNonQuery sql
     
     CheckINF = True
@@ -395,11 +441,16 @@ Public Function CheckNullRecords() As Boolean
     On Error GoTo ErrorHandler
     CheckNullRecords = False
     Debug.Print "********** 開始空值記錄檢查 **********"
-    Call CleanupTempTables(dbTarget, Array( _
-                                        m_Schema.Tables.NullAccount, _
-                                        m_Schema.Tables.NullDocument, _
-                                        m_Schema.Tables.NullDescription _
-                                    ))
+    With m_Schema
+        Call CleanupTempTables( _
+            dbTarget, _
+            Array( _
+                .Tables.NullAccount, _
+                .Tables.NullDocument, _
+                .Tables.NullDescription _
+                ) _
+            )
+    End With
     Debug.Print "********** 檢查會計科目編號空值 **********"
     If Not dbSource.ExtractNullRecords( _
         m_Schema.JE.Name, _

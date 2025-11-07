@@ -14,46 +14,74 @@ Option Explicit
 '
 ' Design Pattern: Configuration Object (配置物件模式)
 '
-' Usage:
-'   ' 清晰的階層關係
-'   sql = "SELECT [" & Schema.JE.AccountNumber & "] FROM " & Schema.JE.Name
-'   sql = "SELECT [" & Schema.TB.AccountNumber & "] FROM " & Schema.TB.Name
+' Responsibility:
+'   本類別作為系統綱要的統一入口點，整合以下三層資訊：
+'   1. 使用者自訂欄位映射 (透過 FieldMapperJe/FieldMapperTb)
+'   2. 系統產生的標準化欄位 (透過 TypeSystemFields)
+'   3. 資料表名稱與報表定義 (透過 TypeSystemTables/TypeSystemReports)
 '
 ' Architecture:
 '   DbSchema (階層式結構)
-'     ├── 資料表
-'     │   ├── JE (TypeTableJe)
-'     │   │   ├── Name = "JE"
-'     │   │   ├── AccountNumber = "AccountNumber"
-'     │   │   ├── PostDate = "PostDate"
-'     │   │   └── K_Amount = "AMOUNT_JE"
-'     │   ├── TB (TypeTableTb)
-'     │   │   ├── Name = "TB"
-'     │   │   ├── AccountNumber = "AccountNumber"
-'     │   │   └── K_Amount = "AMOUNT_TB"
-'     │   ├── DateDimension (TypeTableDateDimension)
-'     │   ├── CompletenessDetail (TypeTableCompletenessDetail)
-'     │   ├── AccountMapping (TypeTableAccountMapping)
-'     │   └── Derived (TypeDerivedTables) - 衍生資料表集合
-'     └── 報表
-'         ├── ReportEngagementOverview (TypeReportEngagementOverview)
-'         ├── ReportDataOverview (TypeReportDataOverview)
-'         ├── ReportValidationOverview (TypeReportValidationOverview)
-'         ├── ReportCompletenessDetail (TypeReportCompletenessDetail)
-'         ├── ReportDocumentBalanceDetail (TypeReportDocumentBalanceDetail)
-'         ├── ReportInfSampleDetail (TypeReportInfSampleDetail)
-'         ├── ReportAccountMappingInfo (TypeReportAccountMappingInfo)
-'         └── ReportFieldMappingInfo (TypeReportFieldMappingInfo)
+'     ├── JE (FieldMapperJe) - 使用者自訂欄位映射
+'     │   ├── .Name                       → "JE"
+'     │   ├── .DebitAmount                → "借方金額_JE" (動態)
+'     │   └── .AccountNumber              → "會計項目_JE" (動態)
+'     │
+'     ├── TB (FieldMapperTb) - 使用者自訂欄位映射
+'     │   ├── .Name                       → "TB"
+'     │   ├── .ChangeAmount               → "異動金額_TB" (動態)
+'     │   └── .AccountNumber              → "科目編號_TB" (動態)
+'     │
+'     ├── DateDimension (TypeTableDateDimension) - 系統資料表
+'     │   ├── .Name                       → "DATE_DIMENSION"
+'     │   ├── .DateKey                    → "DateKey" (固定)
+'     │   └── .IsWeekend                  → "IsWeekend" (固定)
+'     │
+'     ├── AccountMapping (TypeTableAccountMapping) - 系統資料表
+'     │   ├── .Name                       → "ACCOUNT_MAPPING"
+'     │   ├── .AccountCode                → "AccountCode" (固定)
+'     │   └── .AccountStandardized        → "AccountStandardized" (固定)
+'     │
+'     ├── Tables (TypeSystemTables) - 系統衍生資料表集合
+'     │   ├── .JeInPeriod                 → "JE_IN_PERIOD"
+'     │   ├── .CompletenessDetail         → "COMPLETENESS_DETAIL"
+'     │   └── .DocumentBalanceDetail      → "DOCUMENT_BALANCE_DETAIL"
+'     │
+'     ├── Fields (TypeSystemFields) - 系統產生欄位集合
+'     │   ├── .JeAmount                   → "K_AMOUNT_JE"
+'     │   ├── .TbAmount                   → "K_AMOUNT_TB"
+'     │   ├── .AccountMerged              → "ACCOUNT_MERGED"
+'     │   └── .TbJeDiff                   → "TB_JE_DIFF"
+'     │
+'     └── Reports (TypeSystemReports) - 系統報表集合
+'         ├── .EngagementOverview
+'         │   ├── .Name                   → "ENGAGEMENT_OVERVIEW"
+'         │   ├── .Client                 → "客戶"
+'         │   └── .PreparedBy             → "報表生產人"
+'         ├── .DataOverview
+'         │   ├── .Name                   → "DATA_OVERVIEW"
+'         │   └── .JeName                 → "分錄檔案名稱"
+'         └── .ValidationOverview
+'             ├── .Name                   → "VALIDATION_OVERVIEW"
+'             └── .CompletenessDiffCount  → "完整性差異筆數"
+'
+' Usage:
+'   '使用者自訂欄位（透過 FieldMapper，動態）
+'   sql = "SELECT [" & context.Schema.JE.DebitAmount & "] " & _
+'         "FROM " & context.Schema.JE.Name
 '
 ' Dependencies:
-'   - SchemaTypes.bas: 定義使用者自訂類型（UDT）
+'   - SchemaTypes.bas: 定義所有 UDT
+'   - FieldMapperJe.cls: 管理 JE 的使用者自訂欄位映射
+'   - FieldMapperTb.cls: 管理 TB 的使用者自訂欄位映射
+'   - ContextManager.cls: 透過依賴注入傳遞 Schema 物件
 '
 ' Benefits:
-'   1. 集中管理 - 所有資料表/欄位名稱定義在一處
-'   2. 命名空間分離 - 透過階層結構避免命名衝突
+'   1. 統一入口 - 所有資料表/欄位名稱透過 context.Schema 存取
+'   2. 職責分離 - FieldMapper (動態) + Schema (靜態)
 '   3. IntelliSense 友善 - IDE 提供完整的自動完成
 '   4. 類型安全 - 編譯期檢查，減少拼寫錯誤
-'   5. 易於重構 - 修改名稱只需改一處
+'   5. 易於維護 - 修改名稱只需改一處
 '   6. 符合 OOP - 欄位從屬於資料表，符合正規化原則
 '===============================================================================
 ' 使用 SchemaTypes 模組定義的 UDT
@@ -93,13 +121,16 @@ Public Property Get Reports() As TypeSystemReports
 End Property
 
 '===============================================================================
-' 初始化 UDT 成員
+' Initialization Methods
 '===============================================================================
+
+'-------------------------------------------------------------------------------
+' Method: InitializeTables
+' Purpose: 初始化所有系統資料表和集合的定義
+' Called By: Initialize()
+'-------------------------------------------------------------------------------
 Private Sub InitializeTables()
-    '---------------------------------------------------------------------------
-    ' 初始化所有資料表的 Schema 映射定義
-    '---------------------------------------------------------------------------
-    '-- DateDimension: 系統定義的標準化欄位
+    '-- DateDimension: 日期維度表
     With m_DateDimension
         .Name = "DATE_DIMENSION"
         '-- 欄位
@@ -115,18 +146,16 @@ Private Sub InitializeTables()
         .MakeupDaysDesc = "MakeupDaysDesc"
     End With
     
-    '-- AccountMapping: 系統定義的標準化欄位
+    '-- AccountMapping: 科目配對表
     With m_AccountMapping
         .Name = "ACCOUNT_MAPPING"
         '-- 欄位
-        .AccountCode = "AccountCode"
+        .AccountNumber = "AccountNumber"
         .AccountName = "AccountName"
         .AccountStandardized = "AccountStandardized"
-        .IsActive = "IsActive"
-        .CreatedDate = "CreatedDate"
     End With
     
-    '-- 初始化衍生資料表
+    '-- Tables: 系統衍生資料表集合
     With m_Tables
         .JeInPeriod = "JE_IN_PERIOD"
         .JeNotInPeriod = "JE_NOT_IN_PERIOD"
@@ -144,13 +173,11 @@ Private Sub InitializeTables()
         .NullDescription = "NULL_DESCRIPTION_RECORDS"
     End With
     
-    '-- 初始化衍生欄位表
+    '-- Fields: 系統產生欄位集合
     With m_Fields
-        '//
         '//NOTE: 由於 UDT 僅作為副本傳送，而不可修改狀態
         '//      因此以下欄位名稱暫時可用，若後續有動態連結
         '//      則應該交由 FieldMapper 處理
-        '//
         .JeUid = "識別碼_JE"
         .JeAmount = "K_AMOUNT_JE"
         .JeAmountSum = "K_AMOUNT_SUM_JE"
@@ -159,11 +186,13 @@ Private Sub InitializeTables()
         .TbJeDiff = "TB_JE_DIFF"
     End With
 End Sub
+'-------------------------------------------------------------------------------
+' Method: InitializeReports
+' Purpose: 初始化所有報表的定義
+' Called By: Initialize()
+'-------------------------------------------------------------------------------
 Private Sub InitializeReports()
-    '---------------------------------------------------------------------------
-    ' 初始化所有報表的 Schema 映射定義
-    '---------------------------------------------------------------------------
-    '-- ENGAGEMENT_OVERVIEW
+    '-- ENGAGEMENT_OVERVIEW: 專案總覽報表
     With m_Reports.EngagementOverview
         .Name = "ENGAGEMENT_OVERVIEW"
         '-- 欄位
@@ -174,7 +203,8 @@ Private Sub InitializeReports()
         .PreparedBy = "報表生產人"
         .PreparedDate = "報表生產時間"
     End With
-    '-- DATA_OVERVIEW
+    
+    '-- DATA_OVERVIEW: 資料總覽報表
     With m_Reports.DataOverview
         .Name = "DATA_OVERVIEW"
         '-- 欄位
@@ -186,7 +216,8 @@ Private Sub InitializeReports()
         .TbName = "試算表檔案名稱"
         .TbAccountCount = "試算表科目數量"
     End With
-    '-- VALIDATION_OVERVIEW
+    
+    '-- VALIDATION_OVERVIEW: 驗證總覽報表
     With m_Reports.ValidationOverview
         .Name = "VALIDATION_OVERVIEW"
         '-- 欄位
@@ -197,33 +228,52 @@ Private Sub InitializeReports()
         .CompletenessDiffCount = "完整性差異筆數"
         .DocumentBalanceDiffCount = "借貸不平差異筆數"
     End With
-    '-- COMPLETENESS_DETAIL
+    
+    '-- COMPLETENESS_DETAIL: 完整性測試明細報表
     With m_Reports.CompletenessDetail
         .Name = "COMPLETENESS_DETAIL"
     End With
-    '-- DOCUMENT_BALANCE_DETAIL
+    
+    '-- DOCUMENT_BALANCE_DETAIL: 借貸平衡測試明細報表
     With m_Reports.DocumentBalanceDetail
         .Name = "DOCUMENT_BALANCE_DETAIL"
     End With
-    '-- ACCOUNT_MAPPING_INFO
+    
+    '-- INF_SAMPLE_DETAIL: INF抽樣明細報表
+    With m_Reports.InfSampleDetail
+        .Name = "INF_SAMPLE_DETAIL"
+    End With
+    
+    '-- ACCOUNT_MAPPING_INFO: 科目配對資訊報表
     With m_Reports.AccountMappingInfo
         .Name = "ACCOUNT_MAPPING_INFO"
     End With
-    '-- FIELD_MAPPING_INFO
+    
+    '-- FIELD_MAPPING_INFO: 欄位映射資訊報表
     With m_Reports.FieldMappingInfo
         .Name = "FIELD_MAPPING_INFO"
     End With
 End Sub
 
+'-------------------------------------------------------------------------------
+' Method: Initialize
+' Purpose: 模擬建構子，初始化所有綱要定義並綁定 FieldMapper
+' Parameters:
+'   - jeMapper: JE 的欄位映射物件（使用者自訂欄位）
+'   - tbMapper: TB 的欄位映射物件（使用者自訂欄位）
+' Called By: ContextManager.Initialize()
+' Note:
+'   此方法必須在 ContextManager 初始化時呼叫，以綁定使用者的欄位映射
+'-------------------------------------------------------------------------------
 Public Sub Initialize( _
     ByVal jeMapper As FieldMapperJe, _
     ByVal tbMapper As FieldMapperTb _
 )
-    '---------------------------------------------------------------------------
-    ' 模擬建構子初始化
-    '---------------------------------------------------------------------------
+    '-- 初始化系統定義的資料表和集合
     Call InitializeTables
     Call InitializeReports
+    
+    '-- 綁定使用者自訂的欄位映射
     Set m_JE = jeMapper
     Set m_TB = tbMapper
 End Sub

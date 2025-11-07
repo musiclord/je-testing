@@ -4,20 +4,39 @@ Option Explicit
 ' Module: SchemaTypes
 ' Purpose: 定義 DbSchema 使用的使用者自訂類型 (User-Defined Type)
 '
+' Responsibility:
+'   本模組定義系統中所有 UDT，分為三大類：
+'   1. 報表類型 (TypeReport*)       - 定義報表資料表的名稱和欄位
+'   2. 資料表類型 (TypeTable*)      - 定義系統資料表的名稱和欄位
+'   3. 集合類型 (TypeSystem*)       - 定義衍生資料表、欄位、報表的集合
+'
 ' Note:
-'   - VBA 不允許在類別模組中定義 Public Type，因此將類型定義移至標準模組。
-'   - 只定義「系統產生」的標準化欄位（如 K_Amount, ACCOUNT_MERGED）
+'   - VBA 不允許在類別模組中定義 Public Type，因此將類型定義移至標準模組
+'   - 只定義「系統產生」的標準化欄位（如 K_AMOUNT_JE, ACCOUNT_MERGED）
 '   - 不定義「使用者自訂」的欄位（如 DebitAmount, AccountNumber）
-'   - 使用者自訂欄位由 FieldMapper 管理
+'   - 使用者自訂欄位由 FieldMapperJe 和 FieldMapperTb 管理
 '
 ' Naming Convention:
-'   - Type 名稱: TypeTable{TableName} / TypeReport{ReportName}
+'   - Type 名稱格式:
+'       * TypeReport{ReportName}   - 報表類型
+'       * TypeTable{TableName}     - 資料表類型
+'       * TypeSystem{Category}     - 系統集合類型
 '   - 欄位名稱: PascalCase（與實際資料庫欄位名稱一致）
 '
 ' Dependencies:
 '   - DbSchema.cls: 使用這些 UDT 建立階層式結構
+'   - FieldMapperJe.cls: 管理 JE 的使用者自訂欄位映射
+'   - FieldMapperTb.cls: 管理 TB 的使用者自訂欄位映射
+'
+' Usage Example:
+'   '**在 DbSchema 中使用**
+'   Private m_Reports As TypeSystemReports
+'   '**在 Service 中使用**
+'   Dim rpt As TypeReportEngagementOverview
+'   rpt = context.Schema.Reports.EngagementOverview
+'   sql = "SELECT ... AS [" & rpt.Client & "] INTO " & rpt.Name
 '===============================================================================
-' 報表
+' 報表類型定義
 '-------------------------------------------------------------------------------
 Public Type TypeReportEngagementOverview
     Name As String                      ' 報表名稱
@@ -77,6 +96,10 @@ Public Type TypeReportFieldMappingInfo
 End Type
 '===============================================================================
 ' 資料表類型定義
+' Note: 僅定義系統產生的欄位，使用者自訂欄位由 FieldMapper 管理
+'===============================================================================
+' DATE_DIMENSION (日期維度表)
+' 提供日期相關的維度資訊（年、月、日、星期、假日、補班日）
 '-------------------------------------------------------------------------------
 Public Type TypeTableDateDimension
     Name As String                      ' 資料表名稱
@@ -93,17 +116,23 @@ Public Type TypeTableDateDimension
     MakeupDaysDesc As String            '[CHAR]   補班日說明 (選填)
 End Type
 '-------------------------------------------------------------------------------
+' ACCOUNT_MAPPING (科目配對表)
+' 提供科目編號與標準化科目分類的對應關係
+'-------------------------------------------------------------------------------
 Public Type TypeTableAccountMapping
     Name As String                      ' 資料表名稱
     '-- 欄位
-    AccountCode As String               ' 科目編號
+    AccountNumber As String             ' 科目編號
     AccountName As String               ' 科目名稱
     AccountStandardized As String       ' 科目分類名稱
-    IsActive As String                  ' 是否啟用
-    CreatedDate As String               ' 建立日期
 End Type
-'-------------------------------------------------------------------------------
+'===============================================================================
+' 系統集合類型定義
+' 將相關的資料表、欄位、報表組織成集合，便於統一管理
+'===============================================================================
 ' 資料表: 系統衍生資料表集合
+' 集中管理驗證測試過程中產生的所有中間表和結果表
+'-------------------------------------------------------------------------------
 Public Type TypeSystemTables
     JeInPeriod As String                ' 期間內的 JE
     JeNotInPeriod As String             ' 期間外的 JE
@@ -122,6 +151,8 @@ Public Type TypeSystemTables
 End Type
 '-------------------------------------------------------------------------------
 ' 欄位表: 系統衍生欄位表集合
+' 集中管理系統產生的標準化計算欄位
+'-------------------------------------------------------------------------------
 Public Type TypeSystemFields
     '-- 系統產生的標準化欄位
     JeUid As String                     ' JE 的唯一主鍵
@@ -133,6 +164,8 @@ Public Type TypeSystemFields
 End Type
 '-------------------------------------------------------------------------------
 ' 報表: 系統衍生報表集合
+' 將所有報表類型組織成單一集合，便於統一存取
+'-------------------------------------------------------------------------------
 Public Type TypeSystemReports
     EngagementOverview As TypeReportEngagementOverview          '專案總覽報表
     DataOverview As TypeReportDataOverview                      '資料總覽報表
