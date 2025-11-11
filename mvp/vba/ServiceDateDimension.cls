@@ -73,8 +73,8 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
     tbl = m_Schema.DateDimension
     '取得總筆數
     rsHolidays.MoveFirst
-    If rsHolidays.RecordCount = -1 Then rsHolidays.MoveLast
-    totalCount = rsHolidays.RecordCount
+    If rsHolidays.recordCount = -1 Then rsHolidays.MoveLast
+    totalCount = rsHolidays.recordCount
     rsHolidays.MoveFirst
     
     Do While Not rsHolidays.EOF
@@ -115,8 +115,8 @@ Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
     tbl = m_Schema.DateDimension
     '取得總筆數
     rsMakeupDays.MoveFirst
-    If rsMakeupDays.RecordCount = -1 Then rsMakeupDays.MoveLast
-    totalCount = rsMakeupDays.RecordCount
+    If rsMakeupDays.recordCount = -1 Then rsMakeupDays.MoveLast
+    totalCount = rsMakeupDays.recordCount
     rsMakeupDays.MoveFirst
     
     Do While Not rsMakeupDays.EOF

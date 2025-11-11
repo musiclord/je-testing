@@ -81,10 +81,10 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
                 currentRow = currentRow + 2
             Else
                 '¼g¤J¸ê®Æ
-                If rs.RecordCount = -1 Then
+                If rs.recordCount = -1 Then
                     rs.MoveLast
                 End If
-                rowsCopied = rs.RecordCount
+                rowsCopied = rs.recordCount
                 If rowsCopied < 0 Then rowsCopied = 0
                 rs.MoveFirst
                 ws.Cells(currentRow, 1).CopyFromRecordset rs

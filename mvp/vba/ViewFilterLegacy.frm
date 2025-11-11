@@ -3,7 +3,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewFilterLegacy
    Caption         =   "Legacy Filter"
    ClientHeight    =   8370.001
    ClientLeft      =   120
-   ClientTop       =   465
+   ClientTop       =   468
    ClientWidth     =   8880.001
    OleObjectBlob   =   "ViewFilterLegacy.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡

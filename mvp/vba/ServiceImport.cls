@@ -430,8 +430,8 @@ Public Function ImportFromSheet( _
     '-- 確認記錄集狀態
     If Not ImportFromSheet Is Nothing Then
         If Not ImportFromSheet.EOF Then
-            If ImportFromSheet.RecordCount = -1 Then ImportFromSheet.MoveLast
-            Debug.Print "  - [" & TBL_TEMP & "] 已匯入 " & ImportFromSheet.RecordCount & " 筆資料"
+            If ImportFromSheet.recordCount = -1 Then ImportFromSheet.MoveLast
+            Debug.Print "  - [" & TBL_TEMP & "] 已匯入 " & ImportFromSheet.recordCount & " 筆資料"
             ImportFromSheet.MoveFirst
         Else
             Debug.Print "  - [" & TBL_TEMP & "]" & TBL_TEMP & " 無資料"

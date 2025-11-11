@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImport 
    Caption         =   "Import"
    ClientHeight    =   8430.001
-   ClientLeft      =   105
-   ClientTop       =   405
-   ClientWidth     =   7155
+   ClientLeft      =   108
+   ClientTop       =   408
+   ClientWidth     =   7152
    OleObjectBlob   =   "ViewImport.frx":0000
    StartUpPosition =   1  '©ÒÄÝµøµ¡¤¤¥¡
 End

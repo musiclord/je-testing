@@ -44,6 +44,7 @@ Private importer As ServiceImport
 Private exporter As ServiceExport
 Private reporter As ServiceReport
 Private validator As ServiceValidation
+Private mapper As ServiceAccountMapping
 Private filter As ServiceFilter
 
 '===============================================================================
@@ -70,6 +71,7 @@ Public Sub Initialize()
     Set exporter = New ServiceExport
     Set reporter = New ServiceReport
     Set validator = New ServiceValidation
+    Set mapper = New ServiceAccountMapping
     Set filter = New ServiceFilter
     '--
     Call context.Initialize
@@ -117,6 +119,7 @@ Private Sub vMain_DoStep2()
     ' 初始化步驟二所需的物件並開啟表單介面 ViewValidation
     '---------------------------------------------------------------------------
     Call validator.Initialize(context)
+    Call mapper.Initialize(context)
     '--
     Call vValidation.Initialize
     vValidation.Show vbModeless
@@ -271,7 +274,7 @@ Private Sub vImport_TestDefaultRequested()
 End Sub
 Private Sub vImport_Submitted(ByVal dto As DataTransferObject)
     '---------------------------------------------------------------------------
-    ' 處理匯入表單提交並更新 Context
+    ' 接收組裝好的 DTO ，處理匯入表單提交並更新 Context
     '---------------------------------------------------------------------------
     context.info.CompanyName = dto.CompanyName
     context.info.PrepStartDate = dto.PrepStartDate
@@ -342,8 +345,31 @@ Private Sub vValidation_INF()
     validator.CheckINF
 End Sub
 
+Private Sub vValidation_ShowAccountMapping()
+    '---------------------------------------------------------------------------
+    ' 開啟科目配對工作表 (AccountMappingSheet)
+    '---------------------------------------------------------------------------
+    If Not context.DbInput.TableExists(context.DbSchema.JE.Name) Then
+        MsgBox "未找到完整性測試明細資料表", vbExclamation, "查閱科目配對"
+        Exit Sub
+    End If
+    
+    '初始化並顯示科目配對工作表
+    Call mapper.ExportTemplate '<-- 這裡還沒設計是否要帶參數
+    
+End Sub
+
+Private Sub vValidation_ImportAccountMapping()
+    '---------------------------------------------------------------------------
+    ' 將科目配對工作表匯入至資料庫
+    '---------------------------------------------------------------------------
+    
+End Sub
+
 Private Sub vValidation_Submitted(ByVal dto As DataTransferObject)
-    '...
+    '---------------------------------------------------------------------------
+    ' 接收組裝好的 DTO 物件，更新 Context 狀態
+    '---------------------------------------------------------------------------
 End Sub
 
 '===============================================================================
