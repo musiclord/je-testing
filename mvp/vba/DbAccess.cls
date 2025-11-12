@@ -256,15 +256,17 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     Set ExecuteQuery = m_Db.OpenRecordset(sql, dbOpenSnapshot)
 End Function
 
-Public Function ExecuteNonQuery(ByVal sql As String) As Long
+Public Function ExecuteNonQuery(ByVal sql As String, Optional logging As Boolean = True) As Long
     '---------------------------------------------------------------------------
     ' 執行指定的 SQL 指令（非查詢型），並回傳受影響的記錄筆數。
     '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
-    Debug.Print String(60, "-")
-    Debug.Print "<<" & Dir(m_Db.Name) & ">> : "
-    Debug.Print sql
-    Debug.Print String(60, "-")
+    If logging Then
+        Debug.Print String(60, "-")
+        Debug.Print "<<" & Dir(m_Db.Name) & ">> : "
+        Debug.Print sql
+        Debug.Print String(60, "-")
+    End If
     m_Db.Execute sql, dbFailOnError
     '刷新快取
     Call Refresh

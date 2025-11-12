@@ -379,11 +379,7 @@ Private Sub vValidation_ShowAccountMapping()
     Dim ws As Worksheet
     Set ws = SHT_ACCOUNT_MAPPING
     '-- 產出科目配對工作表
-    If mapper.ExportTemplate(ws) Then
-        Debug.Print "科目配對工作表匯出成功"
-    Else
-        Debug.Print "科目配對工作表匯出失敗"
-    End If
+    Call mapper.ExportTemplate(ws)
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -406,23 +402,20 @@ Private Sub vValidation_ImportAccountMapping()
     End If
     Dim dataRange As String
     dataRange = "A1:C" & lastRow
+    
     '-- 定義欄位型別
     Dim fieldTypes As Variant
-    fieldTypes = Array("TEXT(50", "TExt(50)", "TEXT(50)")
+    fieldTypes = Array("TEXT(50)", "TEXT(50)", "TEXT(50)")
     '-- 定義記錄集物件
     Dim rs As DAO.Recordset
     Set rs = importer.ImportFromSheet(ws, dataRange, fieldTypes)
-    If rs Is Nothing Or rs.EOF Then
-        MsgBox "從工作表讀區資料發生錯誤", vbCritical, "科目配對"
-        Exit Sub
-    End If
+    
     '-- 匯入科目配對表至資料庫
     If Not mapper.ImportAccountMapping(rs) Then
         MsgBox "科目配對失敗", vbExclamation, "科目配對"
+    Else
+        MsgBox "科目配對成功", vbInformation, "科目配對"
     End If
-    
-    
-    
 End Sub
 
 '-------------------------------------------------------------------------------

@@ -83,7 +83,6 @@ Public Function ExportTemplate(ws As Worksheet) As Boolean
     Dim colNum As String: colNum = m_Schema.AccountMapping.AccountNumber
     Dim colName As String: colName = m_Schema.AccountMapping.AccountName
     Dim colStandardized As String: colStandardized = m_Schema.AccountMapping.AccountStandardized
-    Dim i As Long
     
     '-- 設置工作表格式
     ws.Cells.Clear
@@ -151,6 +150,10 @@ Public Function ImportAccountMapping(ByVal rs As DAO.Recordset) As Boolean
     On Error GoTo ErrorHandler
     ImportAccountMapping = False
     '...
+    If m_Db.TableExists(m_Schema.AccountMapping.Name) Then
+        m_Db.DropTable m_Schema.AccountMapping.Name
+    End If
+    '...
     '-- 建立資料表
     Dim sql As String
     sql = "CREATE TABLE [" & m_Schema.AccountMapping.Name & "] (" & vbCrLf & _
@@ -164,7 +167,7 @@ Public Function ImportAccountMapping(ByVal rs As DAO.Recordset) As Boolean
           "SELECT * FROM [" & TBL_TEMP & "];" '<-- TBL_TEMP 已經由 importer 匯入進資料庫
     Call m_Db.ExecuteNonQuery(sql)
     '-- 匯入完成
-    Debug.Print "********** 科目配對匯入完成 **********"
+    Debug.Print "********** 科目配對表匯入完成 **********"
     ImportAccountMapping = True
     Exit Function
 ErrorHandler:

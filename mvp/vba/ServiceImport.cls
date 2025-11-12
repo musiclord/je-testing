@@ -345,6 +345,7 @@ Public Function ImportFromSheet( _
     '   - SQL 執行失敗 → 回傳 Nothing
     '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
+    Dim rs As DAO.Recordset
     Dim rng As Range
     Dim headerRow As Range
     Dim dataRows As Range
@@ -426,24 +427,26 @@ Public Function ImportFromSheet( _
                 If i < colCount Then sql = sql & ", "
             Next i
             sql = sql & ");"
-            If Not allBlank Then db.ExecuteNonQuery sql
+            If Not allBlank Then db.ExecuteNonQuery sql, logging:=False
         Next row
     End If
     
     '-- 將更新完的日期維度表傳回為記錄集
-    Set ImportFromSheet = db.ExecuteQuery("SELECT * FROM [" & TBL_TEMP & "];")
+    Set rs = db.ExecuteQuery("SELECT * FROM [" & TBL_TEMP & "];")
     
     '-- 確認記錄集狀態
-    If Not ImportFromSheet Is Nothing Then
-        If Not ImportFromSheet.EOF Then
-            If ImportFromSheet.recordCount = -1 Then ImportFromSheet.MoveLast
-            Debug.Print "  - [" & TBL_TEMP & "] 已匯入 " & ImportFromSheet.recordCount & " 筆資料"
-            ImportFromSheet.MoveFirst
+    Debug.Print "ServiceImport.ImportFromSheet()"
+    If Not rs Is Nothing Then
+        If Not rs.EOF Then
+            If rs.recordCount = -1 Then rs.MoveLast
+            Debug.Print "  - [" & TBL_TEMP & "] 已匯入 " & rs.recordCount & " 筆資料"
+            rs.MoveFirst
         Else
             Debug.Print "  - [" & TBL_TEMP & "]" & TBL_TEMP & " 無資料"
-            ImportFromSheet.Close
+            rs.Close
         End If
     End If
+    Set ImportFromSheet = rs
     Exit Function
 ErrorHandler:
     Debug.Print "ImportFromSheet(): " & Err.Number & " - " & Err.Description
