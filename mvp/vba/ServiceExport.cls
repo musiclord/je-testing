@@ -27,17 +27,22 @@ Public Sub Initialize(context As ContextManager)
     Set m_Schema = context.DbSchema
 End Sub
 
-'-- 資料預覽方法
+'-------------------------------------------------------------------------------
+' 方法: 將多個資料表依序渲染至指定工作表
+' 參數:
+'     - ws: 目標工作表物件
+'     - Tables: 資料表名稱陣列 (Variant Array)
+'     - startRow: 起始列位置 (預設為 1)
+' Usage:
+'     Dim ws As Worksheet
+'     Set ws = ThisWorkbook.Worksheets(SHT_ACCOUNT_MAPPING)
+'     Dim Tables As Variant
+'     Tables = Array("COMPLETENESS_DETAIL", "DOCUMENT_BALANCE_DETAIL")
+'     Call RenderTablesToWorksheet(ws, Tables, 3)
+'-------------------------------------------------------------------------------
 Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
                                     ByVal Tables As Variant, _
                                     Optional ByVal startRow As Long = 1)
-    '---------------------------------------------------------------------------
-    ' 方法: 將多個資料表依序渲染至指定工作表
-    ' 參數:
-    '     - ws: 目標工作表物件
-    '     - tables: 資料表名稱陣列 (Variant Array)
-    '     - startRow: 起始列位置 (預設為 1)
-    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     Dim idx As Long
     Dim currentRow As Long
@@ -118,10 +123,10 @@ Private Sub SetPassword(ByRef xlSheet As Excel.Worksheet)
 End Sub
 
 '-- 產出指定報告
+'-------------------------------------------------------------------------------
+' 資料預先整理之說明 = ENGAGEMENT_OVERVIEW
+'-------------------------------------------------------------------------------
 Public Function ShowEngagementOverview() As Boolean
-    '---------------------------------------------------------------------------
-    ' 資料預先整理之說明 = ENGAGEMENT_OVERVIEW
-    '---------------------------------------------------------------------------
     ShowEngagementOverview = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -131,7 +136,7 @@ Public Function ShowEngagementOverview() As Boolean
     sheetName = "Step-1-1|資料預先整理之說明"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
@@ -142,10 +147,10 @@ Public Function ShowWorkingPaperSummary() As Boolean
     ' JE底稿說明 = 0
 End Function
 
+'-------------------------------------------------------------------------------
+' 驗證測試報告 = ENGAGEMENT_OVERVIEW + DATA_OVERVIEW + VALIDATION_OVERVIEW
+'-------------------------------------------------------------------------------
 Public Function ShowValidationReport() As Boolean
-    '---------------------------------------------------------------------------
-    ' 驗證測試報告 = ENGAGEMENT_OVERVIEW + DATA_OVERVIEW + VALIDATION_OVERVIEW
-    '---------------------------------------------------------------------------
     ShowValidationReport = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -159,17 +164,17 @@ Public Function ShowValidationReport() As Boolean
     sheetName = "Step-2-1|驗證測試報告"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowValidationReport = True
 End Function
 
+'-------------------------------------------------------------------------------
+' 完整性測試報告 = ENGAGEMENT_OVERVIEW + COMPLETENESS_DETAIL
+'-------------------------------------------------------------------------------
 Public Function ShowCompletenessReport() As Boolean
-    '---------------------------------------------------------------------------
-    ' 完整性測試報告 = ENGAGEMENT_OVERVIEW + COMPLETENESS_DETAIL
-    '---------------------------------------------------------------------------
     ShowCompletenessReport = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -182,17 +187,17 @@ Public Function ShowCompletenessReport() As Boolean
     sheetName = "Step-2-2|完整性測試報告"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessReport = True
 End Function
 
+'-------------------------------------------------------------------------------
+' 借貸不平測試報告 = ENGAGEMENT_OVERVIEW + DOCUMENT_BALANCE_DETAIL
+'-------------------------------------------------------------------------------
 Public Function ShowDocumentBalanceReport() As Boolean
-    '---------------------------------------------------------------------------
-    ' 借貸不平測試報告 = ENGAGEMENT_OVERVIEW + DOCUMENT_BALANCE_DETAIL
-    '---------------------------------------------------------------------------
     ShowDocumentBalanceReport = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -205,18 +210,18 @@ Public Function ShowDocumentBalanceReport() As Boolean
     sheetName = "Step-2-3|借貸不平測試報告"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowDocumentBalanceReport = True
 End Function
 
+'-------------------------------------------------------------------------------
+' 分錄編制人員說明 = ENGAGEMENT_OVERVIEW + ???
+' 原始資料位於 #PreScr-R5-Sum 為預篩選步驟
+'-------------------------------------------------------------------------------
 Public Function ShowPreparerSummary() As Boolean
-    '---------------------------------------------------------------------------
-    ' 分錄編制人員說明 = ENGAGEMENT_OVERVIEW + ???
-    ' 原始資料位於 #PreScr-R5-Sum 為預篩選步驟
-    '---------------------------------------------------------------------------
     ShowPreparerSummary = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -226,17 +231,17 @@ Public Function ShowPreparerSummary() As Boolean
     sheetName = "Step-2-4|分錄編制人員說明"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
-    'Call RenderTablesToWorksheet(ws, tables)
+    'Call RenderTablesToWorksheet(ws, Tables)
     ShowPreparerSummary = True
 End Function
 
+'-------------------------------------------------------------------------------
+' 完整性測試之差異說明 =
+'-------------------------------------------------------------------------------
 Public Function ShowCompletenessDiffSummary() As Boolean
-    '---------------------------------------------------------------------------
-    ' 完整性測試之差異說明 =
-    '---------------------------------------------------------------------------
     ShowCompletenessDiffSummary = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -246,17 +251,17 @@ Public Function ShowCompletenessDiffSummary() As Boolean
     sheetName = "Step-2-5|完整性測試之差異說明"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessDiffSummary = True
 End Function
 
+'-------------------------------------------------------------------------------
+' 完整性差異調節報告
+'-------------------------------------------------------------------------------
 Public Function ShowCompletenessReconciliationReport() As Boolean
-    '---------------------------------------------------------------------------
-    ' 完整性差異調節報告
-    '---------------------------------------------------------------------------
     ShowCompletenessReconciliationReport = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -266,17 +271,17 @@ Public Function ShowCompletenessReconciliationReport() As Boolean
     sheetName = "Step-2-6|完整性差異調節報告"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessReconciliationReport = True
 End Function
 
+'-------------------------------------------------------------------------------
+' INF可靠性測試 =
+'-------------------------------------------------------------------------------
 Public Function ShowINFReport() As Boolean
-    '---------------------------------------------------------------------------
-    ' INF可靠性測試 =
-    '---------------------------------------------------------------------------
     ShowINFReport = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -286,17 +291,17 @@ Public Function ShowINFReport() As Boolean
     sheetName = "Step-3-1|INF可靠性測試"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowINFReport = True
 End Function
 
+'-------------------------------------------------------------------------------
+' 高風險條件 (HRC) 說明
+'-------------------------------------------------------------------------------
 Public Function ShowHRCSummary() As Boolean
-    '---------------------------------------------------------------------------
-    ' 高風險條件 (HRC) 說明
-    '---------------------------------------------------------------------------
     ShowHRCSummary = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -306,7 +311,7 @@ Public Function ShowHRCSummary() As Boolean
     sheetName = "Step-4-1|高風險條件 (HRC) 說明"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
@@ -314,10 +319,10 @@ Public Function ShowHRCSummary() As Boolean
     '...
 End Function
 
+'-------------------------------------------------------------------------------
+' 符合高風險條件傳票報告 =
+'-------------------------------------------------------------------------------
 Public Function ShowHRCReport() As Boolean
-    '---------------------------------------------------------------------------
-    ' 符合高風險條件傳票報告 =
-    '---------------------------------------------------------------------------
     ShowHRCReport = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -327,17 +332,17 @@ Public Function ShowHRCReport() As Boolean
     sheetName = "Step-4-2|符合高風險條件傳票報告"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCReport = True
 End Function
 
+'-------------------------------------------------------------------------------
+' 符合高風險條件傳票之明細
+'-------------------------------------------------------------------------------
 Public Function ShowHRCDetails() As Boolean
-    '---------------------------------------------------------------------------
-    ' 符合高風險條件傳票之明細
-    '---------------------------------------------------------------------------
     ShowHRCDetails = False
     '設置資料表陣列
     Dim Tables As Variant
@@ -347,18 +352,18 @@ Public Function ShowHRCDetails() As Boolean
     sheetName = "Step-4-3|符合高風險條件傳票之明細"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCDetails = True
 End Function
 
-Public Function PostClosingEntries() As Boolean
-    '---------------------------------------------------------------------------
-    '財務報表關帳後調整之分錄
-    '---------------------------------------------------------------------------
-    PostClosingEntries = False
+'-------------------------------------------------------------------------------
+'財務報表關帳後調整之分錄
+'-------------------------------------------------------------------------------
+Public Function ShowPostClosingEntries() As Boolean
+    ShowPostClosingEntries = False
     '設置資料表陣列
     Dim Tables As Variant
     Tables = Array()
@@ -367,34 +372,38 @@ Public Function PostClosingEntries() As Boolean
     sheetName = "Step-5-1|財務報表關帳後調整之分錄"
     '設置工作表物件
     Dim ws As Worksheet
-    Set ws = PreviewSheet
+    Set ws = SHT_PREVIEW
     ws.Name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
-    PostClosingEntries = True
+    ShowPostClosingEntries = True
 End Function
 
-Public Function FieldInfo() As Boolean
-    '---------------------------------------------------------------------------
-    ' 自動化工具-檔案欄位資訊
-    '---------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
+' 自動化工具-檔案欄位資訊
+'-------------------------------------------------------------------------------
+Public Function ShowFieldInfo() As Boolean
+    '...
 End Function
 
-Public Function HolidyInfo() As Boolean
-    '---------------------------------------------------------------------------
-    ' 自動化工具-假期假日資訊
-    '---------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
+' 自動化工具-假期假日資訊
+'-------------------------------------------------------------------------------
+Public Function ShowHolidyInfo() As Boolean
+    '...
 End Function
 
-Public Function AccountMappingInfo() As Boolean
-    '---------------------------------------------------------------------------
-    ' 自動化工具-科目配對資訊
-    '---------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
+' 自動化工具-科目配對資訊
+'-------------------------------------------------------------------------------
+Public Function ShowAccountMappingInfo() As Boolean
+    '...
 End Function
 
+'-------------------------------------------------------------------------------
+' 將處理好的底稿輸出至本機目錄
+' 彙總所有軌跡的報告並輸出 .xlsx 檔案至專案木錄
+'-------------------------------------------------------------------------------
 Public Function ExportWp() As Boolean
-    '---------------------------------------------------------------------------
-    ' 將處理好的底稿輸出至本機目錄
-    ' 彙總所有軌跡的報告並輸出 .xlsx 檔案至專案木錄
-    '---------------------------------------------------------------------------
+    '...
 End Function

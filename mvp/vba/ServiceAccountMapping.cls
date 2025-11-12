@@ -76,291 +76,100 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Method: ExportTemplate
 ' Purpose: 從 COMPLETENESS_DETAIL 匯出科目清單至 AccountMappingSheet
-' Returns: Boolean - 成功回傳 True
 '-------------------------------------------------------------------------------
-Public Function ExportTemplate() As Boolean
+Public Function ExportTemplate(ws As Worksheet) As Boolean
     On Error GoTo ErrorHandler
     ExportTemplate = False
+    Dim colNum As String: colNum = m_Schema.AccountMapping.AccountNumber
+    Dim colName As String: colName = m_Schema.AccountMapping.AccountName
+    Dim colStandardized As String: colStandardized = m_Schema.AccountMapping.AccountStandardized
+    Dim i As Long
     
-    Debug.Print "********** 開始匯出科目配對範本 **********"
-    
-    '-- 檢查前置條件
-    If Not m_DbValid.TableExists(m_Schema.Tables.CompletenessDetail) Then
-        Debug.Print "  - 錯誤: COMPLETENESS_DETAIL 表不存在"
-        MsgBox "請先執行完整性測試以產生科目清單", vbExclamation, "科目配對"
-        Exit Function
-    End If
-    
-    '-- 建立查詢 SQL
-    Dim sql As String
-    sql = "SELECT " & vbCrLf & _
-          "    [" & m_Schema.Fields.AccountMerged & "] AS [GL_Number], " & vbCrLf & _
-          "    [" & m_Schema.TB.AccountName & "] AS [GL_Name], " & vbCrLf & _
-          "    [" & m_Schema.Fields.TbAmount & "] AS [TB_Amount], " & vbCrLf & _
-          "    [" & m_Schema.Fields.JeAmountSum & "] AS [JE_Amount], " & vbCrLf & _
-          "    [" & m_Schema.Fields.TbJeDiff & "] AS [TB_JE_Diff], " & vbCrLf & _
-          "    '' AS [Standardized_Account_Name]" & vbCrLf & _
-          "FROM [" & m_Schema.Tables.CompletenessDetail & "]" & vbCrLf & _
-          "ORDER BY [" & m_Schema.Fields.AccountMerged & "];"
-    
-    Debug.Print "  - 執行查詢"
-    
-    '-- 執行查詢
-    Dim rs As DAO.Recordset
-    Set rs = m_DbValid.ExecuteQuery(sql)
-    
-    If rs.EOF Then
-        Debug.Print "  - 警告: 無科目資料可匯出"
-        MsgBox "完整性測試結果沒有科目資料", vbInformation, "科目配對"
-        rs.Close
-        Exit Function
-    End If
-    
-    '-- 取得目標工作表
-    Dim ws As Worksheet
-    Set ws = ThisWorkbook.Worksheets(SHT_ACCOUNT_MAPPING)
-    
-    '-- 清空工作表
+    '-- 設置工作表格式
     ws.Cells.Clear
+    ws.Columns("A").NumberFormat = "@"
+    ws.Columns("B").NumberFormat = "@"
+    ws.Columns("C").NumberFormat = "@"
+    '-- 設置表頭名稱
+    ws.Range("A1").Value = colNum
+    ws.Range("B1").Value = colName
+    ws.Range("C1").Value = colStandardized
+    ws.Range("A1:C1").Font.Bold = True
     
-    '-- 寫入欄位標題
-    ws.Range("A1").Value = "GL_Number"
-    ws.Range("B1").Value = "GL_Name"
-    ws.Range("C1").Value = "TB_Amount"
-    ws.Range("D1").Value = "JE_Amount"
-    ws.Range("E1").Value = "TB_JE_Diff"
-    ws.Range("F1").Value = "Standardized_Account_Name"
+    '-- 填入資料
+    Dim tableName As String
+    tableName = m_Schema.Tables.CompletenessDetail
     
-    '-- 格式化標題列
-    With ws.Range("A1:F1")
-        .Font.Bold = True
-        .Interior.Color = RGB(217, 217, 217)
-        .HorizontalAlignment = xlCenter
-    End With
-    
-    '-- 設定欄位格式
-    ws.Columns("A:B").NumberFormat = "@"           ' 文字格式
-    ws.Columns("C:E").NumberFormat = "#,##0.00"    ' 金額格式
-    ws.Columns("F:F").NumberFormat = "@"           ' 文字格式
-    
-    '-- 寫入資料 (從 A2 開始)
-    Debug.Print "  - 開始寫入資料"
-    ws.Range("A2").CopyFromRecordset rs
-    
-    rs.Close
-    Set rs = Nothing
-    
-    '-- 取得實際資料範圍
-    Dim lastRow As Long
-    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).row
-    
-    '-- 設定資料驗證 (F欄: 標準化科目分類)
-    If lastRow > 1 Then
-        With ws.Range("F2:F" & lastRow).Validation
-            .Delete
-            .Add Type:=xlValidateList, _
-                 AlertStyle:=xlValidAlertStop, _
-                 Operator:=xlBetween, _
-                 Formula1:="Cash,Revenue,Receipt in advance,Receivables,Others"
-            .IgnoreBlank = True
-            .InCellDropdown = True
-            .ShowInput = True
-            .ShowError = True
-        End With
+    If Not m_DbValid.TableExists(tableName) Then
+        ws.Cells(2, 1).Value = "資料表 [" & tableName & "] 不存在"
+    Else
+        '-- 查詢字串
+        Dim sql As String
+        sql = "SELECT " & vbCrLf & _
+              "    [" & m_Schema.Fields.AccountMerged & "] AS [" & colNum & "], " & vbCrLf & _
+              "    [" & m_Schema.TB.AccountName & "] AS [" & colName & "], " & vbCrLf & _
+              "    '' AS [" & colStandardized & "]" & vbCrLf & _
+              "FROM [" & tableName & "] " & vbCrLf & _
+              "ORDER BY [" & m_Schema.Fields.AccountMerged & "];"
+        
+        '-- 查詢資料庫
+        Dim rs As DAO.Recordset
+        Set rs = m_DbValid.ExecuteQuery(sql)
+        
+        If rs.BOF And rs.EOF Then
+            '無資料情形
+            ws.Cells(2, 1).Value = "(無資料)"
+            Exit Function
+        Else
+            '有資料情形，寫入
+            Dim maxRows As Long: maxRows = 1000
+            Call ws.Cells(2, 1).CopyFromRecordset(rs, maxRows)
+            '取得資料列數
+            Dim lastRow As Long
+            lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).row
+            Debug.Print "  - 成功匯出 " & (lastRow - 1) & " 筆科目"
+            rs.Close
+        End If
     End If
-    
-    '-- 自動調整欄寬
-    ws.Columns("A:F").AutoFit
-    
-    '-- 凍結首列
-    ws.Rows("2:2").Select
-    ActiveWindow.FreezePanes = True
-    ws.Range("A2").Select
-    
-    Debug.Print "  - 成功匯出 " & (lastRow - 1) & " 筆科目資料"
+    '-- 啟用工作表
+    ws.Columns("A:C").AutoFit
+    ws.Activate
     Debug.Print "********** 科目配對範本匯出完成 **********"
-    
     ExportTemplate = True
     Exit Function
-    
 ErrorHandler:
-    Debug.Print "ExportTemplate(): " & Err.Number
+    Debug.Print "ExportTemplate()"
+    Debug.Print "  - 錯誤代碼: " & Err.Number
     Debug.Print "  - 錯誤描述: " & Err.Description
-    MsgBox "匯出科目配對範本時發生錯誤:" & vbCrLf & Err.Description, vbCritical, "科目配對"
 End Function
 
 '-------------------------------------------------------------------------------
 ' Method: ImportAccountMapping
 ' Purpose: 讀取 AccountMappingSheet 並儲存至 ACCOUNT_MAPPING 表
-' Returns: Boolean - 成功回傳 True
 '-------------------------------------------------------------------------------
-Public Function ImportAccountMapping() As Boolean
+Public Function ImportAccountMapping(ByVal rs As DAO.Recordset) As Boolean
     On Error GoTo ErrorHandler
     ImportAccountMapping = False
-    
-    Debug.Print "********** 開始匯入科目配對資料 **********"
-    
-    '-- 取得來源工作表
-    Dim ws As Worksheet
-    Set ws = ThisWorkbook.Worksheets(SHT_ACCOUNT_MAPPING)
-    
-    '-- 驗證表頭
-    If ws.Range("A1").Value <> "GL_Number" Or _
-       ws.Range("F1").Value <> "Standardized_Account_Name" Then
-        Debug.Print "  - 錯誤: 工作表格式不正確"
-        MsgBox "工作表格式不正確，請重新匯出範本", vbExclamation, "科目配對"
-        Exit Function
-    End If
-    
-    '-- 取得資料範圍
-    Dim lastRow As Long
-    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).row
-    
-    If lastRow < 2 Then
-        Debug.Print "  - 警告: 無資料可匯入"
-        MsgBox "工作表中沒有資料", vbInformation, "科目配對"
-        Exit Function
-    End If
-    
-    Debug.Print "  - 共 " & (lastRow - 1) & " 筆資料待匯入"
-    
-    '-- 驗證必填欄位
-    Dim i As Long
-    Dim missingCount As Long
-    
-    For i = 2 To lastRow
-        If Trim(ws.Cells(i, 1).Value & "") = "" Or _
-           Trim(ws.Cells(i, 6).Value & "") = "" Then
-            missingCount = missingCount + 1
-        End If
-    Next i
-    
-    If missingCount > 0 Then
-        Debug.Print "  - 錯誤: 發現 " & missingCount & " 筆必填欄位未填寫"
-        MsgBox "發現 " & missingCount & " 筆資料的 GL_Number 或 Standardized_Account_Name 未填寫", _
-               vbExclamation, "科目配對"
-        Exit Function
-    End If
-    
-    '-- 清空並重建 ACCOUNT_MAPPING 表
-    Debug.Print "  - 清空並重建 ACCOUNT_MAPPING 表"
-    If m_Db.TableExists(m_Schema.AccountMapping.Name) Then
-        Call m_Db.DropTable(m_Schema.AccountMapping.Name)
-    End If
-    
-    Dim sqlCreate As String
-    sqlCreate = "CREATE TABLE [" & m_Schema.AccountMapping.Name & "] (" & vbCrLf & _
-                "    [" & m_Schema.AccountMapping.AccountNumber & "] TEXT(50) NOT NULL, " & vbCrLf & _
-                "    [" & m_Schema.AccountMapping.AccountName & "] TEXT(255), " & vbCrLf & _
-                "    [" & m_Schema.AccountMapping.AccountStandardized & "] TEXT(50) NOT NULL" & vbCrLf & _
-                ");"
-    
-    m_Db.ExecuteNonQuery sqlCreate
-    
-    '-- 開始交易
-    m_Db.BeginTx
-    
+    '...
+    '-- 建立資料表
+    Dim sql As String
+    sql = "CREATE TABLE [" & m_Schema.AccountMapping.Name & "] (" & vbCrLf & _
+          "    [" & m_Schema.AccountMapping.AccountNumber & "] TEXT(50), " & vbCrLf & _
+          "    [" & m_Schema.AccountMapping.AccountName & "] TEXT(50)," & vbCrLf & _
+          "    [" & m_Schema.AccountMapping.AccountStandardized & "] TEXT(50) " & vbCrLf & _
+          ");"
+    Call m_Db.ExecuteNonQuery(sql)
     '-- 匯入資料
-    Debug.Print "  - 開始匯入資料"
-    Dim rs As DAO.Recordset
-    Set rs = m_Db.Database.OpenRecordset( _
-                m_Schema.AccountMapping.Name, _
-                dbOpenDynaset _
-             )
-    
-    Dim importCount As Long
-    importCount = 0
-    
-    For i = 2 To lastRow
-        rs.AddNew
-        rs(m_Schema.AccountMapping.AccountNumber) = Trim(ws.Cells(i, 1).Value & "")
-        rs(m_Schema.AccountMapping.AccountName) = Trim(ws.Cells(i, 2).Value & "")
-        rs(m_Schema.AccountMapping.AccountStandardized) = Trim(ws.Cells(i, 6).Value & "")
-        rs.Update
-        importCount = importCount + 1
-    Next i
-    
-    rs.Close
-    Set rs = Nothing
-    
-    '-- 提交交易
-    m_Db.CommitTx
-    m_Db.Refresh
-    
-    Debug.Print "  - 成功匯入 " & importCount & " 筆科目配對資料"
-    Debug.Print "********** 科目配對資料匯入完成 **********"
-    
-    MsgBox "成功匯入 " & importCount & " 筆科目配對資料", vbInformation, "科目配對"
-    
+    sql = "INSERT INTO [" & m_Schema.AccountMapping.Name & "] " & vbCrLf & _
+          "SELECT * FROM [" & TBL_TEMP & "];" '<-- TBL_TEMP 已經由 importer 匯入進資料庫
+    Call m_Db.ExecuteNonQuery(sql)
+    '-- 匯入完成
+    Debug.Print "********** 科目配對匯入完成 **********"
     ImportAccountMapping = True
     Exit Function
-    
 ErrorHandler:
-    Debug.Print "ImportAccountMapping(): " & Err.Number
+    Debug.Print "ImportAccountMapping()"
+    Debug.Print "  - 錯誤代碼: " & Err.Number
     Debug.Print "  - 錯誤描述: " & Err.Description
-    MsgBox "匯入科目配對資料時發生錯誤:" & vbCrLf & Err.Description, vbCritical, "科目配對"
 End Function
 
-'-------------------------------------------------------------------------------
-' Method: ValidateAccountMapping
-' Purpose: 驗證科目配對的完整性
-' Returns: Boolean - 驗證通過回傳 True
-'-------------------------------------------------------------------------------
-Public Function ValidateAccountMapping() As Boolean
-    On Error GoTo ErrorHandler
-    ValidateAccountMapping = False
-    
-    Debug.Print "********** 開始驗證科目配對 **********"
-    
-    '-- 檢查 ACCOUNT_MAPPING 表是否存在
-    If Not m_Db.TableExists(m_Schema.AccountMapping.Name) Then
-        Debug.Print "  - 錯誤: ACCOUNT_MAPPING 表不存在"
-        MsgBox "請先匯入科目配對資料", vbExclamation, "科目配對驗證"
-        Exit Function
-    End If
-    
-    '-- 檢查記錄數量
-    Dim recordCount As Long
-    recordCount = CLng(m_Db.GetTotal(m_Schema.AccountMapping.Name, "", "DBCount"))
-    
-    If recordCount = 0 Then
-        Debug.Print "  - 警告: ACCOUNT_MAPPING 表為空"
-        MsgBox "科目配對表沒有資料", vbInformation, "科目配對驗證"
-        Exit Function
-    End If
-    
-    '-- 檢查是否有重複的科目代號
-    Dim sqlDuplicate As String
-    sqlDuplicate = "SELECT [" & m_Schema.AccountMapping.AccountNumber & "], COUNT(*) AS [Count] " & _
-                   "FROM [" & m_Schema.AccountMapping.Name & "] " & _
-                   "GROUP BY [" & m_Schema.AccountMapping.AccountNumber & "] " & _
-                   "HAVING COUNT(*) > 1;"
-    
-    Dim rsDup As DAO.Recordset
-    Set rsDup = m_Db.ExecuteQuery(sqlDuplicate)
-    
-    If Not rsDup.EOF Then
-        Debug.Print "  - 警告: 發現重複的科目代號"
-        Dim dupList As String
-        Do While Not rsDup.EOF
-            dupList = dupList & rsDup(0) & " (" & rsDup(1) & "次), "
-            rsDup.MoveNext
-        Loop
-        rsDup.Close
-        MsgBox "發現重複的科目代號:" & vbCrLf & Left(dupList, Len(dupList) - 2), _
-               vbExclamation, "科目配對驗證"
-        Exit Function
-    End If
-    rsDup.Close
-    
-    Debug.Print "  - 驗證通過 (共 " & recordCount & " 筆)"
-    Debug.Print "********** 科目配對驗證完成 **********"
-    
-    ValidateAccountMapping = True
-    Exit Function
-    
-ErrorHandler:
-    Debug.Print "ValidateAccountMapping(): " & Err.Number
-    Debug.Print "  - 錯誤描述: " & Err.Description
-    MsgBox "驗證科目配對時發生錯誤:" & vbCrLf & Err.Description, vbCritical, "科目配對驗證"
-End Function

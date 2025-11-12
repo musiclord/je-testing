@@ -29,9 +29,9 @@ Option Explicit
 '   - FieldMapperTb.cls: 管理 TB 的使用者自訂欄位映射
 '
 ' Usage Example:
-'   '**在 DbSchema 中使用**
+'   '--在 DbSchema 中使用
 '   Private m_Reports As TypeSystemReports
-'   '**在 Service 中使用**
+'   '--在 Service 中使用
 '   Dim rpt As TypeReportEngagementOverview
 '   rpt = context.Schema.Reports.EngagementOverview
 '   sql = "SELECT ... AS [" & rpt.Client & "] INTO " & rpt.Name

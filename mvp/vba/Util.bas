@@ -8,12 +8,6 @@ Option Explicit
 Private m_App As New ApplicationMain
 '-- 通用暫存表
 Public Const TBL_TEMP As String = "TEMP_DATA"
-'-- 全域工作表名稱 (作為後綁定使用)
-Public Const SHT_MAIN As String = "MainSheet"
-Public Const SHT_ACCOUNT_MAPPING As String = "AccountMappingSheet"
-Public Const SHT_HOLIDAYS As String = "HolidaysSheet"
-Public Const SHT_MAKEUPDAYS As String = "MakeupDaysSheet"
-Public Const SHT_PREVIEW As String = "PreviewSheet"
 
 '-- 專案全域入口介面
 '-------------------------------------------------------------------------------

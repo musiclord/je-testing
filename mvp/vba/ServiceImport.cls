@@ -314,23 +314,29 @@ Public Function ImportFromSheet( _
     '   DAO.Recordset   - 指向暫存表的記錄集（已開啟且可直接遍歷）
     '                     失敗時回傳 Nothing
     ' 使用範例:
-    '   ' 範例 1: 從工作表自動偵測欄位名稱
+    '   範例 1: 從工作表自動偵測欄位名稱
     '   Dim types As Variant
     '   types = Array("DATE", "TEXT(50)")
     '   Set rs = importer.ImportFromSheet(HolidaySheet, "A1:B100", types)
-    '   ' → 將 A1:B100 匯入，A1/B1 為欄位名稱，A2:B100 為資料
+    '   → 將 A1:B100 匯入，A1/B1 為欄位名稱，A2:B100 為資料
     '
-    '   ' 範例 2: 使用自訂欄位名稱（工作表無標題列）
+    '   範例 2: 使用自訂欄位名稱（工作表無標題列）
     '   Dim names As Variant, types As Variant
     '   names = Array("Date", "Description")
     '   types = Array("DATE", "TEXT(100)")
     '   Set rs = importer.ImportFromSheet(MakeupDaySheet, "A2:B50", types, names)
-    '   ' → 將 A2:B50 匯入，欄位名稱為 Date/Description
+    '   → 將 A2:B50 匯入，欄位名稱為 Date/Description
     '
-    '   ' 範例 3: 混合型別（日期 + 文字 + 布林 + 數字）
+    '   範例 3: 混合型別（日期 + 文字 + 布林 + 數字）
     '   Dim types As Variant
     '   types = Array("DATE", "TEXT(50)", "YESNO", "LONG")
     '   Set rs = importer.ImportFromSheet(CustomSheet, "A1:D100", types)
+    '
+    '   範例 4: 簡單從工作表匯入
+    '   Set rs = importer.ImporterFromSheet(CustomSheet, dataRange, fieldTypes)
+    '   sql = "INSERT INTO [要插入的資料表]" & _
+    '         "SELECT * FROM [" & TBL_TEMP & "];"
+    '   m_Db.ExecuteNonQuery sql
     '
     ' 錯誤處理:
     '   - fieldNames 與 fieldTypes 數量不符 → 拋出錯誤 514

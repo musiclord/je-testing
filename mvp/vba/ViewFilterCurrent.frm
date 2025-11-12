@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewFilterCurrent 
    Caption         =   "篩選條件"
    ClientHeight    =   5520
-   ClientLeft      =   108
-   ClientTop       =   408
-   ClientWidth     =   7032
+   ClientLeft      =   105
+   ClientTop       =   405
+   ClientWidth     =   7035
    OleObjectBlob   =   "ViewFilterCurrent.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
