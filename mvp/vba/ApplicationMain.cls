@@ -303,7 +303,7 @@ End Sub
 ' 套用表單 MapJe 的欄位映射
 '-------------------------------------------------------------------------------
 Private Sub vMapJe_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
-    context.DbSchema.JE.Method = amountMethod
+    context.DbSchema.JE.method = amountMethod
     If Not importer.ApplyJe(dict) Then
         vImport.lblFieldMappingStatus.Caption = " JE FAILED"
         MsgBox "JE 套用欄位失敗", vbExclamation, "JE 套用欄位"
@@ -320,7 +320,7 @@ End Sub
 ' 套用表單 MapTb 的欄位映射
 '-------------------------------------------------------------------------------
 Private Sub vMapTb_ApplyField(ByVal dict As Dictionary, ByVal amountMethod As Long)
-    context.DbSchema.TB.Method = amountMethod
+    context.DbSchema.TB.method = amountMethod
     If Not importer.ApplyTb(dict) Then
         vImport.lblFieldMappingStatus.Caption = "TB FAILED"
         MsgBox "TB套用欄位失敗", vbExclamation, "TB套用欄位"
@@ -336,7 +336,7 @@ End Sub
 '-------------------------------------------------------------------------------
 ' 執行完整性測試
 '-------------------------------------------------------------------------------
-Private Sub vValidation_Completeness()
+Private Sub vValidation_CheckCompleteness()
     If validator.CheckCompleteness() Then
         'exporter.PreviewTable
     End If
@@ -345,21 +345,21 @@ End Sub
 '-------------------------------------------------------------------------------
 ' 執行借貸不平測試
 '-------------------------------------------------------------------------------
-Private Sub vValidation_DocumentBalance()
+Private Sub vValidation_CheckDocumentBalance()
     validator.CheckDocumentBalance
 End Sub
 
 '-------------------------------------------------------------------------------
 ' 檢查空值分錄
 '-------------------------------------------------------------------------------
-Private Sub vValidation_NullRecords()
+Private Sub vValidation_CheckNullRecords()
     validator.CheckNullRecords
 End Sub
 
 '-------------------------------------------------------------------------------
 ' 執行可靠性測試
 '-------------------------------------------------------------------------------
-Private Sub vValidation_INF()
+Private Sub vValidation_CheckINF()
     validator.CheckINF
 End Sub
 
@@ -430,12 +430,12 @@ End Sub
 '===============================================================================
 Private Sub vFilterRouter_RouteToCurrent()
     Call vFilterCurrent.Initialize
-    vFilterCurrent.Show vbModeless
+    vFilterCurrent.Show vbModeless ' <-- 使用新版本的篩選條件
 End Sub
 
 Private Sub vFilterRouter_RouteToLegacy()
     Call vFilterLegacy.Initialize
-    vFilterLegacy.Show vbModeless
+    vFilterLegacy.Show vbModeless ' <-- 使用舊版本的篩選條件
 End Sub
 
 '===============================================================================

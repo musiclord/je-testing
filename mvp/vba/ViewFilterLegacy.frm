@@ -33,38 +33,47 @@ Private Sub btnExecuteCriterion_Click()
     
     If Me.chkPostedOnWeekend.Value Then
         '總帳日期在週末
+        '查詢 DateDimension 建立 IN 條件
     End If
     
     If Me.chkApprovedOnWeekend.Value Then
         '核准日期在週末
+        '查詢 DateDimension 建立 IN 條件
     End If
     
     If Me.chkPostedOnHoliday.Value Then
         '總帳日期在國定假日
+        '查詢 DateDimension 建立 IN 條件
     End If
     
     If Me.chkApprovedOnHoliday.Value Then
         '核准日期在國定假日
+        '查詢 DateDimension 建立 IN 條件
     End If
     
     If Me.chkExcludePostedOnMakeupDay.Value Then
         '需排除總帳日期在補班日/加班日
+        '查詢 DateDimension 建立 IN 條件
     End If
     
     If Me.chkExcludeApprovedOnMakeupDay.Value Then
         '需排除核准日期在補班日/加班日
+        '查詢 DateDimension 建立 IN 條件
     End If
     
     If Me.chkOnlyDebit.Value Then
         '僅考量借方傳票
+        '根據 JE 的欄位標籤排除
     End If
     
     If Me.chkOnlyCredit.Value Then
         '僅考量貸方傳票
+        '根據 JE 的欄位標籤排除
     End If
     
     If Me.chkSelectManualEntries.Value Then
         '篩選人工編制傳票
+        '根據 JE 的欄位標籤排除
     End If
     
     If Me.chkKeywordFilter.Value Then

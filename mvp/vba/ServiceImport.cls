@@ -30,6 +30,9 @@ Public Sub Initialize(context As ContextManager)
     Set m_Schema = context.DbSchema
 End Sub
 
+'===============================================================================
+' 處理 JE 及 TB 匯入專用方法
+'===============================================================================
 
 Public Sub OpenWizard(ByVal target As String)
     '---------------------------------------------------------------------------
@@ -121,7 +124,7 @@ Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
     UID = "識別碼_" & m_Schema.JE.Name
     m_Schema.JE.SetField "UID", UID
     '//TODO: 檢查欄位型別
-    If Not ProcessJeAmount(m_Schema.JE.Method) Then
+    If Not ProcessJeAmount(m_Schema.JE.method) Then
         'error
         Debug.Print "********** JE 欄位映射及金額處理失敗 **********"
     Else
@@ -149,7 +152,7 @@ Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
     Next key
     m_Schema.TB.PrintFields
     '//TODO: 檢查欄位型別
-    If Not ProcessTbAmount(m_Schema.TB.Method) Then
+    If Not ProcessTbAmount(m_Schema.TB.method) Then
         'error
         Debug.Print "********** TB 欄位映射及金額處理失敗 **********"
     Else
@@ -159,7 +162,6 @@ Public Function ApplyTb(ByVal dict As Dictionary) As Boolean
     ApplyTb = True
 End Function
 
-'-- 自訂
 Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     '---------------------------------------------------------------------------
     ' 方法: 金額處理邏輯
@@ -177,22 +179,26 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     Set tdf = dbs.TableDefs(m_Schema.JE.Name)
     Debug.Print "********** 開始 JE 金額處理 **********"
     Select Case amountMethod
-        Case 1 '直接使用原始金額欄位
+        Case 1  '直接使用原始金額欄位
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
             sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.Amount) & ";"
             db.ExecuteNonQuery sql
+            '增加借貸別欄位
+            Call AddDebitCreditField(amountMethod)
             
-        Case 2 '傳票金額 = 借方金額 - 貸方金額
+        Case 2  '傳票金額 = 借方金額 - 貸方金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
             sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.DebitAmount) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.CreditAmount) & ";"
             db.ExecuteNonQuery sql
+            '增加借貸別欄位
+            Call AddDebitCreditField(amountMethod)
             
-        Case 3 '依借貸別決定金額正負號
+        Case 3  '依借貸別決定金額正負號
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
             sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
@@ -202,6 +208,8 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
                   "    " & SanitizeNumericField(m_Schema.JE.Amount) & " * -1" & vbCrLf & _
                   ");"
             db.ExecuteNonQuery sql
+            '增加借貸別欄位
+            Call AddDebitCreditField(amountMethod)
             
         Case Else
             Debug.Print "不支援的金額處理方式: " & CStr(amountMethod)
@@ -228,16 +236,14 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
     Set tdf = dbs.TableDefs(m_Schema.TB.Name)
     Debug.Print "********** 開始 TB 金額處理 **********"
     Select Case amountMethod
-        Case 1
-            '直接使用變動金額
+        Case 1  '直接使用變動金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
             sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.ChangeAmount) & ";"
             db.ExecuteNonQuery sql
             
-        Case 2
-            '期末 - 期初 = 變動金額
+        Case 2  '期末 - 期初 = 變動金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
             sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
@@ -245,8 +251,7 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
                   SanitizeNumericField(m_Schema.TB.OpeningBalance) & ";"
             db.ExecuteNonQuery sql
             
-        Case 3
-            '借方 - 貸方 = 變動金額
+        Case 3  '借方 - 貸方 = 變動金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
             sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
@@ -282,68 +287,64 @@ ErrorHandler:
     ProcessTbAmount = False
 End Function
 
+Private Sub AddDebitCreditField(ByVal method As Long)
+    '新增借貸別欄位
+    Select Case method
+        Case 1  '直接使用原始金額欄位
+        
+        Case 2  '傳票金額 = 借方金額 - 貸方金額
+        
+        Case 3  '依借貸別決定金額正負號
+    End Select
+End Sub
+
+Private Sub AddLineItem( _
+    ByVal tableName As String, _
+    ByVal fieldGroupby As String, _
+    ByVal fieldLineItem As String _
+)
+    '---------------------------------------------------------------------------
+    '逐筆增加分錄項次
+    '---------------------------------------------------------------------------
+    Dim db As Database
+    Dim rs As Recordset
+    '//TODO:增加項次欄位
+End Sub
+
+'===============================================================================
+' 其他匯入資料方法
+'===============================================================================
+
+'---------------------------------------------------------------------------
+' 從 Excel 工作表匯入資料至 Access 暫存表
+'
+' 參數:
+'   ws          - 來源工作表物件
+'   dataRange   - 資料範圍 (如 "A1:B100")
+'   fieldTypes  - 欄位型別陣列 (如 Array("DATE", "TEXT(50)", "YESNO"))
+'   fieldNames  - [選填] 自訂欄位名稱陣列 (未提供則從第一列讀取)
+'
+' 回傳:
+'   DAO.Recordset - 暫存表記錄集，失敗時回傳 Nothing
+'
+' 範例:
+'   ' 自動偵測欄位名稱
+'   Set rs = importer.ImportFromSheet(ws, "A1:B100", Array("DATE", "TEXT(50)"))
+'
+'   ' 使用自訂欄位名稱
+'   Set rs = importer.ImportFromSheet(ws, "A2:B50", _
+'       Array("DATE", "TEXT(100)"), Array("Date", "Description"))
+'
+' 錯誤:
+'   - 陣列數量不符 → 拋出錯誤 514
+'   - 日期格式錯誤 → 寫入 NULL
+'---------------------------------------------------------------------------
 Public Function ImportFromSheet( _
     ByVal ws As Worksheet, _
     ByVal dataRange As String, _
     ByVal fieldTypes As Variant, _
     Optional ByVal fieldNames As Variant _
 ) As DAO.Recordset
-    '---------------------------------------------------------------------------
-    ' 通用方法：從工作表範圍匯入資料至 Access 暫存表
-    ' 目的:
-    '   將 Excel 工作表轉換為 Access 資料表，供後續業務邏輯處理。
-    '   此方法支援自動偵測欄位名稱或使用自訂欄位名稱，並強制指定欄位型別以確保
-    '   資料完整性。適用於 Holidays/MakeUpDays/CustomData 等各類工作表匯入需求。
-    '
-    ' 參數說明:
-    '   ws              - [必要] 來源工作表物件
-    '                     範例: HolidaySheet, MakeupDaySheet
-    '
-    '   dataRange       - [必要] 資料範圍（含標題列或純資料區域）
-    '                     格式: "A1:B100" 或 "A2:C50"（若 fieldNames 已提供則不含標題列）
-    '
-    '   fieldTypes      - [必要] 欄位型別陣列，定義每個欄位的 Access 資料型別
-    '                     支援型別: "DATE", "TEXT(n)", "SHORT", "LONG", "CURRENCY", "YESNO"
-    '                     範例: Array("DATE", "TEXT(50)", "YESNO")
-    '
-    '   fieldNames      - [選填] 自訂欄位名稱陣列（若不提供則從 dataRange 第 1 列讀取）
-    '                     範例: Array("Date", "Description", "IsActive")
-    '                     用途: 當工作表無標題列或需重新命名欄位時使用
-    '
-    ' 回傳值:
-    '   DAO.Recordset   - 指向暫存表的記錄集（已開啟且可直接遍歷）
-    '                     失敗時回傳 Nothing
-    ' 使用範例:
-    '   範例 1: 從工作表自動偵測欄位名稱
-    '   Dim types As Variant
-    '   types = Array("DATE", "TEXT(50)")
-    '   Set rs = importer.ImportFromSheet(HolidaySheet, "A1:B100", types)
-    '   → 將 A1:B100 匯入，A1/B1 為欄位名稱，A2:B100 為資料
-    '
-    '   範例 2: 使用自訂欄位名稱（工作表無標題列）
-    '   Dim names As Variant, types As Variant
-    '   names = Array("Date", "Description")
-    '   types = Array("DATE", "TEXT(100)")
-    '   Set rs = importer.ImportFromSheet(MakeupDaySheet, "A2:B50", types, names)
-    '   → 將 A2:B50 匯入，欄位名稱為 Date/Description
-    '
-    '   範例 3: 混合型別（日期 + 文字 + 布林 + 數字）
-    '   Dim types As Variant
-    '   types = Array("DATE", "TEXT(50)", "YESNO", "LONG")
-    '   Set rs = importer.ImportFromSheet(CustomSheet, "A1:D100", types)
-    '
-    '   範例 4: 簡單從工作表匯入
-    '   Set rs = importer.ImporterFromSheet(CustomSheet, dataRange, fieldTypes)
-    '   sql = "INSERT INTO [要插入的資料表]" & _
-    '         "SELECT * FROM [" & TBL_TEMP & "];"
-    '   m_Db.ExecuteNonQuery sql
-    '
-    ' 錯誤處理:
-    '   - fieldNames 與 fieldTypes 數量不符 → 拋出錯誤 514
-    '   - fieldTypes 與實際欄位數量不符 → 拋出錯誤 514
-    '   - 日期格式錯誤 → 該儲存格寫入 NULL
-    '   - SQL 執行失敗 → 回傳 Nothing
-    '---------------------------------------------------------------------------
     On Error GoTo ErrorHandler
     Dim rs As DAO.Recordset
     Dim rng As Range
@@ -452,20 +453,6 @@ ErrorHandler:
     Debug.Print "ImportFromSheet(): " & Err.Number & " - " & Err.Description
     Set ImportFromSheet = Nothing
 End Function
-
-Private Function AddLineItem( _
-    ByVal tableName As String, _
-    ByVal fieldGroupby As String, _
-    ByVal fieldLineItem As String _
-) As Boolean
-    '---------------------------------------------------------------------------
-    '逐筆增加分錄項次
-    '---------------------------------------------------------------------------
-    Dim db As Database
-    Dim rs As Recordset
-    '//TODO:增加項次欄位
-End Function
-    
 
 Private Sub AddFieldSuffix( _
     ByVal tableName As String, _

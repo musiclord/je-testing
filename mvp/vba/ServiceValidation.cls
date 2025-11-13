@@ -9,7 +9,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-'Class Name: ServiceValidationrd
+'Class Name: ServiceValidation
 'Purpose: 對客戶資料進行驗證測試
 '===============================================================================
 Private dbSource As DbAccess

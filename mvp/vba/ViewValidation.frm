@@ -19,10 +19,10 @@ Option Explicit
 ' Purpose:
 ' Methods:
 '===============================================================================
-Public Event Completeness()
-Public Event DocumentBalance()
-Public Event INF()
-Public Event NullRecords()
+Public Event CheckCompleteness()
+Public Event CheckDocumentBalance()
+Public Event CheckINF()
+Public Event CheckNullRecords()
 Public Event ShowAccountMapping()
 Public Event ImportAccountMapping()
 Public Event Submitted(ByVal dto As DataTransferObject)
@@ -32,19 +32,19 @@ Public Sub Initialize()
 End Sub
 
 Private Sub btnCompleteness_Click()
-    RaiseEvent Completeness
+    RaiseEvent CheckCompleteness
 End Sub
 
 Private Sub btnDocumentBalance_Click()
-    RaiseEvent DocumentBalance
+    RaiseEvent CheckDocumentBalance
 End Sub
 
 Private Sub btnINF_Click()
-    RaiseEvent INF
+    RaiseEvent CheckINF
 End Sub
 
 Private Sub btnNullRecords_Click()
-    RaiseEvent NullRecords
+    RaiseEvent CheckNullRecords
 End Sub
 
 Private Sub btnConfigureAccountMapping_Click()

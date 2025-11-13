@@ -19,7 +19,7 @@ Option Explicit
 ' Purpose:
 ' Methods:
 '===============================================================================
-Public Event ApplyField(ByVal dict As Dictionary, ByVal Method As Long)
+Public Event ApplyField(ByVal dict As Dictionary, ByVal method As Long)
 Private m_Method As Long
 
 Public Sub Initialize(ByRef db As DbAccess)
@@ -30,15 +30,11 @@ Public Sub Initialize(ByRef db As DbAccess)
     Call btnMethod1_Click
 End Sub
 
+'===============================================================================
+'===============================================================================
 '--そ秨よ猭ㄑ场秸ノ(ノ代刚)
-Public Sub ApplyTestDefaults()
-    '恶代刚把计
-    Call btnTestDefaults_Click
-    '莱ノ代刚把计
-    Call btnApplyField_Click
-End Sub
 Private Sub btnTestDefaults_Click()
-    '### FOR DEBUG TESTING ###
+    '//WARNING: ONLY FOR DEBUGGING
     Call btnMethod2_Click
     Me.AccountName.Value = FindField(Me.AccountName, "兜ヘ嘿")
     Me.AccountNumber.Value = FindField(Me.AccountNumber, "穦璸兜ヘ")
@@ -48,6 +44,14 @@ Private Sub btnTestDefaults_Click()
     Me.DebitAmount.Value = FindField(Me.DebitAmount, "よ肂")
     Me.CreditAmount.Value = FindField(Me.CreditAmount, "禪よ肂")
 End Sub
+Public Sub ApplyTestDefaults()
+    '恶代刚把计
+    Call btnTestDefaults_Click
+    '莱ノ代刚把计
+    Call btnApplyField_Click
+End Sub
+'===============================================================================
+'===============================================================================
 
 Private Sub btnApplyField_Click()
     Dim dict As New Dictionary

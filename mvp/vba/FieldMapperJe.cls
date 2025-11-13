@@ -87,10 +87,10 @@ End Property
 Public Property Let Name(ByVal Value As String)
     m_Name = Value
 End Property
-Public Property Get Method() As Long
-    Method = m_Method
+Public Property Get method() As Long
+    method = m_Method
 End Property
-Public Property Let Method(ByVal Value As Long)
+Public Property Let method(ByVal Value As Long)
     m_Method = Value
 End Property
 Public Property Get Fields() As Dictionary

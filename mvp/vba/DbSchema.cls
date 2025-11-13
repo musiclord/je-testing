@@ -182,8 +182,9 @@ Private Sub InitializeTables()
         .JeAmount = "K_AMOUNT_JE"
         .JeAmountSum = "K_AMOUNT_SUM_JE"
         .TbAmount = "K_AMOUNT_TB"
-        .AccountMerged = "ACCOUNT_MERGED"
-        .TbJeDiff = "TB_JE_DIFF"
+        .JeDrCr = "K_DRCR_JE"
+        .AccountMerged = "K_ACCOUNT_MERGED"
+        .TbJeDiff = "K_TB_JE_DIFF"
     End With
 End Sub
 '-------------------------------------------------------------------------------

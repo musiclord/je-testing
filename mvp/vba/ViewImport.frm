@@ -30,6 +30,35 @@ Public Event BeepBoop()
 '--
 Private m_Format As String
 
+'===============================================================================
+'===============================================================================
+Private Sub btnTestDefault_Click()
+    '---------------------------------------------------------------------------
+    ' //WARNING: ONLY FOR TESTING
+    '---------------------------------------------------------------------------
+    '填上控制項
+    Me.txtbCompanyName.Text = "精能醫學"
+    Me.txtbPeriodStart.Text = "2024/01/01"
+    Me.txtbPeriodEnd.Text = "2024/12/31"
+    Me.txtbPrepStartDate = "2024/12/31"
+    RaiseEvent TestDefaultRequested
+    '填上假期
+    Call btnConfigureHolidays_Click
+    Dim ws As Worksheet
+    Set ws = SHT_HOLIDAYS
+    ws.Range("A2").Value = DateSerial(2024, 10, 12)
+    ws.Range("B2").Value = "國慶日"
+    ws.Columns("A:B").AutoFit
+    '填上補班日
+    Call btnConfigureMakeUpDays_Click
+    Set ws = SHT_MAKEUPDAYS
+    ws.Range("A2").Value = DateSerial(2024, 11, 4)
+    ws.Range("B2").Value = "補班日"
+    ws.Columns("A:B").AutoFit
+End Sub
+'===============================================================================
+'===============================================================================
+
 Public Sub Initialize()
     '---------------------------------------------------------------------------
     ' ...
@@ -50,13 +79,6 @@ Public Sub Initialize()
         .Selected(0) = True
         .Selected(6) = True
     End With
-End Sub
-
-Private Sub btnBeepBoop_Click()
-    '//WARNING: BEEP BOOP
-    '//WARNING: BEEP BOOP
-    '//WARNING: BEEP BOOP
-    RaiseEvent BeepBoop
 End Sub
 
 Private Sub btnConfigureHolidays_Click()
@@ -95,13 +117,6 @@ Private Sub btnConfigureMakeUpDays_Click()
         .Font.Bold = True
         .Interior.Color = RGB(245, 241, 222)
     End With
-End Sub
-
-Private Sub btnConfigureWeekend_Click()
-    '---------------------------------------------------------------------------
-    ' 設定選取的週末日期
-    '---------------------------------------------------------------------------
-
 End Sub
 
 Private Sub btnImportJe_Click()
@@ -221,31 +236,6 @@ Private Sub btnExit_Click()
     dto.PrepStartDate = CDate(Me.txtbPrepStartDate.Value)
     Me.Hide
     RaiseEvent Submitted(dto)
-End Sub
-
-Private Sub btnTestDefault_Click()
-    '---------------------------------------------------------------------------
-    ' //WARNING: ONLY FOR TESTING
-    '---------------------------------------------------------------------------
-    '填上控制項
-    Me.txtbCompanyName.Text = "台塑寧波"
-    Me.txtbPeriodStart.Text = "2024/01/01"
-    Me.txtbPeriodEnd.Text = "2024/12/31"
-    Me.txtbPrepStartDate = "2024/12/31"
-    RaiseEvent TestDefaultRequested
-    '填上假期
-    Call btnConfigureHolidays_Click
-    Dim ws As Worksheet
-    Set ws = SHT_HOLIDAYS
-    ws.Range("A2").Value = DateSerial(2024, 10, 12)
-    ws.Range("B2").Value = "國慶日"
-    ws.Columns("A:B").AutoFit
-    '填上補班日
-    Call btnConfigureMakeUpDays_Click
-    Set ws = SHT_MAKEUPDAYS
-    ws.Range("A2").Value = DateSerial(2024, 11, 4)
-    ws.Range("B2").Value = "補班日"
-    ws.Columns("A:B").AutoFit
 End Sub
 
 Private Sub optCsv_Click()

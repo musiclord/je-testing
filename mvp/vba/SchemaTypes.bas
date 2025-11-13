@@ -158,6 +158,7 @@ Public Type TypeSystemFields
     JeUid As String                     ' JE 的唯一主鍵
     JeAmount As String                  ' JE 的計算金額
     JeAmountSum As String               ' JE 的計算金額彙總
+    JeDrCr As String                    ' JE 的借貸別
     TbAmount As String                  ' TB 的計算金額
     AccountMerged As String             ' 合併 JE 和 TB 科目編號
     TbJeDiff As String                  ' JE 和 TB 差異金額
