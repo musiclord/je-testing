@@ -30,6 +30,7 @@ End Sub
 Private Sub btnExecuteCriterion_Click()
     Dim cbo As MSForms.ComboBox
     
+    
     If Me.chkPostedOnWeekend.Value Then
         '總帳日期在週末
     End If
@@ -90,6 +91,8 @@ Private Sub btnExecuteCriterion_Click()
         Dim numericValueEnd As Long
         numericValueEnd = CLng(Me.txtbNumericValueEnd.Value)
     End If
+    
+    RaiseEvent ExecuteCriterion
 End Sub
 
 Private Sub btnShowCriteria_Click()
