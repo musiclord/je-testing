@@ -17,7 +17,7 @@ Option Explicit
 '   每個 Criterion 為一個 Dict:
 '       - "Type"        : String, 條件類型 (Field/Date/Keyword/Special)
 '       - "Field"       : String, 欄位名稱 (PostDate, AccountNumber)
-'       - "Operator"    : String, 運算子 (=, <>, >, < LIKE, IN, BETWEEN)
+'       - "Operator"    : String, 運算子 (=, <>, >=, =< LIKE, IN, BETWEEN)
 '       - "Value"       : Variant, 條件值 (String/Date/Number/Array)
 '       - "Logic"       : String, 邏輯運算子 (AND/OR, AND)
 '       - "Description" : String, 條件描述 (供UI顯示)
@@ -39,12 +39,12 @@ Private Const KEY_DESC As String = "Description"
 
 Private m_Db As DbAccess
 Private m_Context As ContextManager
-Private m_Criteria As Collection '<- Collection of Dictionary
+Private m_Criteria As Collection    '<-- Criteria is a collection of Criterion objects
+Private m_Criterion As Dictionary   '<-- Criterion is a dictionary of parameters for one rule
 
 Public Sub Initialize(context As ContextManager)
     Set m_Db = context.DbValid
     Set m_Context = context
-    Set m_Criteria = New Collection
 End Sub
 
 '-------------------------------------------------------------------------------

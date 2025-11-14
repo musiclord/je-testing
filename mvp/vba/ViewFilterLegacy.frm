@@ -34,6 +34,7 @@ Private Sub btnExecuteCriterion_Click()
     If Me.chkPostedOnWeekend.Value Then
         '總帳日期在週末
         '查詢 DateDimension 建立 IN 條件
+        
     End If
     
     If Me.chkApprovedOnWeekend.Value Then

@@ -26,7 +26,7 @@ Public PrepStartDate As Date
 
 Public Sub Initialize()
     '---------------------------------------------------------------------------
-    ' 初始化 DTO 物件
+    ' 初始化 DTO 物件並建置 UI 狀態機所需成員
     '---------------------------------------------------------------------------
     Set weekendIndices = New Collection
     Set DateHolidays = New Collection

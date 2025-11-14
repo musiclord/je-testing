@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewFilterCurrent 
    Caption         =   "篩選條件"
-   ClientHeight    =   5520
+   ClientHeight    =   7470
    ClientLeft      =   105
    ClientTop       =   405
-   ClientWidth     =   7035
+   ClientWidth     =   10785
    OleObjectBlob   =   "ViewFilterCurrent.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -20,52 +20,54 @@ Option Explicit
 ' Methods:
 '===============================================================================
 Public Event OverviewCriteria()
+Public Event ExecuteCriteria()
+Public Event AddCriteria()
+Public Event RemoveCriteria()
+Public Event AddCriterion()
+Public Event RemoveCriterion()
+Public Event AddSqlRequested()
 Public Event Submitted(dto As DataTransferObject)
 '--
-Private m_Sql As String
-
 Public Sub Initialize()
-    '...
-End Sub
-
-Private Sub btnCustomSQL_Click()
-    m_Sql = ""
-End Sub
-
-Private Sub btnExecute_Click()
     '...
 End Sub
 
 Private Sub btnOverview_Click()
     '...
-    RaiseEvent OverviewCriteria
+    RaiseEvent OverviewCriteria '總覽條件組合詳細
 End Sub
 
 Private Sub btnAddCriteria_Click()
-    '...
+    RaiseEvent AddCriteria      '新增條件組合
 End Sub
 
-Private Sub btnAddPreset_Click()
-    '...
+Private Sub btnAddCriterion_Click()
+    RaiseEvent AddCriterion     '新增條件，打開 ViewFilterAddCriteria
 End Sub
 
-Private Sub btnRemoveCondition_Click()
-    '...
+Private Sub btnCustomSQL_Click()
+    RaiseEvent AddSqlRequested  '要求打開 ViewFilterAddSql
 End Sub
 
-Private Sub btnRemovePreset_Click()
-    '...
+Private Sub btnExecute_Click()
+    RaiseEvent ExecuteCriteria  '執行所有條件集合，組成 SQL 查詢
+End Sub
+
+Private Sub btnRemoveCriteria_Click()
+    RaiseEvent RemoveCriteria   '移除所選的條件組合
+End Sub
+
+Private Sub btnRemoveCriterion_Click()
+    RaiseEvent RemoveCriterion  '移除所選的條件
 End Sub
 
 
 Private Sub btnExit_Click()
     '...
     '檢查並驗證
-    '...
     Dim dto As New DataTransferObject
     '...
     Me.Hide
     Unload Me
     RaiseEvent Submitted(dto)
 End Sub
-
