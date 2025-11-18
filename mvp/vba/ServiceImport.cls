@@ -20,8 +20,8 @@ Private m_Ace As New Access.Application
 Private m_DataType As String
 Private m_Method As Long
 
-Public Property Let dType(ByVal Value As String)
-    m_DataType = Value
+Public Property Let dType(ByVal value As String)
+    m_DataType = value
     Debug.Print "Type: " & m_DataType
 End Property
 
@@ -384,7 +384,7 @@ Public Function ImportFromSheet( _
         If useCustomNames Then
             colName = CStr(fieldNames(LBound(fieldNames) + i - 1))
         Else
-            colName = Trim$(CStr(headerRow.Cells(1, i).Value))
+            colName = Trim$(CStr(headerRow.Cells(1, i).value))
             If colName = "" Then colName = "Field" & i
         End If
         sql = sql & "[" & colName & "] " & fieldTypes(LBound(fieldTypes) + i - 1)
@@ -408,7 +408,7 @@ Public Function ImportFromSheet( _
             sql = "INSERT INTO [" & TBL_TEMP & "] VALUES ("
             For i = 1 To colCount
                 Dim cellValue As Variant
-                cellValue = row.Cells(1, i).Value
+                cellValue = row.Cells(1, i).value
                 If Not IsNull(cellValue) Then
                     If Trim$(CStr(cellValue)) <> "" Then allBlank = False
                 End If

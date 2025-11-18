@@ -41,17 +41,17 @@ End Function
 
 '-- 檢查資料方法
 '-------------------------------------------------------------------------------
-Public Function CheckDate(ByVal Value As Variant) As Boolean
+Public Function CheckDate(ByVal value As Variant) As Boolean
     ' Use: If Not CheckDate(date) Then Exit Sub
     ' CDate (value)
 End Function
 
-Public Function CheckDouble(ByVal Value As Variant) As Boolean
+Public Function CheckDouble(ByVal value As Variant) As Boolean
     ' Use: If Not CheckDouble(double) Then Exit Sub
     ' CDouble (value)
 End Function
 
-Public Function CheckText(ByVal Value As Variant) As Boolean
+Public Function CheckText(ByVal value As Variant) As Boolean
     ' Use If Not CheckText(text) Then Exit Sub
     ' CStr(value)
 End Function

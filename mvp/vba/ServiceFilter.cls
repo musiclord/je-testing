@@ -17,7 +17,8 @@ Option Explicit
 '===============================================================================
 Private m_Db As DbAccess
 Private m_Context As ContextManager
-Private m_CriteriaSet As Collection 'key:String, item:ServiceFilterCriteria
+Private m_Criteria As Collection 'key:String, item:ServiceFilterCriteria
+Private m_Criterion As Dictionary
 
 Public Sub Initialize(context As ContextManager)
     Set m_Db = context.DbValid

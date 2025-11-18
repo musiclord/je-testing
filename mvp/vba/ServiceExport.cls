@@ -57,20 +57,20 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
         tableName = CStr(Tables(idx))
         '檢查資料表是否存在
         If Not m_Db.TableExists(tableName) Then
-            ws.Cells(currentRow, 1).Value = "資料表 [" & tableName & "] 不存在"
+            ws.Cells(currentRow, 1).value = "資料表 [" & tableName & "] 不存在"
             ws.Cells(currentRow, 1).Font.Color = vbRed
             currentRow = currentRow + 2
         Else
             Set rs = m_Db.ExecuteQuery("SELECT * FROM [" & tableName & "];")
             rowsCopied = 0
             '寫入區塊標題列
-            ws.Cells(currentRow, 1).Value = tableName
+            ws.Cells(currentRow, 1).value = tableName
             ws.Cells(currentRow, 1).Font.Bold = True
             currentRow = currentRow + 1
             '寫入欄位名稱列
             Dim col As Long
             For col = 0 To rs.Fields.Count - 1
-                ws.Cells(currentRow, col + 1).Value = rs.Fields(col).Name
+                ws.Cells(currentRow, col + 1).value = rs.Fields(col).Name
             Next col
             '格式化欄位名稱列
             With ws.Range(ws.Cells(currentRow, 1), ws.Cells(currentRow, rs.Fields.Count))
@@ -82,7 +82,7 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
             '處理資料
             If rs.BOF And rs.EOF Then
                 '無資料情形
-                ws.Cells(currentRow, 1).Value = "(無資料)"
+                ws.Cells(currentRow, 1).value = "(無資料)"
                 currentRow = currentRow + 2
             Else
                 '寫入資料

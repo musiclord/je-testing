@@ -81,9 +81,9 @@ Public Sub MergeHolidays(rsHolidays As DAO.Recordset)
         '預期 rsHolidays 有欄位 Date(DATE), Description(TEXT)
         Dim holidayDate As Variant
         Dim HolidayDesc As String
-        holidayDate = rsHolidays.Fields(0).Value
-        If rsHolidays.Fields.Count > 1 And Not IsNull(rsHolidays.Fields(1).Value) Then
-            HolidayDesc = rsHolidays.Fields(1).Value
+        holidayDate = rsHolidays.Fields(0).value
+        If rsHolidays.Fields.Count > 1 And Not IsNull(rsHolidays.Fields(1).value) Then
+            HolidayDesc = rsHolidays.Fields(1).value
         Else
             HolidayDesc = vbNullString
         End If
@@ -123,9 +123,9 @@ Public Sub MergeMakeupDays(rsMakeupDays As DAO.Recordset)
         ' 預期 rsMakeupDays 有欄位 Date(DATE), Description(TEXT)
         Dim makeupDate As Variant
         Dim makeupDesc As String
-        makeupDate = rsMakeupDays.Fields(0).Value
-        If rsMakeupDays.Fields.Count > 1 And Not IsNull(rsMakeupDays.Fields(1).Value) Then
-            makeupDesc = rsMakeupDays.Fields(1).Value
+        makeupDate = rsMakeupDays.Fields(0).value
+        If rsMakeupDays.Fields.Count > 1 And Not IsNull(rsMakeupDays.Fields(1).value) Then
+            makeupDesc = rsMakeupDays.Fields(1).value
         Else
             makeupDesc = vbNullString
         End If
@@ -188,16 +188,16 @@ Public Sub CreateDateDimensionTable()
         dow = Weekday(currentDate, vbSunday)
         '新增記錄並填入欄位值
         rs.AddNew
-        rs(tbl.DateKey).Value = currentDate
-        rs(tbl.Year).Value = Year(currentDate)
-        rs(tbl.Month).Value = Month(currentDate)
-        rs(tbl.Day).Value = Day(currentDate)
-        rs(tbl.DayOfWeek).Value = dow
-        rs(tbl.IsWeekend).Value = (dow = vbSunday Or dow = vbSaturday)
-        rs(tbl.IsHolidays).Value = False
-        rs(tbl.IsMakeupDays).Value = False
-        rs(tbl.HolidaysDesc).Value = vbNullString
-        rs(tbl.MakeupDaysDesc).Value = vbNullString
+        rs(tbl.DateKey).value = currentDate
+        rs(tbl.Year).value = Year(currentDate)
+        rs(tbl.Month).value = Month(currentDate)
+        rs(tbl.Day).value = Day(currentDate)
+        rs(tbl.DayOfWeek).value = dow
+        rs(tbl.IsWeekend).value = (dow = vbSunday Or dow = vbSaturday)
+        rs(tbl.IsHolidays).value = False
+        rs(tbl.IsMakeupDays).value = False
+        rs(tbl.HolidaysDesc).value = vbNullString
+        rs(tbl.MakeupDaysDesc).value = vbNullString
         rs.Update
         '遞增下一日
         currentDate = DateAdd("d", 1, currentDate)

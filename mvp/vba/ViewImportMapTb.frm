@@ -2,8 +2,8 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImportMapTb 
    Caption         =   "處理 TB 欄位映射"
    ClientHeight    =   7020
-   ClientLeft      =   105
-   ClientTop       =   405
+   ClientLeft      =   108
+   ClientTop       =   408
    ClientWidth     =   8520.001
    OleObjectBlob   =   "ViewImportMapTb.frx":0000
    StartUpPosition =   1  '所屬視窗中央
@@ -36,10 +36,10 @@ End Sub
 Private Sub btnTestDefaults_Click()
     '//WARNING: ONLY FOR DEBUGGING
     Call btnMethod3_Click
-    Me.AccountName.Value = FindField(Me.AccountName, "會計科目名稱")
-    Me.AccountNumber.Value = FindField(Me.AccountNumber, "會計科目編號")
-    Me.DebitAmount.Value = FindField(Me.DebitAmount, "借方金額")
-    Me.CreditAmount.Value = FindField(Me.CreditAmount, "貸方金額")
+    Me.AccountName.value = FindField(Me.AccountName, "會計科目名稱")
+    Me.AccountNumber.value = FindField(Me.AccountNumber, "會計科目編號")
+    Me.DebitAmount.value = FindField(Me.DebitAmount, "借方金額")
+    Me.CreditAmount.value = FindField(Me.CreditAmount, "貸方金額")
 End Sub
 Public Sub ApplyTestDefaults()
     '設定測試參數
@@ -53,18 +53,18 @@ End Sub
 Private Sub btnApplyField_Click()
     Dim dict As New Dictionary
     '金額欄位
-    dict("ChangeAmount") = Me.ChangeAmount.Value
-    dict("OpeningBalance") = Me.OpeningBalance.Value
-    dict("OpeningDebitBalance") = Me.OpeningDebitBalance.Value
-    dict("OpeningCreditBalance") = Me.OpeningCreditBalance.Value
-    dict("ClosingBalance") = Me.ClosingBalance.Value
-    dict("ClosingDebitBalance") = Me.ClosingDebitBalance.Value
-    dict("ClosingCreditBalance") = Me.ClosingCreditBalance.Value
-    dict("DebitAmount") = Me.DebitAmount.Value
-    dict("CreditAmount") = Me.CreditAmount.Value
+    dict("ChangeAmount") = Me.ChangeAmount.value
+    dict("OpeningBalance") = Me.OpeningBalance.value
+    dict("OpeningDebitBalance") = Me.OpeningDebitBalance.value
+    dict("OpeningCreditBalance") = Me.OpeningCreditBalance.value
+    dict("ClosingBalance") = Me.ClosingBalance.value
+    dict("ClosingDebitBalance") = Me.ClosingDebitBalance.value
+    dict("ClosingCreditBalance") = Me.ClosingCreditBalance.value
+    dict("DebitAmount") = Me.DebitAmount.value
+    dict("CreditAmount") = Me.CreditAmount.value
     '必選欄位
-    dict("AccountNumber") = Me.AccountNumber.Value
-    dict("AccountName") = Me.AccountName.Value
+    dict("AccountNumber") = Me.AccountNumber.value
+    dict("AccountName") = Me.AccountName.value
     '傳回
     RaiseEvent ApplyField(dict, m_Method)
 End Sub
@@ -114,10 +114,10 @@ Private Sub btnExit_Click()
     '檢查必填欄位
     Dim errors As Collection
     Set errors = New Collection
-    If Trim(Me.AccountNumber.Value & "") = "" Then
+    If Trim(Me.AccountNumber.value & "") = "" Then
         errors.Add "請選擇會計科目編號"
     End If
-    If Trim(Me.AccountName.Value & "") = "" Then
+    If Trim(Me.AccountName.value & "") = "" Then
         errors.Add "請選擇會計科目名稱"
     End If
     '顯示錯誤訊息(若有)

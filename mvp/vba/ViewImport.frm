@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewImport 
    Caption         =   "Import"
    ClientHeight    =   8430.001
-   ClientLeft      =   105
-   ClientTop       =   405
-   ClientWidth     =   7155
+   ClientLeft      =   108
+   ClientTop       =   408
+   ClientWidth     =   7152
    OleObjectBlob   =   "ViewImport.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -46,14 +46,14 @@ Private Sub btnTestDefault_Click()
     Call btnConfigureHolidays_Click
     Dim ws As Worksheet
     Set ws = SHT_HOLIDAYS
-    ws.Range("A2").Value = DateSerial(2024, 10, 12)
-    ws.Range("B2").Value = "國慶日"
+    ws.Range("A2").value = DateSerial(2024, 10, 12)
+    ws.Range("B2").value = "國慶日"
     ws.Columns("A:B").AutoFit
     '填上補班日
     Call btnConfigureMakeUpDays_Click
     Set ws = SHT_MAKEUPDAYS
-    ws.Range("A2").Value = DateSerial(2024, 11, 4)
-    ws.Range("B2").Value = "補班日"
+    ws.Range("A2").value = DateSerial(2024, 11, 4)
+    ws.Range("B2").value = "補班日"
     ws.Columns("A:B").AutoFit
 End Sub
 '===============================================================================
@@ -64,7 +64,7 @@ Public Sub Initialize()
     ' ...
     '---------------------------------------------------------------------------
     '預設匯入格式為 XLSX
-    Me.optXlsx.Value = True
+    Me.optXlsx.value = True
     Call optXlsx_Click
     '預設非工作日清單
     With Me.lstWeekend
@@ -92,8 +92,8 @@ Private Sub btnConfigureHolidays_Click()
     ws.Cells.Clear
     ws.Columns("A").NumberFormat = "m/d/yyyy"   '簡短日期
     ws.Columns("B").NumberFormat = "@"          '文字
-    ws.Range("A1").Value = "Date"
-    ws.Range("B1").Value = "Description"
+    ws.Range("A1").value = "Date"
+    ws.Range("B1").value = "Description"
     With ws.Range("A1:B1")
         .Font.Bold = True
         .Interior.Color = RGB(245, 241, 222)
@@ -111,8 +111,8 @@ Private Sub btnConfigureMakeUpDays_Click()
     ws.Cells.Clear
     ws.Columns("A").NumberFormat = "m/d/yyyy"   '簡短日期
     ws.Columns("B").NumberFormat = "@"          '文字
-    ws.Range("A1").Value = "Date"
-    ws.Range("B1").Value = "Description"
+    ws.Range("A1").value = "Date"
+    ws.Range("B1").value = "Description"
     With ws.Range("A1:B1")
         .Font.Bold = True
         .Interior.Color = RGB(245, 241, 222)
@@ -157,15 +157,15 @@ Private Sub btnApplyDateConfig_Click()
     Dim i As Long
     Dim errors As New Collection
     '檢查輸入 - 期間開始日
-    If Trim(Me.txtbPeriodStart.Value & "") = "" Then
+    If Trim(Me.txtbPeriodStart.value & "") = "" Then
         errors.Add "請填寫會計期間開始日"
-    ElseIf Not IsDate(Me.txtbPeriodStart.Value) Then
+    ElseIf Not IsDate(Me.txtbPeriodStart.value) Then
         errors.Add "會計期間開始日格式錯誤，請使用 yyyy/mm/dd 格式"
     End If
     '檢查輸入 - 期間結束日
-    If Trim(Me.txtbPeriodStart.Value & "") = "" Then
+    If Trim(Me.txtbPeriodStart.value & "") = "" Then
         errors.Add "請填寫會計期間結束日"
-    ElseIf Not IsDate(Me.txtbPeriodEnd.Value) Then
+    ElseIf Not IsDate(Me.txtbPeriodEnd.value) Then
         errors.Add "會計期間結束日格式錯誤，請使用 yyyy/mm/dd 格式"
     End If
     '顯示錯誤訊息(若有)
@@ -179,7 +179,7 @@ Private Sub btnApplyDateConfig_Click()
         Exit Sub
     End If
     '驗證資料邏輯
-    If CDate(Me.txtbPeriodStart.Value) > CDate(Me.txtbPeriodEnd.Value) Then
+    If CDate(Me.txtbPeriodStart.value) > CDate(Me.txtbPeriodEnd.value) Then
         MsgBox "會計期間開始日不能晚於結束日", vbExclamation, "日期邏輯錯誤"
         Me.txtbPeriodStart.SetFocus
         Exit Sub
@@ -198,8 +198,8 @@ Private Sub btnApplyDateConfig_Click()
     End If
     '組裝 DTO 物件交給 Presenter 處理
     Dim dto As New DataTransferObject
-    dto.PeriodStart = CDate(Me.txtbPeriodStart.Value)
-    dto.PeriodEnd = CDate(Me.txtbPeriodEnd.Value)
+    dto.PeriodStart = CDate(Me.txtbPeriodStart.value)
+    dto.PeriodEnd = CDate(Me.txtbPeriodEnd.value)
     Set dto.weekendIndices = weekendIndices
     RaiseEvent UpdateDateDimensionRequested(dto)
 End Sub
@@ -210,13 +210,13 @@ Private Sub btnExit_Click()
     '---------------------------------------------------------------------------
     Dim errors As New Collection
     '檢查輸入 - 公司名稱
-    If Trim(Me.txtbCompanyName.Value & "") = "" Then
+    If Trim(Me.txtbCompanyName.value & "") = "" Then
         errors.Add "請填寫公司名稱"
     End If
     '檢查輸入 - 財報準備期間開始日
-    If Trim(Me.txtbPrepStartDate.Value & "") = "" Then
+    If Trim(Me.txtbPrepStartDate.value & "") = "" Then
         errors.Add "請填寫財報準備期間開始日"
-    ElseIf Not IsDate(Me.txtbPrepStartDate.Value) Then
+    ElseIf Not IsDate(Me.txtbPrepStartDate.value) Then
         errors.Add "財報準備期間開始日格式錯誤，請使用 yyyy/mm/dd 格式"
     End If
     '顯示錯誤訊息(若有)
@@ -232,8 +232,8 @@ Private Sub btnExit_Click()
     End If
     '組裝 DTO 物件交給 Presenter 處理
     Dim dto As New DataTransferObject
-    dto.CompanyName = CStr(Me.txtbCompanyName.Value)
-    dto.PrepStartDate = CDate(Me.txtbPrepStartDate.Value)
+    dto.CompanyName = CStr(Me.txtbCompanyName.value)
+    dto.PrepStartDate = CDate(Me.txtbPrepStartDate.value)
     Me.Hide
     RaiseEvent Submitted(dto)
 End Sub
