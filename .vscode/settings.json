@@ -13,5 +13,5 @@
     "github.copilot.chat.reviewSelection.enabled": false,
     "github.copilot.chat.setupTests.enabled": false,
     "github.copilot.chat.tools.memory.enabled": true,
-    "chat.disableAIFeatures": true
+    "chat.disableAIFeatures": false
 }
