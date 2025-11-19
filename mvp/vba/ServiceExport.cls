@@ -57,20 +57,20 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
         tableName = CStr(Tables(idx))
         '檢查資料表是否存在
         If Not m_Db.TableExists(tableName) Then
-            ws.Cells(currentRow, 1).value = "資料表 [" & tableName & "] 不存在"
+            ws.Cells(currentRow, 1).Value = "資料表 [" & tableName & "] 不存在"
             ws.Cells(currentRow, 1).Font.Color = vbRed
             currentRow = currentRow + 2
         Else
             Set rs = m_Db.ExecuteQuery("SELECT * FROM [" & tableName & "];")
             rowsCopied = 0
             '寫入區塊標題列
-            ws.Cells(currentRow, 1).value = tableName
+            ws.Cells(currentRow, 1).Value = tableName
             ws.Cells(currentRow, 1).Font.Bold = True
             currentRow = currentRow + 1
             '寫入欄位名稱列
             Dim col As Long
             For col = 0 To rs.Fields.Count - 1
-                ws.Cells(currentRow, col + 1).value = rs.Fields(col).Name
+                ws.Cells(currentRow, col + 1).Value = rs.Fields(col).name
             Next col
             '格式化欄位名稱列
             With ws.Range(ws.Cells(currentRow, 1), ws.Cells(currentRow, rs.Fields.Count))
@@ -82,7 +82,7 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
             '處理資料
             If rs.BOF And rs.EOF Then
                 '無資料情形
-                ws.Cells(currentRow, 1).value = "(無資料)"
+                ws.Cells(currentRow, 1).Value = "(無資料)"
                 currentRow = currentRow + 2
             Else
                 '寫入資料
@@ -130,14 +130,14 @@ Public Function ShowEngagementOverview() As Boolean
     ShowEngagementOverview = False
     '設置資料表陣列
     Dim Tables As Variant
-    Tables = Array(m_Schema.Reports.EngagementOverview.Name)
+    Tables = Array(m_Schema.Reports.EngagementOverview.name)
     '設置工作表名稱
     Dim sheetName As String
     sheetName = "Step-1-1|資料預先整理之說明"
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowEngagementOverview = True
@@ -155,9 +155,9 @@ Public Function ShowValidationReport() As Boolean
     '設置資料表陣列
     Dim Tables As Variant
     Tables = Array( _
-        m_Schema.Reports.EngagementOverview.Name, _
-        m_Schema.Reports.DataOverview.Name, _
-        m_Schema.Reports.ValidationOverview.Name _
+        m_Schema.Reports.EngagementOverview.name, _
+        m_Schema.Reports.DataOverview.name, _
+        m_Schema.Reports.ValidationOverview.name _
     )
     '設置工作表名稱
     Dim sheetName As String
@@ -165,7 +165,7 @@ Public Function ShowValidationReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowValidationReport = True
@@ -179,8 +179,8 @@ Public Function ShowCompletenessReport() As Boolean
     '設置資料表陣列
     Dim Tables As Variant
     Tables = Array( _
-        m_Schema.Reports.EngagementOverview.Name, _
-        m_Schema.Reports.CompletenessDetail.Name _
+        m_Schema.Reports.EngagementOverview.name, _
+        m_Schema.Reports.CompletenessDetail.name _
     )
     '設置工作表名稱
     Dim sheetName As String
@@ -188,7 +188,7 @@ Public Function ShowCompletenessReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessReport = True
@@ -202,8 +202,8 @@ Public Function ShowDocumentBalanceReport() As Boolean
     '設置資料表陣列
     Dim Tables As Variant
     Tables = Array( _
-        m_Schema.Reports.EngagementOverview.Name, _
-        m_Schema.Reports.DocumentBalanceDetail.Name _
+        m_Schema.Reports.EngagementOverview.name, _
+        m_Schema.Reports.DocumentBalanceDetail.name _
     )
     '設置工作表名稱
     Dim sheetName As String
@@ -211,7 +211,7 @@ Public Function ShowDocumentBalanceReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowDocumentBalanceReport = True
@@ -232,7 +232,7 @@ Public Function ShowPreparerSummary() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     'Call RenderTablesToWorksheet(ws, Tables)
     ShowPreparerSummary = True
@@ -252,7 +252,7 @@ Public Function ShowCompletenessDiffSummary() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessDiffSummary = True
@@ -272,7 +272,7 @@ Public Function ShowCompletenessReconciliationReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowCompletenessReconciliationReport = True
@@ -292,7 +292,7 @@ Public Function ShowINFReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowINFReport = True
@@ -312,7 +312,7 @@ Public Function ShowHRCSummary() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCSummary = True
@@ -333,7 +333,7 @@ Public Function ShowHRCReport() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCReport = True
@@ -353,7 +353,7 @@ Public Function ShowHRCDetails() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowHRCDetails = True
@@ -373,7 +373,7 @@ Public Function ShowPostClosingEntries() As Boolean
     '設置工作表物件
     Dim ws As Worksheet
     Set ws = SHT_PREVIEW
-    ws.Name = sheetName
+    ws.name = sheetName
     '預覽記錄集於工作表
     Call RenderTablesToWorksheet(ws, Tables)
     ShowPostClosingEntries = True

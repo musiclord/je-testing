@@ -97,7 +97,7 @@ Private Sub vProject_SelectProject(ByVal path As String)
     '---------------------------------------------------------------------------
     projector.SelectProject path
     vProject.Hide
-    Call vMain.Initialize(fso.GetFolder(path).Name)
+    Call vMain.Initialize(fso.GetFolder(path).name)
     vMain.Show vbModeless
 End Sub
 
@@ -105,9 +105,9 @@ End Sub
 '-- vMain
 '===============================================================================
 
-'---------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
 ' 初始化步驟一所需的物件並開啟表單介面 ViewImport
-'---------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
 Private Sub vMain_DoStep1()
     Call importer.Initialize(context)
     Call calendar.Initialize(context)
@@ -116,9 +116,9 @@ Private Sub vMain_DoStep1()
     vImport.Show vbModeless
 End Sub
 
-'---------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
 ' 初始化步驟二所需的物件並開啟表單介面 ViewValidation
-'---------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
 Private Sub vMain_DoStep2()
     Call validator.Initialize(context)
     Call mapper.Initialize(context)
@@ -173,8 +173,8 @@ Private Sub vImport_BeepBoop()
     '//WARNING: BEEP BOOP
     '//WARNING: BEEP BOOP
     Dim testString As String
-    testString = context.DbSchema.JE.Name
-    Debug.Print "BEEP BOOP:" & context.DbSchema.JE.Name
+    testString = context.DbSchema.JE.name
+    Debug.Print "BEEP BOOP:" & context.DbSchema.JE.name
     MsgBox testString, vbInformation, testString
 End Sub
 
@@ -184,7 +184,7 @@ End Sub
 Private Sub vImport_ImportJournalEntries(ByVal Format As String)
     importer.dType = Format
     importer.OpenWizard "je"
-    vImport.lblImportStatus.Caption = "匯入資料表: " & context.DbSchema.JE.Name
+    vImport.lblImportStatus.Caption = "匯入資料表: " & context.DbSchema.JE.name
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -193,7 +193,7 @@ End Sub
 Private Sub vImport_ImportTrialBalance(ByVal Format As String)
     importer.dType = Format
     importer.OpenWizard "tb"
-    vImport.lblImportStatus.Caption = "匯入資料表: " & context.DbSchema.TB.Name
+    vImport.lblImportStatus.Caption = "匯入資料表: " & context.DbSchema.TB.name
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub vImport_JeFieldMappingRequested()
     '檢查是否有匯入 JE 資料表
-    If Not context.DbInput.TableExists(context.DbSchema.JE.Name) Then
+    If Not context.DbInput.TableExists(context.DbSchema.JE.name) Then
         MsgBox "尚未匯入 JE 資料表", vbExclamation, "JE欄位映射"
         vImport.btnImportJe.SetFocus
         Exit Sub
@@ -216,7 +216,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub vImport_TbFieldMappingRequested()
     '檢查是否有匯入 TB 資料表
-    If Not context.DbInput.TableExists(context.DbSchema.TB.Name) Then
+    If Not context.DbInput.TableExists(context.DbSchema.TB.name) Then
         MsgBox "尚未匯入 TB 資料表", vbExclamation, "TB欄位映射"
         vImport.btnImportTb.SetFocus
         Exit Sub
@@ -445,15 +445,25 @@ End Sub
 '-------------------------------------------------------------------------------
 '...
 '-------------------------------------------------------------------------------
-Private Sub vFilterLegacy_ExecuteCriterion()
-    '...
+Private Sub vFilterLegacy_ExecuteCriteriaRequested()
+    '將介面的狀態設給服務層讀取
+    Dim states As Dictionary
+    Set states = vFilterLegacy.CriteriaStates
+    
+    Dim key As Variant
+    For Each key In states.Keys
+        'filter.MapLegacyState CStr(key), states(key)
+    Next key
+    
+    
 End Sub
 
 '-------------------------------------------------------------------------------
 '...
 '-------------------------------------------------------------------------------
-Private Sub vFilterLegacy_ShowCriteria()
+Private Sub vFilterLegacy_ShowCriteriaRequested()
     '...
+    
 End Sub
 
 '-------------------------------------------------------------------------------

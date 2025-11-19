@@ -39,7 +39,7 @@ Option Explicit
 ' 報表類型定義
 '-------------------------------------------------------------------------------
 Public Type TypeReportEngagementOverview
-    Name As String                      ' 報表名稱
+    name As String                      ' 報表名稱
     '-- 欄位
     Client As String                    ' 客戶
     PrepStartDate As String             ' 財報準備期間開始日
@@ -50,7 +50,7 @@ Public Type TypeReportEngagementOverview
 End Type
 '-------------------------------------------------------------------------------
 Public Type TypeReportDataOverview
-    Name As String                      ' 報表名稱
+    name As String                      ' 報表名稱
     '-- 欄位
     JeName As String                    ' 分錄檔案名稱
     JeNetAmount As String               ' 分錄借貸淨額
@@ -62,7 +62,7 @@ Public Type TypeReportDataOverview
 End Type
 '-------------------------------------------------------------------------------
 Public Type TypeReportValidationOverview
-    Name As String                      ' 報表名稱
+    name As String                      ' 報表名稱
     '-- 欄位
     NullAccountRecordCount As String    ' 無會計科目編號筆數
     NullDocumentRecordCount As String   ' 無傳票號碼筆數
@@ -73,26 +73,26 @@ Public Type TypeReportValidationOverview
 End Type
 '-------------------------------------------------------------------------------
 Public Type TypeReportCompletenessDetail
-    Name As String                      ' 報表名稱
+    name As String                      ' 報表名稱
     '-- 此報表直接複製 COMPLETENESS_DETAIL 表
 End Type
 '-------------------------------------------------------------------------------
 Public Type TypeReportDocumentBalanceDetail
-    Name As String                      ' 報表名稱
+    name As String                      ' 報表名稱
     '-- 此報表直接複製 DOCUMENT_BALANCE_DETAIL 表
 End Type
 '-------------------------------------------------------------------------------
 Public Type TypeReportInfSampleDetail
-    Name As String                      ' 報表名稱
+    name As String                      ' 報表名稱
     '-- 此報表直接複製 INF_SORTED 表
 End Type
 '-------------------------------------------------------------------------------
 Public Type TypeReportAccountMappingInfo
-    Name As String                      ' 報表名稱
+    name As String                      ' 報表名稱
 End Type
 '-------------------------------------------------------------------------------
 Public Type TypeReportFieldMappingInfo
-    Name As String                      ' 報表名稱
+    name As String                      ' 報表名稱
 End Type
 '===============================================================================
 ' 資料表類型定義
@@ -102,7 +102,7 @@ End Type
 ' 提供日期相關的維度資訊（年、月、日、星期、假日、補班日）
 '-------------------------------------------------------------------------------
 Public Type TypeTableDateDimension
-    Name As String                      ' 資料表名稱
+    name As String                      ' 資料表名稱
     '-- 欄位
     DateKey As String                   '[DATE]   唯一主鍵，格式: YYYYMMDD
     Year As String                      '[NUM]    西元年 (1900-?)
@@ -120,7 +120,7 @@ End Type
 ' 提供科目編號與標準化科目分類的對應關係
 '-------------------------------------------------------------------------------
 Public Type TypeTableAccountMapping
-    Name As String                      ' 資料表名稱
+    name As String                      ' 資料表名稱
     '-- 欄位
     AccountNumber As String             ' 科目編號
     AccountName As String               ' 科目名稱

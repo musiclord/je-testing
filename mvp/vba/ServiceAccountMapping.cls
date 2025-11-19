@@ -90,9 +90,9 @@ Public Function ExportTemplate(ws As Worksheet) As Boolean
     ws.Columns("B").NumberFormat = "@"
     ws.Columns("C").NumberFormat = "@"
     '-- 設置表頭名稱
-    ws.Range("A1").value = colNum
-    ws.Range("B1").value = colName
-    ws.Range("C1").value = colStandardized
+    ws.Range("A1").Value = colNum
+    ws.Range("B1").Value = colName
+    ws.Range("C1").Value = colStandardized
     ws.Range("A1:C1").Font.Bold = True
     
     '-- 填入資料
@@ -100,7 +100,7 @@ Public Function ExportTemplate(ws As Worksheet) As Boolean
     tableName = m_Schema.Tables.CompletenessDetail
     
     If Not m_DbValid.TableExists(tableName) Then
-        ws.Cells(2, 1).value = "資料表 [" & tableName & "] 不存在"
+        ws.Cells(2, 1).Value = "資料表 [" & tableName & "] 不存在"
     Else
         '-- 查詢字串
         Dim sql As String
@@ -117,7 +117,7 @@ Public Function ExportTemplate(ws As Worksheet) As Boolean
         
         If rs.BOF And rs.EOF Then
             '無資料情形
-            ws.Cells(2, 1).value = "(無資料)"
+            ws.Cells(2, 1).Value = "(無資料)"
             Exit Function
         Else
             '有資料情形，寫入
@@ -150,20 +150,20 @@ Public Function ImportAccountMapping(ByVal rs As DAO.Recordset) As Boolean
     On Error GoTo ErrorHandler
     ImportAccountMapping = False
     '...
-    If m_Db.TableExists(m_Schema.AccountMapping.Name) Then
-        m_Db.DropTable m_Schema.AccountMapping.Name
+    If m_Db.TableExists(m_Schema.AccountMapping.name) Then
+        m_Db.DropTable m_Schema.AccountMapping.name
     End If
     '...
     '-- 建立資料表
     Dim sql As String
-    sql = "CREATE TABLE [" & m_Schema.AccountMapping.Name & "] (" & vbCrLf & _
+    sql = "CREATE TABLE [" & m_Schema.AccountMapping.name & "] (" & vbCrLf & _
           "    [" & m_Schema.AccountMapping.AccountNumber & "] TEXT(50), " & vbCrLf & _
           "    [" & m_Schema.AccountMapping.AccountName & "] TEXT(50)," & vbCrLf & _
           "    [" & m_Schema.AccountMapping.AccountStandardized & "] TEXT(50) " & vbCrLf & _
           ");"
     Call m_Db.ExecuteNonQuery(sql)
     '-- 匯入資料
-    sql = "INSERT INTO [" & m_Schema.AccountMapping.Name & "] " & vbCrLf & _
+    sql = "INSERT INTO [" & m_Schema.AccountMapping.name & "] " & vbCrLf & _
           "SELECT * FROM [" & TBL_TEMP & "];" '<-- TBL_TEMP 已經由 importer 匯入進資料庫
     Call m_Db.ExecuteNonQuery(sql)
     '-- 匯入完成

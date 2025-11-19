@@ -36,7 +36,7 @@ Public Function GenerateEngagementOverview() As Boolean
     rpt = m_Schema.Reports.EngagementOverview
     '設定資料表名稱
     Dim tableName As String
-    tableName = rpt.Name
+    tableName = rpt.name
     '檢查已存在資料表
     If m_Db.TableExists(tableName) Then
         Call m_Db.DropTable(tableName)
@@ -52,7 +52,7 @@ Public Function GenerateEngagementOverview() As Boolean
               "    #" & m_Context.info.PeriodEnd & "# AS [" & .PeriodEnd & "], " & vbCrLf & _
               "    #" & Date & "# AS [" & .PreparedDate & "] " & vbCrLf & _
               "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-              "FROM " & m_Schema.JE.Name & " IN '" & m_Context.DbInput.path & "';"
+              "FROM " & m_Schema.JE.name & " IN '" & m_Context.DbInput.path & "';"
     End With
     m_Db.ExecuteNonQuery sql
     GenerateEngagementOverview = True
@@ -79,7 +79,7 @@ Public Function GenerateDataOverview() As Boolean
     rpt = m_Schema.Reports.DataOverview
     '設定資料表名稱
     Dim tableName As String
-    tableName = rpt.Name
+    tableName = rpt.name
     '檢查已存在資料表
     If m_Db.TableExists(tableName) Then
         Call m_Db.DropTable(tableName)
@@ -94,13 +94,13 @@ Public Function GenerateDataOverview() As Boolean
     Dim TbAccountCount As Long
     '--
     With m_Schema
-        JeName = .JE.Name
-        TbName = .TB.Name
-        JeNetAmount = m_Context.DbInput.GetTotal(.JE.Name, .Fields.JeAmount, "NetValue")
-        JeDebitSum = m_Context.DbInput.GetTotal(.JE.Name, .Fields.JeAmount, "PositiveValue")
-        JeCreditSum = m_Context.DbInput.GetTotal(.JE.Name, .Fields.JeAmount, "NegativeValue")
-        JeRecordCount = m_Context.DbInput.GetTotal(.JE.Name, "", "DBCount")
-        TbAccountCount = m_Context.DbInput.GetTotal(.TB.Name, "", "DBCount")
+        JeName = .JE.name
+        TbName = .TB.name
+        JeNetAmount = m_Context.DbInput.GetTotal(.JE.name, .Fields.JeAmount, "NetValue")
+        JeDebitSum = m_Context.DbInput.GetTotal(.JE.name, .Fields.JeAmount, "PositiveValue")
+        JeCreditSum = m_Context.DbInput.GetTotal(.JE.name, .Fields.JeAmount, "NegativeValue")
+        JeRecordCount = m_Context.DbInput.GetTotal(.JE.name, "", "DBCount")
+        TbAccountCount = m_Context.DbInput.GetTotal(.TB.name, "", "DBCount")
     End With
     '處理資料庫查詢
     Dim sql As String
@@ -114,7 +114,7 @@ Public Function GenerateDataOverview() As Boolean
               "    '" & TbName & "' AS [" & .TbName & "], " & vbCrLf & _
               "    '" & TbAccountCount & "' AS [" & .TbAccountCount & "] " & vbCrLf & _
               "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-              "FROM " & m_Schema.JE.Name & " IN '" & m_Context.DbInput.path & "';"
+              "FROM " & m_Schema.JE.name & " IN '" & m_Context.DbInput.path & "';"
     End With
     m_Db.ExecuteNonQuery sql
     GenerateDataOverview = True
@@ -141,7 +141,7 @@ Public Function GenerateValidationOverview() As Boolean
     rpt = m_Schema.Reports.ValidationOverview
     '設定資料表名稱
     Dim tableName As String
-    tableName = rpt.Name
+    tableName = rpt.name
     '檢查已存在資料表
     If m_Context.DbReport.TableExists(tableName) Then
         Call m_Context.DbReport.DropTable(tableName)
@@ -173,7 +173,7 @@ Public Function GenerateValidationOverview() As Boolean
               "    '" & CompletenessDiffCount & "' AS [" & .CompletenessDiffCount & "], " & vbCrLf & _
               "    '" & documentDiffCount & "' AS [" & .DocumentBalanceDiffCount & "] " & vbCrLf & _
               "INTO " & tableName & " IN '" & m_Db.path & "' " & vbCrLf & _
-              "FROM " & m_Schema.JE.Name & " IN '" & m_Context.DbInput.path & "';"
+              "FROM " & m_Schema.JE.name & " IN '" & m_Context.DbInput.path & "';"
     End With
     m_Db.ExecuteNonQuery sql
     GenerateValidationOverview = True
@@ -198,7 +198,7 @@ Public Function GenerateCompletenessDetail() As Boolean
     rpt = m_Schema.Reports.CompletenessDetail
     '設定資料表名稱
     Dim tableName As String
-    tableName = rpt.Name
+    tableName = rpt.name
     '檢查已存在資料表
     If m_Context.DbReport.TableExists(tableName) Then
         Call m_Context.DbReport.DropTable(tableName)
@@ -231,7 +231,7 @@ Public Function GenerateDocumentBalanceDetail() As Boolean
     rpt = m_Schema.Reports.DocumentBalanceDetail
     '設定資料表名稱
     Dim tableName As String
-    tableName = rpt.Name
+    tableName = rpt.name
     '檢查已存在資料表
     If m_Context.DbReport.TableExists(tableName) Then
         Call m_Context.DbReport.DropTable(tableName)

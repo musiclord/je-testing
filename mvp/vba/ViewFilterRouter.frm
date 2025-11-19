@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} ViewFilterRouter
    Caption         =   "Router (Temp)"
    ClientHeight    =   2685
    ClientLeft      =   120
-   ClientTop       =   468
-   ClientWidth     =   2652
+   ClientTop       =   465
+   ClientWidth     =   2655
    OleObjectBlob   =   "ViewFilterRouter.frx":0000
    StartUpPosition =   1  '所屬視窗中央
 End
@@ -29,6 +29,7 @@ Private Sub btnCurrent_Click()
     '---------------------------------------------------------------------------
     ' 切換至當前篩選條件邏輯
     '---------------------------------------------------------------------------
+    Me.Hide
     RaiseEvent RouteToCurrent
 End Sub
 
@@ -36,6 +37,7 @@ Private Sub btnLegacy_Click()
     '---------------------------------------------------------------------------
     ' 切換至傳統篩選條件邏輯
     '---------------------------------------------------------------------------
+    Me.Hide
     RaiseEvent RouteToLegacy
 End Sub
 

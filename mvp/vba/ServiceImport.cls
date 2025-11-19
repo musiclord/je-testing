@@ -20,8 +20,8 @@ Private m_Ace As New Access.Application
 Private m_DataType As String
 Private m_Method As Long
 
-Public Property Let dType(ByVal value As String)
-    m_DataType = value
+Public Property Let dType(ByVal Value As String)
+    m_DataType = Value
     Debug.Print "Type: " & m_DataType
 End Property
 
@@ -47,8 +47,8 @@ Public Sub OpenWizard(ByVal target As String)
     m_Ace.OpenCurrentDatabase db.path
     '記錄匯入前的表名稱和更新時間
     For Each tdf In m_Ace.CurrentDb.TableDefs
-        If IsUserTable(tdf.Name) Then
-            oldTables.Add tdf.Name
+        If IsUserTable(tdf.name) Then
+            oldTables.Add tdf.name
             oldTimes.Add tdf.LastUpdated
         End If
     Next tdf
@@ -63,12 +63,12 @@ Public Sub OpenWizard(ByVal target As String)
     End Select
     '找出新建立或被覆寫的表
     For Each tdf In m_Ace.CurrentDb.TableDefs
-        If IsUserTable(tdf.Name) Then
+        If IsUserTable(tdf.name) Then
             found = False
             timeChanged = False
             '檢查是否為新表或現有表被更新
             For i = 1 To oldTables.Count
-                If oldTables.item(i) = tdf.Name Then
+                If oldTables.item(i) = tdf.name Then
                     found = True
                     If oldTimes.item(i) <> tdf.LastUpdated Then
                         timeChanged = True
@@ -78,7 +78,7 @@ Public Sub OpenWizard(ByVal target As String)
             Next i
             '新表或時間變更的表都加入清單
             If Not found Or timeChanged Then
-                newTables.Add tdf.Name
+                newTables.Add tdf.name
             End If
         End If
     Next tdf
@@ -86,11 +86,11 @@ Public Sub OpenWizard(ByVal target As String)
     If newTables.Count = 1 Then
         Select Case LCase$(target)
             Case "je"
-                m_Schema.JE.Name = newTables.item(1)
-                Debug.Print "匯入/更新 JE 表：" & m_Schema.JE.Name
+                m_Schema.JE.name = newTables.item(1)
+                Debug.Print "匯入/更新 JE 表：" & m_Schema.JE.name
             Case "tb"
-                m_Schema.TB.Name = newTables.item(1)
-                Debug.Print "匯入/更新 TB 表：" & m_Schema.TB.Name
+                m_Schema.TB.name = newTables.item(1)
+                Debug.Print "匯入/更新 TB 表：" & m_Schema.TB.name
         End Select
         '對匯入的資料表加入後綴
         Call AddFieldSuffix(newTables.item(1), target)
@@ -121,7 +121,7 @@ Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
     m_Schema.JE.PrintFields
     '//NOTE: 臨時映射識別碼欄位
     Dim UID As String
-    UID = "識別碼_" & m_Schema.JE.Name
+    UID = "識別碼_" & m_Schema.JE.name
     m_Schema.JE.SetField "UID", UID
     '//TODO: 檢查欄位型別
     If Not ProcessJeAmount(m_Schema.JE.method) Then
@@ -174,15 +174,15 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     Dim sql As String
     Dim dbs As DAO.Database
     Dim tdf As DAO.TableDef
-    Dim fld As DAO.Field
+    Dim fld As DAO.field
     Set dbs = db.Database
-    Set tdf = dbs.TableDefs(m_Schema.JE.Name)
+    Set tdf = dbs.TableDefs(m_Schema.JE.name)
     Debug.Print "********** 開始 JE 金額處理 **********"
     Select Case amountMethod
         Case 1  '直接使用原始金額欄位
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.Amount) & ";"
             db.ExecuteNonQuery sql
             '增加借貸別欄位
@@ -191,7 +191,7 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
         Case 2  '傳票金額 = 借方金額 - 貸方金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.DebitAmount) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.CreditAmount) & ";"
             db.ExecuteNonQuery sql
@@ -201,7 +201,7 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
         Case 3  '依借貸別決定金額正負號
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
                   "IIF(" & vbCrLf & _
                   "    [" & m_Schema.JE.DrCr & "] = '" & m_Schema.JE.IsDebit & "', " & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.JE.Amount) & "," & vbCrLf & _
@@ -231,22 +231,22 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
     Dim sql As String
     Dim dbs As DAO.Database
     Dim tdf As DAO.TableDef
-    Dim fld As DAO.Field
+    Dim fld As DAO.field
     Set dbs = db.Database
-    Set tdf = dbs.TableDefs(m_Schema.TB.Name)
+    Set tdf = dbs.TableDefs(m_Schema.TB.name)
     Debug.Print "********** 開始 TB 金額處理 **********"
     Select Case amountMethod
         Case 1  '直接使用變動金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.ChangeAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 2  '期末 - 期初 = 變動金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.ClosingBalance) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.OpeningBalance) & ";"
             db.ExecuteNonQuery sql
@@ -254,7 +254,7 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
         Case 3  '借方 - 貸方 = 變動金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.DebitAmount) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.CreditAmount) & ";"
             db.ExecuteNonQuery sql
@@ -263,7 +263,7 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
             '(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
             Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
             tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.Name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
                   "(" & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.TB.ClosingDebitBalance) & " - " & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.TB.OpeningDebitBalance) & vbCrLf & _
@@ -384,7 +384,7 @@ Public Function ImportFromSheet( _
         If useCustomNames Then
             colName = CStr(fieldNames(LBound(fieldNames) + i - 1))
         Else
-            colName = Trim$(CStr(headerRow.Cells(1, i).value))
+            colName = Trim$(CStr(headerRow.Cells(1, i).Value))
             If colName = "" Then colName = "Field" & i
         End If
         sql = sql & "[" & colName & "] " & fieldTypes(LBound(fieldTypes) + i - 1)
@@ -408,7 +408,7 @@ Public Function ImportFromSheet( _
             sql = "INSERT INTO [" & TBL_TEMP & "] VALUES ("
             For i = 1 To colCount
                 Dim cellValue As Variant
-                cellValue = row.Cells(1, i).value
+                cellValue = row.Cells(1, i).Value
                 If Not IsNull(cellValue) Then
                     If Trim$(CStr(cellValue)) <> "" Then allBlank = False
                 End If
@@ -463,15 +463,15 @@ Private Sub AddFieldSuffix( _
     '---------------------------------------------------------------------------
     Dim dbs As DAO.Database
     Dim tdf As DAO.TableDef
-    Dim fld As DAO.Field
+    Dim fld As DAO.field
     Dim oldName As String
     Dim newName As String
     Set dbs = m_Ace.CurrentDb
     Set tdf = dbs.TableDefs(tableName)
     For Each fld In tdf.Fields
-        oldName = fld.Name
+        oldName = fld.name
         newName = oldName & "_" & UCase(suffix)
-        fld.Name = newName
+        fld.name = newName
     Next fld
 End Sub
 
@@ -479,10 +479,10 @@ Private Function IsUserTable(ByVal tableName As String) As Boolean
     '---------------------------------------------------------------------------
     ' 判斷是否為使用者表
     '---------------------------------------------------------------------------
-    Dim Name As String
-    Name = LCase$(tableName)
+    Dim name As String
+    name = LCase$(tableName)
     '排除系統表和例外情況
-    IsUserTable = Not (Left$(Name, 4) = "msys" Or _
+    IsUserTable = Not (Left$(name, 4) = "msys" Or _
                       Left$(tableName, 1) = "~" Or _
                       InStr(1, tableName, "匯入錯誤") > 0)
 End Function
@@ -490,7 +490,7 @@ End Function
 Private Function CreateOrReplace( _
     tdf As DAO.TableDef, _
     fieldName As String _
-) As DAO.Field
+) As DAO.field
     '---------------------------------------------------------------------------
     ' 若欄位存在則刪除
     '---------------------------------------------------------------------------

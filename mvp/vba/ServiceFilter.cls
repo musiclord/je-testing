@@ -17,13 +17,14 @@ Option Explicit
 '===============================================================================
 Private m_Db As DbAccess
 Private m_Context As ContextManager
-Private m_Criteria As Collection 'key:String, item:ServiceFilterCriteria
-Private m_Criterion As Dictionary
+Private m_Schema As DbSchema
+Private m_CriteriaSet As Dictionary 'key:String, item:ServiceFilterCriteria
 
 Public Sub Initialize(context As ContextManager)
     Set m_Db = context.DbValid
+    Set m_Schema = context.DbSchema
     Set m_Context = context
-    Set m_CriteriaSet = New Collection
+    Set m_CriteriaSet = New Dictionary
 End Sub
 
 '===============================================================================
@@ -100,7 +101,78 @@ Private Function GetCriteria(ByVal key As String) As ServiceFilterCriteria
 End Function
 
 '===============================================================================
-' Filter Legacy
+' For Filter Legacy
 '===============================================================================
+' 設置條件組合，傳入參數為該條件組合的鍵值及對應的字典
+'-------------------------------------------------------------------------------
+Public Sub MapLegacyState(ByVal key As String, ByVal criteria As Dictionary)
+    If criteria("chkPostedOnWeekend") Then Call AddWeekendCriterion(key:="PostedOnWeekend", field:=m_Schema.JE.PostDate)
+    m_CriteriaSet.Add key, criteria
+End Sub
 
+'-------------------------------------------------------------------------------
+' 新增日期區間條件
+'-------------------------------------------------------------------------------
+Public Function AddDateRangeCriterion(ByVal key As String, ByVal field As String, ByVal startDate As Date, ByVal endDate As Date) As Boolean
+    Dim dict As New Dictionary
+    dict("Type") = "Date"
+    dict("Field") = field
+    dict("Operator") = "BETWEEN"
+    dict("Value") = Array(startDate, endDate)
+    dict("Logic") = "AND"
+    dict("Description") = field & " 介於 " & Format(startDate, "yyyy/mm/dd") & " 和 " & Format(endDate, "yyyy/mm/dd")
+    
+    AddDateRangeCriterion = AddCriterion(key, dict)
+End Function
 
+'-------------------------------------------------------------------------------
+' 新增數值區間條件
+'-------------------------------------------------------------------------------
+Public Function AddNumericRangeCriterion(ByVal key As String, ByVal field As String, ByVal minVal As Double, ByVal maxVal As Double) As Boolean
+    Dim dict As New Dictionary
+    dict("Type") = "Numeric"
+    dict("Field") = field
+    dict("Operator") = "BETWEEN"
+    dict("Value") = Array(minVal, maxVal)
+    dict("Logic") = "AND"
+    dict("Description") = field & " 介於 " & minVal & " 和 " & maxVal
+    
+    AddNumericRangeCriterion = AddCriterion(key, dict)
+End Function
+
+'-------------------------------------------------------------------------------
+' 新增關鍵字條件
+'-------------------------------------------------------------------------------
+Public Function AddKeywordCriterion(ByVal key As String, ByVal field As String, ByVal keyword As String) As Boolean
+    Dim dict As New Dictionary
+    dict("Type") = "Keyword" ' 或 Text
+    dict("Field") = field
+    dict("Operator") = "LIKE"
+    dict("Value") = keyword
+    dict("Logic") = "AND"
+    dict("Description") = field & " 包含 '" & keyword & "'"
+    
+    AddKeywordCriterion = AddCriterion(key, dict)
+End Function
+
+'-------------------------------------------------------------------------------
+' 新增週末條件 (需要 DateDimension 支援，這裡示範概念)
+'-------------------------------------------------------------------------------
+Public Function AddWeekendCriterion(ByVal key As String, ByVal field As String) As Boolean
+    ' 實務上這裡應該呼叫 ServiceDateDimension 取得週末日期陣列
+    ' 這裡先用假資料示範結構
+    ' Dim weekendDates As Variant
+    ' weekendDates = m_DateDim.GetWeekendDates(...)
+    
+    ' 假設我們有一個方法取得日期陣列
+    ' Dim dict As New Dictionary
+    ' dict("Type") = "Date"
+    ' dict("Field") = field
+    ' dict("Operator") = "IN"
+    ' dict("Value") = weekendDates
+    ' ...
+    ' AddWeekendCriterion = AddCriterion(key, dict)
+    
+    ' 暫時回傳 True 以通過編譯
+    AddWeekendCriterion = True
+End Function

@@ -58,27 +58,27 @@ End Property
 Public Property Get PeriodStart() As Date
     Let PeriodStart = m_PeriodStart
 End Property
-Public Property Let PeriodStart(ByVal value As Date)
-    Let m_PeriodStart = value
+Public Property Let PeriodStart(ByVal Value As Date)
+    Let m_PeriodStart = Value
 End Property
 '--測試資料期間結束日
 Public Property Get PeriodEnd() As Date
     Let PeriodEnd = m_PeriodEnd
 End Property
-Public Property Let PeriodEnd(ByVal value As Date)
-    Let m_PeriodEnd = value
+Public Property Let PeriodEnd(ByVal Value As Date)
+    Let m_PeriodEnd = Value
 End Property
 '--財報準備期間開始日
 Public Property Get PrepStartDate() As Date
     Let PrepStartDate = m_PrepStartDate
 End Property
-Public Property Let PrepStartDate(ByVal value As Date)
-    Let m_PrepStartDate = value
+Public Property Let PrepStartDate(ByVal Value As Date)
+    Let m_PrepStartDate = Value
 End Property
 '--公司名稱
 Public Property Get CompanyName() As String
     Let CompanyName = m_CompanyName
 End Property
-Public Property Let CompanyName(ByVal value As String)
-    Let m_CompanyName = value
+Public Property Let CompanyName(ByVal Value As String)
+    Let m_CompanyName = Value
 End Property

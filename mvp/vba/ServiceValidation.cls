@@ -70,7 +70,7 @@ Public Function CheckCompleteness() As Boolean
         Call CleanupTempTables( _
             dbTarget, _
             Array( _
-                .TB.Name, _
+                .TB.name, _
                 .Tables.JeInPeriod, _
                 .Tables.JeNotInPeriod, _
                 .Tables.JeAccountSum, _
@@ -87,8 +87,8 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** 複製 TB **********"
     With m_Schema
     sql = "SELECT * " & vbCrLf & _
-          "INTO " & .TB.Name & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & .TB.Name & " IN '" & dbSource.path & "';"
+          "INTO " & .TB.name & " IN '" & dbTarget.path & "' " & vbCrLf & _
+          "FROM " & .TB.name & " IN '" & dbSource.path & "';"
     End With
     dbTarget.ExecuteNonQuery sql
     
@@ -100,7 +100,7 @@ Public Function CheckCompleteness() As Boolean
     With m_Schema
         sql = "SELECT * " & vbCrLf & _
               "INTO " & .Tables.JeInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
-              "FROM " & .JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
+              "FROM " & .JE.name & " IN '" & dbSource.path & "' " & vbCrLf & _
               "WHERE [" & .JE.PostDate & "] " & vbCrLf & _
               "BETWEEN #" & m_Info.PeriodStart & "# AND #" & m_Info.PeriodEnd & "#;"
     End With
@@ -114,7 +114,7 @@ Public Function CheckCompleteness() As Boolean
     With m_Schema
     sql = "SELECT * " & vbCrLf & _
           "INTO " & .Tables.JeNotInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
-          "FROM " & .JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
+          "FROM " & .JE.name & " IN '" & dbSource.path & "' " & vbCrLf & _
           "WHERE [" & .JE.PostDate & "] < #" & m_Info.PeriodStart & "# " & vbCrLf & _
           "   OR [" & .JE.PostDate & "] > #" & m_Info.PeriodEnd & "#;"
     End With
@@ -146,13 +146,13 @@ Public Function CheckCompleteness() As Boolean
               "    SELECT" & vbCrLf & _
               "        P.*, S.* " & vbCrLf & _
               "    FROM " & .Tables.JeAccountSum & " AS P " & vbCrLf & _
-              "    LEFT JOIN " & .TB.Name & " AS S " & vbCrLf & _
+              "    LEFT JOIN " & .TB.name & " AS S " & vbCrLf & _
               "        ON P.[" & .JE.AccountNumber & "] = S.[" & .TB.AccountNumber & "] " & vbCrLf & _
               "    UNION " & vbCrLf & _
               "    SELECT " & vbCrLf & _
               "        P.*, S.* " & vbCrLf & _
               "    FROM " & .Tables.JeAccountSum & " AS P " & vbCrLf & _
-              "    RIGHT JOIN " & .TB.Name & " AS S " & vbCrLf & _
+              "    RIGHT JOIN " & .TB.name & " AS S " & vbCrLf & _
               "        ON P.[" & .JE.AccountNumber & "] = S.[" & .TB.AccountNumber & "] " & vbCrLf & _
               ");"
     End With
@@ -380,7 +380,7 @@ Public Function CheckINF() As Boolean
     With m_Schema
         sql = "SELECT * " & vbCrLf & _
               "INTO " & .Tables.JeInPeriod & " IN '" & dbTarget.path & "' " & vbCrLf & _
-              "FROM " & .JE.Name & " IN '" & dbSource.path & "' " & vbCrLf & _
+              "FROM " & .JE.name & " IN '" & dbSource.path & "' " & vbCrLf & _
               "WHERE [" & .JE.PostDate & "] " & vbCrLf & _
               "BETWEEN #" & m_Info.PeriodStart & "# AND #" & m_Info.PeriodEnd & "#;"
     End With
@@ -453,7 +453,7 @@ Public Function CheckNullRecords() As Boolean
     End With
     Debug.Print "********** 檢查會計科目編號空值 **********"
     If Not dbSource.ExtractNullRecords( _
-        m_Schema.JE.Name, _
+        m_Schema.JE.name, _
         m_Schema.JE.AccountNumber, _
         m_Schema.Tables.NullAccount, _
         destinationDb:=dbTarget.path _
@@ -463,7 +463,7 @@ Public Function CheckNullRecords() As Boolean
     End If
     Debug.Print "********** 檢查傳票號碼空值 **********"
     If Not dbSource.ExtractNullRecords( _
-        m_Schema.JE.Name, _
+        m_Schema.JE.name, _
         m_Schema.JE.DocumentNumber, _
         m_Schema.Tables.NullDocument, _
         destinationDb:=dbTarget.path _
@@ -473,7 +473,7 @@ Public Function CheckNullRecords() As Boolean
     End If
     Debug.Print "********** 檢查傳票摘要空值 **********"
     If Not dbSource.ExtractNullRecords( _
-        m_Schema.JE.Name, _
+        m_Schema.JE.name, _
         m_Schema.JE.EntryDescription, _
         m_Schema.Tables.NullDescription, _
         destinationDb:=dbTarget.path _

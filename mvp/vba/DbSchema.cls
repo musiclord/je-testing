@@ -132,7 +132,7 @@ End Property
 Private Sub InitializeTables()
     '-- DateDimension: 日期維度表
     With m_DateDimension
-        .Name = "DATE_DIMENSION"
+        .name = "DATE_DIMENSION"
         '-- 欄位
         .DateKey = "DateKey"
         .Year = "Year"
@@ -148,7 +148,7 @@ Private Sub InitializeTables()
     
     '-- AccountMapping: 科目配對表
     With m_AccountMapping
-        .Name = "ACCOUNT_MAPPING"
+        .name = "ACCOUNT_MAPPING"
         '-- 欄位
         .AccountNumber = "AccountNumber"
         .AccountName = "AccountName"
@@ -195,7 +195,7 @@ End Sub
 Private Sub InitializeReports()
     '-- ENGAGEMENT_OVERVIEW: 專案總覽報表
     With m_Reports.EngagementOverview
-        .Name = "ENGAGEMENT_OVERVIEW"
+        .name = "ENGAGEMENT_OVERVIEW"
         '-- 欄位
         .Client = "客戶"
         .PrepStartDate = "財報準備期間開始日"
@@ -207,7 +207,7 @@ Private Sub InitializeReports()
     
     '-- DATA_OVERVIEW: 資料總覽報表
     With m_Reports.DataOverview
-        .Name = "DATA_OVERVIEW"
+        .name = "DATA_OVERVIEW"
         '-- 欄位
         .JeName = "分錄檔案名稱"
         .JeNetAmount = "分錄借貸淨額"
@@ -220,7 +220,7 @@ Private Sub InitializeReports()
     
     '-- VALIDATION_OVERVIEW: 驗證總覽報表
     With m_Reports.ValidationOverview
-        .Name = "VALIDATION_OVERVIEW"
+        .name = "VALIDATION_OVERVIEW"
         '-- 欄位
         .NullAccountRecordCount = "無會計科目編號筆數"
         .NullDocumentRecordCount = "無傳票號碼筆數"
@@ -232,27 +232,27 @@ Private Sub InitializeReports()
     
     '-- COMPLETENESS_DETAIL: 完整性測試明細報表
     With m_Reports.CompletenessDetail
-        .Name = "COMPLETENESS_DETAIL"
+        .name = "COMPLETENESS_DETAIL"
     End With
     
     '-- DOCUMENT_BALANCE_DETAIL: 借貸平衡測試明細報表
     With m_Reports.DocumentBalanceDetail
-        .Name = "DOCUMENT_BALANCE_DETAIL"
+        .name = "DOCUMENT_BALANCE_DETAIL"
     End With
     
     '-- INF_SAMPLE_DETAIL: INF抽樣明細報表
     With m_Reports.InfSampleDetail
-        .Name = "INF_SAMPLE_DETAIL"
+        .name = "INF_SAMPLE_DETAIL"
     End With
     
     '-- ACCOUNT_MAPPING_INFO: 科目配對資訊報表
     With m_Reports.AccountMappingInfo
-        .Name = "ACCOUNT_MAPPING_INFO"
+        .name = "ACCOUNT_MAPPING_INFO"
     End With
     
     '-- FIELD_MAPPING_INFO: 欄位映射資訊報表
     With m_Reports.FieldMappingInfo
-        .Name = "FIELD_MAPPING_INFO"
+        .name = "FIELD_MAPPING_INFO"
     End With
 End Sub
 

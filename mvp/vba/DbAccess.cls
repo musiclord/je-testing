@@ -33,8 +33,8 @@ End Property
 Public Property Get path() As String
     path = m_Path
 End Property
-Public Property Let path(ByVal value As String)
-    m_Path = value
+Public Property Let path(ByVal Value As String)
+    m_Path = Value
 End Property
 
 '-- 方法
@@ -65,7 +65,7 @@ Public Sub Disconnect()
         Call RollbackTx
     End If
     Dim wsName As String
-    If Not m_Ws Is Nothing Then wsName = m_Ws.Name
+    If Not m_Ws Is Nothing Then wsName = m_Ws.name
     If Not m_Db Is Nothing Then
         m_Db.Close
         Set m_Db = Nothing
@@ -96,10 +96,10 @@ Public Sub Refresh(Optional forceDeep As Boolean = False)
         Dim tdf As DAO.TableDef
         For Each tdf In m_Db.TableDefs
             '跳過系統表和臨時表
-            If Not (tdf.Name Like "MSys*" Or tdf.Name Like "~TMPCLP*") Then
+            If Not (tdf.name Like "MSys*" Or tdf.name Like "~TMPCLP*") Then
                 tdf.Fields.Refresh
                 If Err.Number <> 0 Then
-                    Debug.Print "警告: 無法刷新資料表欄位: " & tdf.Name & " (錯誤: " & Err.Number & ")"
+                    Debug.Print "警告: 無法刷新資料表欄位: " & tdf.name & " (錯誤: " & Err.Number & ")"
                     Err.Clear
                 End If
             End If
@@ -233,7 +233,7 @@ Public Function FieldExists(ByVal tdf As DAO.TableDef, ByVal fieldName As String
     ' 檢查指定欄位名稱是否存在於指定的資料表中
     '---------------------------------------------------------------------------
     '檢查欄位是否存在
-    Dim dummyFld As DAO.Field
+    Dim dummyFld As DAO.field
     On Error Resume Next
     Set dummyFld = tdf.Fields(fieldName)
     FieldExists = (Err.Number = 0)
@@ -247,7 +247,7 @@ Public Function ExecuteQuery(ByVal sql As String) As DAO.Recordset
     '---------------------------------------------------------------------------
     If Not m_IsConnected Then Connect
     Debug.Print String(60, "-")
-    Debug.Print "<<" & Dir(m_Db.Name) & ">> : "
+    Debug.Print "<<" & Dir(m_Db.name) & ">> : "
     Debug.Print sql
     Debug.Print String(60, "-")
     '刷新快取
@@ -263,7 +263,7 @@ Public Function ExecuteNonQuery(ByVal sql As String, Optional logging As Boolean
     If Not m_IsConnected Then Connect
     If logging Then
         Debug.Print String(60, "-")
-        Debug.Print "<<" & Dir(m_Db.Name) & ">> : "
+        Debug.Print "<<" & Dir(m_Db.name) & ">> : "
         Debug.Print sql
         Debug.Print String(60, "-")
     End If
@@ -307,12 +307,12 @@ Public Function GetTableFields(ByVal tableName As String) As Collection
     '取得指定資料表的欄位
     If Not m_IsConnected Then Connect
     Dim Fields As New Collection
-    Dim fld As DAO.Field
+    Dim fld As DAO.field
     Dim rs As DAO.Recordset
-    Set rs = m_Db.OpenRecordset(Name:=tableName, Type:=dbOpenDynaset)
+    Set rs = m_Db.OpenRecordset(name:=tableName, Type:=dbOpenDynaset)
     '遍歷 RS 的欄位
     For Each fld In rs.Fields
-        Fields.Add fld.Name
+        Fields.Add fld.name
     Next fld
     rs.Close
     Set rs = Nothing
@@ -344,7 +344,7 @@ Public Function ExtractNullRecords( _
     Dim tdf As DAO.TableDef: Set tdf = m_Db.TableDefs(tableName)
     If Not FieldExists(tdf, fieldName) Then Exit Function
     '取得欄位物件，準備分析欄位型別
-    Dim fld As DAO.Field: Set fld = tdf.Fields(fieldName)
+    Dim fld As DAO.field: Set fld = tdf.Fields(fieldName)
     Dim isNumeric As Boolean
     isNumeric = (fld.Type = dbByte Or fld.Type = dbInteger Or fld.Type = dbLong Or _
                  fld.Type = dbSingle Or fld.Type = dbDouble Or fld.Type = dbCurrency Or _
