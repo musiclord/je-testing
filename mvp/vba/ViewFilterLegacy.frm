@@ -23,25 +23,30 @@ Public Event ExecuteCriteriaRequested()
 Public Event ShowCriteriaRequested()
 Public Event Submitted(ByVal dto As DataTransferObject)
 '--
-Public CriteriaStates As New Dictionary
+Public criteriaStates As New Dictionary
 Private m_LastSelection As String
 
 '-------------------------------------------------------------------------------
 ' 初始化
 '-------------------------------------------------------------------------------
-Public Sub Initialize()
+Public Sub Initialize(ByRef db As DbAccess)
+    Dim Fields As Collection
+    Set Fields = db.GetTableFields("JE")
+    Call UpdateFields(Fields)
     Me.cboCriteriaSelector.Clear
     Dim i As Long
+    Dim criteriaName As String
     Dim state As Dictionary
     ' 預設新增十組條件
-    For i = 1 To 10
+    For i = 1 To 8
         Set state = New Dictionary
-        Me.cboCriteriaSelector.AddItem CStr(i)
-        CriteriaStates.Add CStr(i), state
+        criteriaName = "條件_" & CStr(i)
+        Me.cboCriteriaSelector.AddItem criteriaName
+        criteriaStates.Add criteriaName, state
     Next i
     ' 設定初始狀態
-    m_LastSelection = "1"
-    Me.cboCriteriaSelector.Value = "1"
+    m_LastSelection = "條件_1"
+    Me.cboCriteriaSelector.Value = "條件_1"
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -103,7 +108,7 @@ Private Sub SaveState(ByVal key As String)
     Next ctrl
     On Error GoTo 0
     
-    Set CriteriaStates(key) = state
+    Set criteriaStates(key) = state
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -111,7 +116,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub LoadState(ByVal key As String)
     Dim state As Dictionary
-    Set state = CriteriaStates(key)
+    Set state = criteriaStates(key)
     Dim ctrl As MSForms.Control
     ' 如果該組設定是空的(全新)，則清空表單
     If state.Count = 0 Then
@@ -135,4 +140,22 @@ Private Sub LoadState(ByVal key As String)
         Next ctrlName
         On Error GoTo 0
     End If
+End Sub
+
+Private Sub UpdateFields(ByVal Fields As Collection)
+    '更新欄位
+    Dim ctrl As MSForms.Control
+    Dim cbo As MSForms.ComboBox
+    Dim i As Long
+    If Fields Is Nothing Then Exit Sub
+    '遍歷控制項
+    For Each ctrl In Me.Controls
+        If TypeOf ctrl Is MSForms.ComboBox Then
+            Set cbo = ctrl
+            cbo.Clear
+            For i = 1 To Fields.Count
+                cbo.AddItem Fields.item(i)
+            Next i
+        End If
+    Next ctrl
 End Sub

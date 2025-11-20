@@ -15,7 +15,17 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Form:     ViewAddSql
+' Form:     ViewFilterAddSql
 ' Purpose:
 ' Methods:
 '===============================================================================
+Public Event AddSqlRequested()
+
+Public Sub Initialize()
+    '...nothing yet...
+End Sub
+
+Private Sub btnSet_Click()
+    Me.Hide
+    RaiseEvent AddSqlRequested
+End Sub

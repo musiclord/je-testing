@@ -33,6 +33,9 @@ Private WithEvents vFilterLegacy As ViewFilterLegacy
 Attribute vFilterLegacy.VB_VarHelpID = -1
 Private WithEvents vAddCriteria As ViewFilterAddCriteria
 Attribute vAddCriteria.VB_VarHelpID = -1
+Private WithEvents vAddSql As ViewFilterAddSql
+Attribute vAddSql.VB_VarHelpID = -1
+
 Private WithEvents vExport As ViewExport
 Attribute vExport.VB_VarHelpID = -1
 '--
@@ -61,6 +64,7 @@ Public Sub Initialize()
     Set vFilterCurrent = New ViewFilterCurrent
     Set vFilterLegacy = New ViewFilterLegacy
     Set vAddCriteria = New ViewFilterAddCriteria
+    Set vAddSql = New ViewFilterAddSql
     Set vExport = New ViewExport
     '--
     Set fso = New FileSystemObject
@@ -80,6 +84,11 @@ Public Sub Run()
     Call projector.Initialize(context)
     Call vProject.Initialize
     vProject.Show vbModeless
+End Sub
+
+Private Sub vAddSql_AddSqlRequested()
+    Dim sql As String
+    sql = vAddSql.txtbSql.Value
 End Sub
 
 '===============================================================================
@@ -434,28 +443,34 @@ Private Sub vFilterRouter_RouteToCurrent()
 End Sub
 
 Private Sub vFilterRouter_RouteToLegacy()
-    Call vFilterLegacy.Initialize
+    Call vFilterLegacy.Initialize(context.DbInput)
     vFilterLegacy.Show vbModeless ' <-- 使用舊版本的篩選條件
 End Sub
 
 '===============================================================================
 '-- vFilterLegacy
 '===============================================================================
-
-'-------------------------------------------------------------------------------
-'...
+' 組成 SQL 查詢，執行所有條件集合
 '-------------------------------------------------------------------------------
 Private Sub vFilterLegacy_ExecuteCriteriaRequested()
-    '將介面的狀態設給服務層讀取
+    '1. 將介面的狀態設給服務層讀取
     Dim states As Dictionary
-    Set states = vFilterLegacy.CriteriaStates
+    Set states = vFilterLegacy.criteriaStates
     
-    Dim key As Variant
-    For Each key In states.Keys
-        'filter.MapLegacyState CStr(key), states(key)
-    Next key
+    Dim keyword As String
+    keyword = vFilterLegacy.txtbKeywordFilter
     
+    Dim dateRange As Variant
+    dateRange = Array(vFilterLegacy.txtbDateRangeStart, vFilterLegacy.txtbDateRangeEnd)
     
+    Dim numRange As Variant
+    numRange = Array(vFilterLegacy.txtbNumericValueStart, vFilterLegacy.txtbNumericValueEnd)
+    
+    '2. 處理並映射條件集合
+    filter.ProcessCriteriaSet states, "legacy"
+    
+    '3. 執行所有篩選條件
+    'filter.ExecuteBatch ("FILTER_RESULT_")
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -476,6 +491,20 @@ End Sub
 '===============================================================================
 '-- vFilterCurrent
 '===============================================================================
+' 組成 SQL 查詢，執行所有條件集合
+'-------------------------------------------------------------------------------
+Private Sub vFilterCurrent_ExecuteCriteriaRequested()
+    '1. 將介面的狀態設給服務層讀取
+    Dim states As Dictionary
+    Set states = vFilterCurrent.criteriaStates
+    
+    '2. 處理並映射條件集合
+    'filter.ProcessCriteriaSet(states, "current")
+    
+    '3. 執行所有篩選條件
+    'filter.ExecuteBatch("FILTER_RESULT")
+    
+End Sub
 
 '-------------------------------------------------------------------------------
 ' 總覽條件組合詳細
@@ -487,14 +516,14 @@ End Sub
 '-------------------------------------------------------------------------------
 ' 新增條件組合
 '-------------------------------------------------------------------------------
-Private Sub vFilterCurrent_AddCriteria()
+Private Sub vFilterCurrent_AddCriteriaRequested()
     
 End Sub
 
 '-------------------------------------------------------------------------------
 ' 新增條件，打開 ViewFilterAddCriteria
 '-------------------------------------------------------------------------------
-Private Sub vFilterCurrent_AddCriterion()
+Private Sub vFilterCurrent_AddCriterionRequested()
 
 End Sub
 
@@ -502,27 +531,21 @@ End Sub
 ' 要求打開 ViewFilterAddSql
 '-------------------------------------------------------------------------------
 Private Sub vFilterCurrent_AddSqlRequested()
-
-End Sub
-
-'-------------------------------------------------------------------------------
-' 執行所有條件集合，組成 SQL 查詢
-'-------------------------------------------------------------------------------
-Private Sub vFilterCurrent_ExecuteCriteria()
-
+    Call vAddSql.Initialize '<--nothing yet
+    vAddSql.Show vbModeless
 End Sub
 
 '-------------------------------------------------------------------------------
 ' 移除所選的條件組合
 '-------------------------------------------------------------------------------
-Private Sub vFilterCurrent_RemoveCriteria()
+Private Sub vFilterCurrent_RemoveCriteriaRequested()
 
 End Sub
 
 '-------------------------------------------------------------------------------
 ' 移除所選的條件
 '-------------------------------------------------------------------------------
-Private Sub vFilterCurrent_RemoveCriterion()
+Private Sub vFilterCurrent_RemoveCriterionRequested()
 
 End Sub
 

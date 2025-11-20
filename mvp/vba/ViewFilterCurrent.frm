@@ -20,14 +20,15 @@ Option Explicit
 ' Methods:
 '===============================================================================
 Public Event OverviewCriteria()
-Public Event ExecuteCriteria()
-Public Event AddCriteria()
-Public Event RemoveCriteria()
-Public Event AddCriterion()
-Public Event RemoveCriterion()
 Public Event AddSqlRequested()
+Public Event AddCriteriaRequested()
+Public Event AddCriterionRequested()
+Public Event RemoveCriteriaRequested()
+Public Event RemoveCriterionRequested()
+Public Event ExecuteCriteriaRequested()
 Public Event Submitted(dto As DataTransferObject)
 '--
+Public criteriaStates As New Dictionary
 Public Sub Initialize()
     '...
 End Sub
@@ -38,29 +39,28 @@ Private Sub btnOverview_Click()
 End Sub
 
 Private Sub btnAddCriteria_Click()
-    RaiseEvent AddCriteria      '新增條件組合
+    RaiseEvent AddCriteriaRequested      '新增條件組合
 End Sub
 
 Private Sub btnAddCriterion_Click()
-    RaiseEvent AddCriterion     '新增條件，打開 ViewFilterAddCriteria
+    RaiseEvent AddCriterionRequested     '新增條件，打開 ViewFilterAddCriteria
 End Sub
 
 Private Sub btnCustomSQL_Click()
     RaiseEvent AddSqlRequested  '要求打開 ViewFilterAddSql
 End Sub
 
-Private Sub btnExecute_Click()
-    RaiseEvent ExecuteCriteria  '執行所有條件集合，組成 SQL 查詢
-End Sub
-
 Private Sub btnRemoveCriteria_Click()
-    RaiseEvent RemoveCriteria   '移除所選的條件組合
+    RaiseEvent RemoveCriteriaRequested   '移除所選的條件組合
 End Sub
 
 Private Sub btnRemoveCriterion_Click()
-    RaiseEvent RemoveCriterion  '移除所選的條件
+    RaiseEvent RemoveCriterionRequested  '移除所選的條件
 End Sub
 
+Private Sub btnExecuteCriteria_Click()
+    RaiseEvent ExecuteCriteriaRequested  '執行所有條件集合，組成 SQL 查詢
+End Sub
 
 Private Sub btnExit_Click()
     '...

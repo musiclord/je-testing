@@ -15,7 +15,7 @@ Option Explicit
 '
 ' Criteria 結構設計:
 '   每個 Criterion 為一個 Dict:
-'       - "Type"        : String, 條件類型 (Field/Date/Keyword/Special)
+'       - "Type"        : String, 條件類型 (Date/Text/Numeric)
 '       - "Field"       : String, 欄位名稱 (PostDate, AccountNumber)
 '       - "Operator"    : String, 運算子 (=, <>, >=, =< LIKE, IN, BETWEEN)
 '       - "Value"       : Variant, 條件值 (String/Date/Number/Array)
@@ -30,13 +30,14 @@ Option Explicit
 '       criterion("Logic") = "AND"
 '       criterion("Description") = "總帳日期為週末"
 '===============================================================================
-Private Const KEY_TYPE As String = "Type"
-Private Const KEY_FLD As String = "Field"
-Private Const KEY_OP As String = "Operator"
-Private Const KEY_VALUE As String = "Value"
-Private Const KEY_LOGIC As String = "Logic"
-Private Const KEY_DESC As String = "Description"
-
+'-- 全域常數
+Private Const KEY_TYPE As String = "type"
+Private Const KEY_FLD As String = "field"
+Private Const KEY_OP As String = "operator"
+Private Const KEY_VALUE As String = "value"
+Private Const KEY_LOGIC As String = "logic"
+Private Const KEY_DESC As String = "description"
+'--
 Private m_Db As DbAccess
 Private m_Context As ContextManager
 Private m_Criteria As Collection    '<-- Criteria is a collection of Criterion objects
@@ -116,14 +117,14 @@ End Function
 Public Function BuildConditionSql(criterion As Dictionary) As String
     Dim conditionSql As String
     Dim Value As Variant
-    '抓欄位名稱並格式化（加上方括號、防止保留字衝突）
+    '取欄位名稱並格式化（加上方括號、防止保留字衝突）
     Dim fieldName As String
     fieldName = FormatFieldName(criterion(KEY_FLD))
     If Len(fieldName) = 0 Then
         BuildConditionSql = ""
         Exit Function
     End If
-    ' 取得運算子，轉成標準 SQL（例如 <> → !=）
+    '取運算子並轉成標準 SQL（例如 <> → !=）
     Dim operatorText As String
     operatorText = NormalizeOperator(criterion(KEY_OP))
     Value = criterion(KEY_VALUE)
@@ -224,10 +225,16 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Function FormatFieldName(ByVal fieldName As String) As String
     fieldName = Trim$(fieldName)
+    '如果欄位名稱為空，則回傳空字串
     If Len(fieldName) = 0 Then
         FormatFieldName = ""
+    '如果欄位名稱包含括號 (例如函數或運算式)，則直接回傳原始名稱
+    ElseIf InStr(fieldName, "(") > 0 And InStr(fieldName, ")") > 0 Then
+        FormatFieldName = fieldName
+    '如果欄位名稱已用中括號包住，則直接回傳原始名稱
     ElseIf Left$(fieldName, 1) = "[" And Right$(fieldName, 1) = "]" Then
         FormatFieldName = fieldName
+    '其他情況則自動加上中括號
     Else
         FormatFieldName = "[" & fieldName & "]"
     End If
