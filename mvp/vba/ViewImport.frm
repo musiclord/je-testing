@@ -129,7 +129,7 @@ Private Sub btnConfigureHolidays_Click()
     ws.Range("B1").value = "Description"
     With ws.Range("A1:B1")
         .Font.Bold = True
-        .Interior.Color = RGB(245, 241, 222)
+        .Interior.color = RGB(245, 241, 222)
     End With
 End Sub
 
@@ -148,7 +148,7 @@ Private Sub btnConfigureMakeUpDays_Click()
     ws.Range("B1").value = "Description"
     With ws.Range("A1:B1")
         .Font.Bold = True
-        .Interior.Color = RGB(245, 241, 222)
+        .Interior.color = RGB(245, 241, 222)
     End With
 End Sub
 

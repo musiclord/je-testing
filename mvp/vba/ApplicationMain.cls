@@ -292,10 +292,11 @@ Private Sub vImport_UpdateDateDimensionRequested(ByVal dto As DataTransferObject
     End If
     '-- 匯入週末資料
     Call calendar.MergeWeekends(dto.weekendIndices)
-    '-- 更新結束
-    MsgBox "日期維度表更新完成", vbInformation, "日期設置"
+    '-- 成功訊息
+    MsgBox "日期維度已完成設定", vbInformation, "日期設定"
+    ' [NEW] 回推前端狀態，避免 btnExit 誤判
+    vImport.SetCalendarState context.DbInput.TableExists(context.DbSchema.DateDimension.name)
 End Sub
-
 '-------------------------------------------------------------------------------
 '//WARNING: ONLY FOR TESTING
 '//NOTE:只負責觸發前端的操作
@@ -357,30 +358,64 @@ End Sub
 ' 執行完整性測試
 '-------------------------------------------------------------------------------
 Private Sub vValidation_CheckCompleteness()
-    If validator.CheckCompleteness() Then
-        'exporter.PreviewTable
+    Dim succeeded As Boolean
+    Dim msg As String
+
+    succeeded = validator.CheckCompleteness()
+    If succeeded Then
+        msg = "所有期間都有 JE。"
+    Else
+        msg = "請檢視 COMPLETENESS_DETAIL。"
     End If
+    vValidation.ReportTestResult "完整性檢查", succeeded, msg
 End Sub
 
 '-------------------------------------------------------------------------------
 ' 執行借貸不平測試
 '-------------------------------------------------------------------------------
 Private Sub vValidation_CheckDocumentBalance()
-    validator.CheckDocumentBalance
+    Dim succeeded As Boolean
+    Dim msg As String
+
+    succeeded = validator.CheckDocumentBalance()
+    If succeeded Then
+        msg = "借貸金額平衡。"
+    Else
+        msg = "發現不平衡，請檢視 DOCUMENT_BALANCE_DETAIL。"
+    End If
+    vValidation.ReportTestResult "憑證借貸平衡", succeeded, msg
 End Sub
 
 '-------------------------------------------------------------------------------
 ' 檢查空值分錄
 '-------------------------------------------------------------------------------
 Private Sub vValidation_CheckNullRecords()
-    validator.CheckNullRecords
+    Dim succeeded As Boolean
+    Dim msg As String
+
+    succeeded = validator.CheckNullRecords()
+    If succeeded Then
+        msg = "未偵測到 Null 欄位。"
+    Else
+        msg = "有 Null 欄位，請檢視 NULL_RECORDS_DETAIL。"
+    End If
+    vValidation.ReportTestResult "Null Records 檢查", succeeded, msg
 End Sub
 
 '-------------------------------------------------------------------------------
 ' 執行可靠性測試
 '-------------------------------------------------------------------------------
 Private Sub vValidation_CheckINF()
-    validator.CheckINF
+    Dim succeeded As Boolean
+    Dim msg As String
+
+    succeeded = validator.CheckINF()
+    If succeeded Then
+        msg = "INF 檢查通過。"
+    Else
+        msg = "INF 清單有異常，請檢查 LOG_INF_DETAIL。"
+    End If
+    vValidation.ReportTestResult "INF 檢查", succeeded, msg
 End Sub
 
 '-------------------------------------------------------------------------------

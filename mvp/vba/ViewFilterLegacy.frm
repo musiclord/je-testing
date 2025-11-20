@@ -295,7 +295,7 @@ Private Sub PopulateCriteriaResultTable(ByVal ws As Worksheet, _
     Next col
     With ws.Range(ws.Cells(headerRow, 1), ws.Cells(headerRow, rs.fields.Count))
         .Font.Bold = True
-        .Interior.Color = RGB(245, 241, 222)
+        .Interior.color = RGB(245, 241, 222)
     End With
     currentRow = headerRow + 1
     If rs.RecordCount = -1 Then rs.MoveLast

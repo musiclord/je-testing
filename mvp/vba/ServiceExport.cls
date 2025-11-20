@@ -58,7 +58,7 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
         '檢查資料表是否存在
         If Not m_Db.TableExists(tableName) Then
             ws.Cells(currentRow, 1).value = "資料表 [" & tableName & "] 不存在"
-            ws.Cells(currentRow, 1).Font.Color = vbRed
+            ws.Cells(currentRow, 1).Font.color = vbRed
             currentRow = currentRow + 2
         Else
             Set rs = m_Db.ExecuteQuery("SELECT * FROM [" & tableName & "];")
@@ -75,7 +75,7 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
             '格式化欄位名稱列
             With ws.Range(ws.Cells(currentRow, 1), ws.Cells(currentRow, rs.fields.Count))
                 .Font.Bold = True
-                .Interior.Color = RGB(245, 241, 222)
+                .Interior.color = RGB(245, 241, 222)
             End With
             
             currentRow = currentRow + 1
