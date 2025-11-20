@@ -128,7 +128,7 @@ Public Function CheckCompleteness() As Boolean
     With m_Schema
         sql = "SELECT " & vbCrLf & _
               "    [" & .JE.AccountNumber & "], " & vbCrLf & _
-              "    SUM([" & .Fields.JeAmount & "]) AS [" & .Fields.JeAmountSum & "] " & vbCrLf & _
+              "    SUM([" & .fields.JeAmount & "]) AS [" & .fields.JeAmountSum & "] " & vbCrLf & _
               "INTO " & .Tables.JeAccountSum & " " & vbCrLf & _
               "FROM " & .Tables.JeInPeriod & " " & vbCrLf & _
               "GROUP BY [" & .JE.AccountNumber & "];"
@@ -165,13 +165,13 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** ·s¼W®t²§­pºâÄæ¦ì **********"
     With m_Schema
         sql = "ALTER TABLE " & .Tables.CompletenessCalculated & " " & vbCrLf & _
-              "ADD COLUMN [" & .Fields.AccountMerged & "] TEXT(50);"
+              "ADD COLUMN [" & .fields.AccountMerged & "] TEXT(50);"
     End With
     dbTarget.ExecuteNonQuery sql
     
     With m_Schema
         sql = "ALTER TABLE " & .Tables.CompletenessCalculated & " " & vbCrLf & _
-              "ADD COLUMN [" & .Fields.TbJeDiff & "] CURRENCY;"
+              "ADD COLUMN [" & .fields.TbJeDiff & "] CURRENCY;"
     End With
     dbTarget.ExecuteNonQuery sql
     
@@ -183,7 +183,7 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** ­pºâ²Î¤@¬ì¥Ø½s¸¹ **********"
     With m_Schema
         sql = "UPDATE " & .Tables.CompletenessCalculated & " " & vbCrLf & _
-              "SET [" & .Fields.AccountMerged & "] = " & vbCrLf & _
+              "SET [" & .fields.AccountMerged & "] = " & vbCrLf & _
               "    IIF(ISNULL([" & .JE.AccountNumber & "]), [" & .TB.AccountNumber & "], [" & .JE.AccountNumber & "]);"
     End With
     dbTarget.ExecuteNonQuery sql
@@ -195,7 +195,7 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** ­pºâ®t²§ª÷ÃB **********"
     With m_Schema
         sql = "UPDATE " & .Tables.CompletenessCalculated & " " & vbCrLf & _
-              "SET [" & .Fields.TbJeDiff & "] = " & Nz(.Fields.TbAmount) & " - " & Nz(.Fields.JeAmountSum) & ";"
+              "SET [" & .fields.TbJeDiff & "] = " & Nz(.fields.TbAmount) & " - " & Nz(.fields.JeAmountSum) & ";"
     End With
     dbTarget.ExecuteNonQuery sql
     
@@ -208,7 +208,7 @@ Public Function CheckCompleteness() As Boolean
         sql = "SELECT * " & vbCrLf & _
               "INTO " & .Tables.CompletenessDiff & " " & vbCrLf & _
               "FROM " & .Tables.CompletenessCalculated & " " & vbCrLf & _
-              "WHERE ABS([" & .Fields.TbJeDiff & "]) > 0;"
+              "WHERE ABS([" & .fields.TbJeDiff & "]) > 0;"
     End With
     dbTarget.ExecuteNonQuery sql
     
@@ -219,11 +219,11 @@ Public Function CheckCompleteness() As Boolean
     Debug.Print "********** ²£¥Í³Ì²×µ²ªG **********"
     With m_Schema
         sql = "SELECT " & vbCrLf & _
-              "    [" & .Fields.AccountMerged & "], " & vbCrLf & _
+              "    [" & .fields.AccountMerged & "], " & vbCrLf & _
               "    [" & .TB.AccountName & "], " & vbCrLf & _
-              "    [" & .Fields.TbAmount & "], " & vbCrLf & _
-              "    [" & .Fields.JeAmountSum & "], " & vbCrLf & _
-              "    [" & .Fields.TbJeDiff & "] " & vbCrLf & _
+              "    [" & .fields.TbAmount & "], " & vbCrLf & _
+              "    [" & .fields.JeAmountSum & "], " & vbCrLf & _
+              "    [" & .fields.TbJeDiff & "] " & vbCrLf & _
               "INTO " & .Tables.CompletenessDetail & " " & vbCrLf & _
               "FROM " & .Tables.CompletenessCalculated & ";"
     End With
@@ -234,7 +234,7 @@ Public Function CheckCompleteness() As Boolean
     Exit Function
 ErrorHandler:
     Debug.Print "CheckCompleteness(): "; Err.Number
-    Debug.Print "  - ¿ù»~´y­z: " & Err.Description
+    Debug.Print "  - ¿ù»~´y­z: " & Err.description
 End Function
     
 Public Function CheckDocumentBalance() As Boolean
@@ -289,7 +289,7 @@ Public Function CheckDocumentBalance() As Boolean
     With m_Schema
         sql = "SELECT " & vbCrLf & _
               "    [" & .JE.DocumentNumber & "], " & vbCrLf & _
-              "    SUM([" & .Fields.JeAmount & "]) AS [" & .Fields.JeAmountSum & "] " & vbCrLf & _
+              "    SUM([" & .fields.JeAmount & "]) AS [" & .fields.JeAmountSum & "] " & vbCrLf & _
               "INTO " & .Tables.DocumentBalanceSum & " " & vbCrLf & _
               "FROM " & .Tables.JeInPeriod & " " & vbCrLf & _
               "GROUP BY [" & .JE.DocumentNumber & "];"
@@ -305,7 +305,7 @@ Public Function CheckDocumentBalance() As Boolean
         sql = "SELECT * " & vbCrLf & _
               "INTO " & .Tables.DocumentBalanceDiff & " " & vbCrLf & _
               "FROM " & .Tables.DocumentBalanceSum & " " & vbCrLf & _
-              "WHERE [" & .Fields.JeAmountSum & "] <> 0;"
+              "WHERE [" & .fields.JeAmountSum & "] <> 0;"
     End With
     dbTarget.ExecuteNonQuery sql
     
@@ -320,7 +320,7 @@ Public Function CheckDocumentBalance() As Boolean
     With m_Schema
         sql = "SELECT " & vbCrLf & _
               "    P.*, " & vbCrLf & _
-              "    S.[" & .Fields.JeAmountSum & "] " & vbCrLf & _
+              "    S.[" & .fields.JeAmountSum & "] " & vbCrLf & _
               "INTO " & .Tables.DocumentBalanceDetail & " " & vbCrLf & _
               "FROM " & .Tables.JeInPeriod & " AS P" & vbCrLf & _
               "INNER JOIN " & .Tables.DocumentBalanceDiff & " AS S " & vbCrLf & _
@@ -333,7 +333,7 @@ Public Function CheckDocumentBalance() As Boolean
     Exit Function
 ErrorHandler:
     Debug.Print "CheckDocumentBalance(): "; Err.Number
-    Debug.Print "  - ¿ù»~´y­z: "; Err.Description
+    Debug.Print "  - ¿ù»~´y­z: "; Err.description
 End Function
 
 Public Function CheckINF() As Boolean
@@ -396,7 +396,7 @@ Public Function CheckINF() As Boolean
         sql = "SELECT TOP 60 * " & vbCrLf & _
               "INTO " & .Tables.InfRandom & " " & vbCrLf & _
               "FROM " & .Tables.JeInPeriod & " " & vbCrLf & _
-              "ORDER BY Rnd([" & .Fields.JeUid & "]);"
+              "ORDER BY Rnd([" & .fields.JeUid & "]);"
     End With
     dbTarget.ExecuteNonQuery sql
     
@@ -418,7 +418,7 @@ Public Function CheckINF() As Boolean
     Exit Function
 ErrorHandler:
     Debug.Print "CheckINF(): "; Err.Number
-    Debug.Print "  - ¿ù»~´y­z: "; Err.Description
+    Debug.Print "  - ¿ù»~´y­z: "; Err.description
 End Function
 
 Public Function CheckNullRecords() As Boolean
@@ -486,7 +486,7 @@ Public Function CheckNullRecords() As Boolean
     Exit Function
 ErrorHandler:
     Debug.Print "CheckNullRecords(): " & Err.Number
-    Debug.Print "  - ¿ù»~´y­z: " & Err.Description
+    Debug.Print "  - ¿ù»~´y­z: " & Err.description
     CheckNullRecords = False
 End Function
 

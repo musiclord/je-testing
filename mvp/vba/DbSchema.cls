@@ -113,8 +113,8 @@ End Property
 Public Property Get Tables() As TypeSystemTables
     Tables = m_Tables
 End Property
-Public Property Get Fields() As TypeSystemFields
-    Fields = m_Fields
+Public Property Get fields() As TypeSystemFields
+    fields = m_Fields
 End Property
 Public Property Get Reports() As TypeSystemReports
     Reports = m_Reports

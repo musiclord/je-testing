@@ -33,8 +33,8 @@ End Property
 Public Property Get path() As String
     path = m_Path
 End Property
-Public Property Let path(ByVal Value As String)
-    m_Path = Value
+Public Property Let path(ByVal value As String)
+    m_Path = value
 End Property
 
 '-- 方法
@@ -97,7 +97,7 @@ Public Sub Refresh(Optional forceDeep As Boolean = False)
         For Each tdf In m_Db.TableDefs
             '跳過系統表和臨時表
             If Not (tdf.name Like "MSys*" Or tdf.name Like "~TMPCLP*") Then
-                tdf.Fields.Refresh
+                tdf.fields.Refresh
                 If Err.Number <> 0 Then
                     Debug.Print "警告: 無法刷新資料表欄位: " & tdf.name & " (錯誤: " & Err.Number & ")"
                     Err.Clear
@@ -149,7 +149,7 @@ Public Function CompactAndRepair() As Boolean
     CompactAndRepair = True
     Exit Function
 ErrorHandler:
-    Debug.Print "CompactAndRepair(): " & Err.Number & " - " & Err.Description
+    Debug.Print "CompactAndRepair(): " & Err.Number & " - " & Err.description
 End Function
 
 Public Sub BeginTx()
@@ -235,7 +235,7 @@ Public Function FieldExists(ByVal tdf As DAO.TableDef, ByVal fieldName As String
     '檢查欄位是否存在
     Dim dummyFld As DAO.field
     On Error Resume Next
-    Set dummyFld = tdf.Fields(fieldName)
+    Set dummyFld = tdf.fields(fieldName)
     FieldExists = (Err.Number = 0)
     Err.Clear
     On Error GoTo 0
@@ -306,17 +306,17 @@ Public Function GetTableFields(ByVal tableName As String) As Collection
     '---------------------------------------------------------------------------
     '取得指定資料表的欄位
     If Not m_IsConnected Then Connect
-    Dim Fields As New Collection
+    Dim fields As New Collection
     Dim fld As DAO.field
     Dim rs As DAO.Recordset
     Set rs = m_Db.OpenRecordset(name:=tableName, Type:=dbOpenDynaset)
     '遍歷 RS 的欄位
-    For Each fld In rs.Fields
-        Fields.Add fld.name
+    For Each fld In rs.fields
+        fields.Add fld.name
     Next fld
     rs.Close
     Set rs = Nothing
-    Set GetTableFields = Fields
+    Set GetTableFields = fields
 End Function
 
 
@@ -344,7 +344,7 @@ Public Function ExtractNullRecords( _
     Dim tdf As DAO.TableDef: Set tdf = m_Db.TableDefs(tableName)
     If Not FieldExists(tdf, fieldName) Then Exit Function
     '取得欄位物件，準備分析欄位型別
-    Dim fld As DAO.field: Set fld = tdf.Fields(fieldName)
+    Dim fld As DAO.field: Set fld = tdf.fields(fieldName)
     Dim isNumeric As Boolean
     isNumeric = (fld.Type = dbByte Or fld.Type = dbInteger Or fld.Type = dbLong Or _
                  fld.Type = dbSingle Or fld.Type = dbDouble Or fld.Type = dbCurrency Or _
@@ -379,7 +379,7 @@ Public Function ExtractNullRecords( _
     Exit Function
 ErrorHandler:
     Debug.Print "ExtractNullRecords():  " & Err.Number
-    Debug.Print "  - 錯誤描述: " & Err.Description
+    Debug.Print "  - 錯誤描述: " & Err.description
 End Function
 
 Public Function GetTotal( _
@@ -466,7 +466,7 @@ Public Function GetTotal( _
     Exit Function
 ErrorHandler:
     Debug.Print "GetTotal():  " & Err.Number
-    Debug.Print "  - 錯誤描述: " & Err.Description
+    Debug.Print "  - 錯誤描述: " & Err.description
 End Function
 
 

@@ -20,8 +20,8 @@ Private m_Ace As New Access.Application
 Private m_DataType As String
 Private m_Method As Long
 
-Public Property Let dType(ByVal Value As String)
-    m_DataType = Value
+Public Property Let dType(ByVal value As String)
+    m_DataType = value
     Debug.Print "Type: " & m_DataType
 End Property
 
@@ -134,7 +134,7 @@ Public Function ApplyJe(ByVal dict As Dictionary) As Boolean
     ApplyJe = True
     Exit Function
 ErrorHandler:
-    Debug.Print "ApplyJe 發生錯誤: " & Err.Number & " - " & Err.Description
+    Debug.Print "ApplyJe 發生錯誤: " & Err.Number & " - " & Err.description
     Resume Next
 End Function
 
@@ -180,18 +180,18 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
     Debug.Print "********** 開始 JE 金額處理 **********"
     Select Case amountMethod
         Case 1  '直接使用原始金額欄位
-            Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
-            tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
+            Set fld = CreateOrReplace(tdf, m_Schema.fields.JeAmount)
+            tdf.fields.Append fld
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.fields.JeAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.Amount) & ";"
             db.ExecuteNonQuery sql
             '增加借貸別欄位
             Call AddDebitCreditField(amountMethod)
             
         Case 2  '傳票金額 = 借方金額 - 貸方金額
-            Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
-            tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
+            Set fld = CreateOrReplace(tdf, m_Schema.fields.JeAmount)
+            tdf.fields.Append fld
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.fields.JeAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.DebitAmount) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.JE.CreditAmount) & ";"
             db.ExecuteNonQuery sql
@@ -199,9 +199,9 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
             Call AddDebitCreditField(amountMethod)
             
         Case 3  '依借貸別決定金額正負號
-            Set fld = CreateOrReplace(tdf, m_Schema.Fields.JeAmount)
-            tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.JeAmount & "] = " & vbCrLf & _
+            Set fld = CreateOrReplace(tdf, m_Schema.fields.JeAmount)
+            tdf.fields.Append fld
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.fields.JeAmount & "] = " & vbCrLf & _
                   "IIF(" & vbCrLf & _
                   "    [" & m_Schema.JE.DrCr & "] = '" & m_Schema.JE.IsDebit & "', " & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.JE.Amount) & "," & vbCrLf & _
@@ -220,7 +220,7 @@ Private Function ProcessJeAmount(ByVal amountMethod As Long) As Boolean
 ErrorHandler:
     Debug.Print "ProcessJeAmount 發生錯誤:"
     Debug.Print "  - 錯誤代碼: " & Err.Number
-    Debug.Print "  - 錯誤描述: " & Err.Description
+    Debug.Print "  - 錯誤描述: " & Err.description
     ProcessJeAmount = False
 End Function
 
@@ -237,33 +237,33 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
     Debug.Print "********** 開始 TB 金額處理 **********"
     Select Case amountMethod
         Case 1  '直接使用變動金額
-            Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
-            tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
+            Set fld = CreateOrReplace(tdf, m_Schema.fields.TbAmount)
+            tdf.fields.Append fld
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.ChangeAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 2  '期末 - 期初 = 變動金額
-            Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
-            tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
+            Set fld = CreateOrReplace(tdf, m_Schema.fields.TbAmount)
+            tdf.fields.Append fld
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.ClosingBalance) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.OpeningBalance) & ";"
             db.ExecuteNonQuery sql
             
         Case 3  '借方 - 貸方 = 變動金額
-            Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
-            tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
+            Set fld = CreateOrReplace(tdf, m_Schema.fields.TbAmount)
+            tdf.fields.Append fld
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.fields.TbAmount & "] = " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.DebitAmount) & " - " & vbCrLf & _
                   SanitizeNumericField(m_Schema.TB.CreditAmount) & ";"
             db.ExecuteNonQuery sql
             
         Case 4
             '(期末借方-期初借方) - (期末貸方-期初貸方) = 變動金額
-            Set fld = CreateOrReplace(tdf, m_Schema.Fields.TbAmount)
-            tdf.Fields.Append fld
-            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.Fields.TbAmount & "] = " & vbCrLf & _
+            Set fld = CreateOrReplace(tdf, m_Schema.fields.TbAmount)
+            tdf.fields.Append fld
+            sql = "UPDATE " & tdf.name & " SET [" & m_Schema.fields.TbAmount & "] = " & vbCrLf & _
                   "(" & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.TB.ClosingDebitBalance) & " - " & vbCrLf & _
                   "    " & SanitizeNumericField(m_Schema.TB.OpeningDebitBalance) & vbCrLf & _
@@ -283,7 +283,7 @@ Private Function ProcessTbAmount(ByVal amountMethod As Long) As Boolean
 ErrorHandler:
     Debug.Print "ProcessTbAmount 發生錯誤:"
     Debug.Print "  - 錯誤代碼: " & Err.Number
-    Debug.Print "  - 錯誤描述: " & Err.Description
+    Debug.Print "  - 錯誤描述: " & Err.description
     ProcessTbAmount = False
 End Function
 
@@ -384,7 +384,7 @@ Public Function ImportFromSheet( _
         If useCustomNames Then
             colName = CStr(fieldNames(LBound(fieldNames) + i - 1))
         Else
-            colName = Trim$(CStr(headerRow.Cells(1, i).Value))
+            colName = Trim$(CStr(headerRow.Cells(1, i).value))
             If colName = "" Then colName = "Field" & i
         End If
         sql = sql & "[" & colName & "] " & fieldTypes(LBound(fieldTypes) + i - 1)
@@ -408,7 +408,7 @@ Public Function ImportFromSheet( _
             sql = "INSERT INTO [" & TBL_TEMP & "] VALUES ("
             For i = 1 To colCount
                 Dim cellValue As Variant
-                cellValue = row.Cells(1, i).Value
+                cellValue = row.Cells(1, i).value
                 If Not IsNull(cellValue) Then
                     If Trim$(CStr(cellValue)) <> "" Then allBlank = False
                 End If
@@ -439,8 +439,8 @@ Public Function ImportFromSheet( _
     Debug.Print "ServiceImport.ImportFromSheet()"
     If Not rs Is Nothing Then
         If Not rs.EOF Then
-            If rs.recordCount = -1 Then rs.MoveLast
-            Debug.Print "  - [" & TBL_TEMP & "] 已匯入 " & rs.recordCount & " 筆資料"
+            If rs.RecordCount = -1 Then rs.MoveLast
+            Debug.Print "  - [" & TBL_TEMP & "] 已匯入 " & rs.RecordCount & " 筆資料"
             rs.MoveFirst
         Else
             Debug.Print "  - [" & TBL_TEMP & "]" & TBL_TEMP & " 無資料"
@@ -450,7 +450,7 @@ Public Function ImportFromSheet( _
     Set ImportFromSheet = rs
     Exit Function
 ErrorHandler:
-    Debug.Print "ImportFromSheet(): " & Err.Number & " - " & Err.Description
+    Debug.Print "ImportFromSheet(): " & Err.Number & " - " & Err.description
     Set ImportFromSheet = Nothing
 End Function
 
@@ -468,7 +468,7 @@ Private Sub AddFieldSuffix( _
     Dim newName As String
     Set dbs = m_Ace.CurrentDb
     Set tdf = dbs.TableDefs(tableName)
-    For Each fld In tdf.Fields
+    For Each fld In tdf.fields
         oldName = fld.name
         newName = oldName & "_" & UCase(suffix)
         fld.name = newName
@@ -494,7 +494,7 @@ Private Function CreateOrReplace( _
     '---------------------------------------------------------------------------
     ' 若欄位存在則刪除
     '---------------------------------------------------------------------------
-    If db.FieldExists(tdf, fieldName) Then tdf.Fields.Delete fieldName
+    If db.FieldExists(tdf, fieldName) Then tdf.fields.Delete fieldName
     '建立欄位且型別為 CURRENCY
     Set CreateOrReplace = tdf.CreateField(fieldName, dbCurrency)
 End Function

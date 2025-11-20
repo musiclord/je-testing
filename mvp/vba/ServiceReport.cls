@@ -61,7 +61,7 @@ ErrorHandler:
     Debug.Print "GenerateEngagementOverview():" & vbCrLf & _
                 "  - ³øªí: " & tableName & vbCrLf & _
                 "  - ¿ù»~¥N½X: " & Err.Number & vbCrLf & _
-                "  - ¿ù»~´y­z: " & Err.Description & vbCrLf & _
+                "  - ¿ù»~´y­z: " & Err.description & vbCrLf & _
                 "  - SQL: " & vbCrLf & sql
     GenerateEngagementOverview = False
 End Function
@@ -96,9 +96,9 @@ Public Function GenerateDataOverview() As Boolean
     With m_Schema
         JeName = .JE.name
         TbName = .TB.name
-        JeNetAmount = m_Context.DbInput.GetTotal(.JE.name, .Fields.JeAmount, "NetValue")
-        JeDebitSum = m_Context.DbInput.GetTotal(.JE.name, .Fields.JeAmount, "PositiveValue")
-        JeCreditSum = m_Context.DbInput.GetTotal(.JE.name, .Fields.JeAmount, "NegativeValue")
+        JeNetAmount = m_Context.DbInput.GetTotal(.JE.name, .fields.JeAmount, "NetValue")
+        JeDebitSum = m_Context.DbInput.GetTotal(.JE.name, .fields.JeAmount, "PositiveValue")
+        JeCreditSum = m_Context.DbInput.GetTotal(.JE.name, .fields.JeAmount, "NegativeValue")
         JeRecordCount = m_Context.DbInput.GetTotal(.JE.name, "", "DBCount")
         TbAccountCount = m_Context.DbInput.GetTotal(.TB.name, "", "DBCount")
     End With
@@ -123,7 +123,7 @@ ErrorHandler:
     Debug.Print "GenerateDataOverview(): " & vbCrLf & _
                 "  - ³øªí: " & tableName & vbCrLf & _
                 "  - ¿ù»~¥N½X: " & Err.Number & vbCrLf & _
-                "  - ¿ù»~´y­z: " & Err.Description & vbCrLf & _
+                "  - ¿ù»~´y­z: " & Err.description & vbCrLf & _
                 "  - SQL: " & vbCrLf & sql
     GenerateDataOverview = False
 End Function
@@ -182,7 +182,7 @@ ErrorHandler:
     Debug.Print "GenerateValidationOverview(): " & vbCrLf & _
                 "  - ³øªí: " & tableName & vbCrLf & _
                 "  - ¿ù»~¥N½X: " & Err.Number & vbCrLf & _
-                "  - ¿ù»~´y­z: " & Err.Description & vbCrLf & _
+                "  - ¿ù»~´y­z: " & Err.description & vbCrLf & _
                 "  - SQL: " & vbCrLf & sql
     GenerateValidationOverview = False
 End Function
@@ -215,7 +215,7 @@ ErrorHandler:
     Debug.Print "GenerateCompletenessDetail(): " & vbCrLf & _
                 "  - ³øªí: " & tableName & vbCrLf & _
                 "  - ¿ù»~¥N½X: " & Err.Number & vbCrLf & _
-                "  - ¿ù»~´y­z: " & Err.Description & vbCrLf & _
+                "  - ¿ù»~´y­z: " & Err.description & vbCrLf & _
                 "  - SQL: " & vbCrLf & sql
     GenerateCompletenessDetail = False
 End Function
@@ -248,7 +248,7 @@ ErrorHandler:
     Debug.Print "GenerateDocumentBalanceDetail(): " & vbCrLf & _
                 "  - ³øªí: " & tableName & vbCrLf & _
                 "  - ¿ù»~¥N½X: " & Err.Number & vbCrLf & _
-                "  - ¿ù»~´y­z: " & Err.Description & vbCrLf & _
+                "  - ¿ù»~´y­z: " & Err.description & vbCrLf & _
                 "  - SQL: " & vbCrLf & sql
     GenerateDocumentBalanceDetail = False
 End Function

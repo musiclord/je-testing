@@ -88,7 +88,7 @@ End Sub
 
 Private Sub vAddSql_AddSqlRequested()
     Dim sql As String
-    sql = vAddSql.txtbSql.Value
+    sql = vAddSql.txtbSql.value
 End Sub
 
 '===============================================================================
@@ -122,6 +122,13 @@ Private Sub vMain_DoStep1()
     Call calendar.Initialize(context)
     '--
     Call vImport.Initialize
+    ' [New] Sync View State with DB Reality on Startup
+    ' 這是為了防止使用者關閉視窗後重新打開，狀態被重置
+    If Not context.DbInput Is Nothing Then
+        vImport.SetJeState context.DbInput.TableExists(context.DbSchema.JE.name)
+        vImport.SetTbState context.DbInput.TableExists(context.DbSchema.TB.name)
+        vImport.SetCalendarState context.DbInput.TableExists(context.DbSchema.DateDimension.name)
+    End If
     vImport.Show vbModeless
 End Sub
 
@@ -194,6 +201,8 @@ Private Sub vImport_ImportJournalEntries(ByVal Format As String)
     importer.dType = Format
     importer.OpenWizard "je"
     vImport.lblImportStatus.Caption = "匯入資料表: " & context.DbSchema.JE.name
+    ' [New] Update View State
+    vImport.SetJeState context.DbInput.TableExists(context.DbSchema.JE.name)
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -203,6 +212,8 @@ Private Sub vImport_ImportTrialBalance(ByVal Format As String)
     importer.dType = Format
     importer.OpenWizard "tb"
     vImport.lblImportStatus.Caption = "匯入資料表: " & context.DbSchema.TB.name
+    ' [New] Update View State
+    vImport.SetTbState context.DbInput.TableExists(context.DbSchema.TB.name)
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -453,24 +464,18 @@ End Sub
 ' 組成 SQL 查詢，執行所有條件集合
 '-------------------------------------------------------------------------------
 Private Sub vFilterLegacy_ExecuteCriteriaRequested()
-    '1. 將介面的狀態設給服務層讀取
+    '1. 將表單上的狀態(所有條件組合)傳遞給 Filter 服務
     Dim states As Dictionary
     Set states = vFilterLegacy.criteriaStates
     
-    Dim keyword As String
-    keyword = vFilterLegacy.txtbKeywordFilter
-    
-    Dim dateRange As Variant
-    dateRange = Array(vFilterLegacy.txtbDateRangeStart, vFilterLegacy.txtbDateRangeEnd)
-    
-    Dim numRange As Variant
-    numRange = Array(vFilterLegacy.txtbNumericValueStart, vFilterLegacy.txtbNumericValueEnd)
-    
-    '2. 處理並映射條件集合
+    '2. 處理並轉換這些狀態為 SQL 條件物件
     filter.ProcessCriteriaSet states, "legacy"
     
-    '3. 執行所有篩選條件
-    'filter.ExecuteBatch ("FILTER_RESULT_")
+    '3. 執行批次篩選，結果表前綴為 FILTER_RESULT_
+    '   例如: FILTER_RESULT_條件_1
+    filter.ExecuteBatch "FILTER_RESULT"
+    
+    MsgBox "篩選執行完畢！", vbInformation, "Legacy Filter"
 End Sub
 
 '-------------------------------------------------------------------------------

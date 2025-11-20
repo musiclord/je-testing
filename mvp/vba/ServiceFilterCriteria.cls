@@ -44,8 +44,9 @@ Private m_Criteria As Collection    '<-- Criteria is a collection of Criterion o
 Private m_Criterion As Dictionary   '<-- Criterion is a dictionary of parameters for one rule
 
 Public Sub Initialize(context As ContextManager)
-    Set m_Db = context.DbValid
+    Set m_Db = context.DbInput
     Set m_Context = context
+    Call ClearCriteria
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -55,6 +56,7 @@ End Sub
 '   Set criteria = criteria.GetCriteria
 '-------------------------------------------------------------------------------
 Public Function GetCriteria() As Collection
+    Call EnsureCriteria
     Set GetCriteria = m_Criteria
 End Function
 
@@ -65,6 +67,7 @@ End Function
 '   Set criterion = criteria.GetCriterion(1)
 '-------------------------------------------------------------------------------
 Public Function GetCriterion(index As Long) As Dictionary
+    Call EnsureCriteria
     Set GetCriterion = m_Criteria.item(index)
 End Function
 
@@ -112,48 +115,51 @@ End Function
 
 '-------------------------------------------------------------------------------
 ' 將條件轉換為 SQL 片段，根據條件的 Operator 和 Value 型別生成對應語法
-'
 '-------------------------------------------------------------------------------
 Public Function BuildConditionSql(criterion As Dictionary) As String
     Dim conditionSql As String
-    Dim Value As Variant
-    '取欄位名稱並格式化（加上方括號、防止保留字衝突）
+    Dim value As Variant
+    ' 格式化欄位名稱
     Dim fieldName As String
     fieldName = FormatFieldName(criterion(KEY_FLD))
     If Len(fieldName) = 0 Then
         BuildConditionSql = ""
         Exit Function
     End If
-    '取運算子並轉成標準 SQL（例如 <> → !=）
+    ' 正規化運算符
     Dim operatorText As String
     operatorText = NormalizeOperator(criterion(KEY_OP))
-    Value = criterion(KEY_VALUE)
-    '根據不同運算子產生不同 SQL 語法
+    value = criterion(KEY_VALUE)
+    ' 根據運算符產生 SQL
     Select Case operatorText
-        Case "IN"
-            ' IN (...) 語法，用於多筆比對
-            conditionSql = fieldName & " IN " & BuildInValues(Value)
+        Case "IN", "NOT IN"
+            ' 檢查 Value 是否為子查詢字串 (以 SELECT 開頭)
+            ' 如果是子查詢，直接放入括號中，不進行字串跳脫
+            If VarType(value) = vbString And UCase(Left(Trim(value), 6)) = "SELECT" Then
+                conditionSql = fieldName & " " & operatorText & " (" & value & ")"
+            Else
+                ' 一般值列表 (Array 或 Collection)
+                conditionSql = fieldName & " " & operatorText & " " & BuildInValues(value)
+            End If
         Case "BETWEEN"
-            ' BETWEEN a AND b，適用區間查詢（數字或日期）
-            conditionSql = BuildBetweenSql(fieldName, Value)
+            ' BETWEEN a AND b
+            conditionSql = BuildBetweenSql(fieldName, value)
         Case "LIKE"
-            ' LIKE 'xxx%' 做模糊查詢
-            conditionSql = fieldName & " LIKE " & FormatLikeValue(Value)
+            ' LIKE '*xxx*'
+            conditionSql = fieldName & " LIKE " & FormatLikeValue(value)
         Case "IS NULL", "IS NOT NULL"
-            ' IS NULL / IS NOT NULL 不需要值
+            ' IS NULL / IS NOT NULL
             conditionSql = fieldName & " " & operatorText
         Case Else
-            ' 預設情況：一般運算子，例如 =, >, <, <>
-            conditionSql = fieldName & " " & operatorText & " " & FormatSqlValue(Value)
+            ' 一般運算符 =, >, <, <>
+            conditionSql = fieldName & " " & operatorText & " " & FormatSqlValue(value)
     End Select
-    '最後如果有內容，就包上一層括號，避免與其他條件邏輯衝突
+    ' 加上括號保護
     If Len(conditionSql) > 0 Then
         conditionSql = "(" & conditionSql & ")"
     End If
-    '回傳最終 SQL 片段
     BuildConditionSql = conditionSql
 End Function
-
 '-------------------------------------------------------------------------------
 ' 新增單一條件至集合
 ' 範例:
@@ -165,6 +171,7 @@ End Function
 Public Sub AddCriterion(criterion As Dictionary)
     Dim i As Long
     Dim errors As New Collection
+    Call EnsureCriteria
     '驗證資料
     If Not criterion.Exists(KEY_TYPE) Then errors.Add "Criterion 缺少 " & KEY_TYPE
     If Not criterion.Exists(KEY_FLD) Then errors.Add "Criterion 缺少 " & KEY_FLD
@@ -261,51 +268,56 @@ End Function
 '-------------------------------------------------------------------------------
 ' 格式化 SQL Value
 '-------------------------------------------------------------------------------
-Private Function FormatSqlValue(ByVal Value As Variant) As String
-    If IsNull(Value) Then
+Private Function FormatSqlValue(ByVal value As Variant) As String
+    If IsNull(value) Then
         FormatSqlValue = "Null"
         Exit Function
     End If
 
-    Select Case VarType(Value)
+    Select Case VarType(value)
         Case vbString
-            FormatSqlValue = "'" & EscapeSqlString(CStr(Value)) & "'"
+            FormatSqlValue = "'" & EscapeSqlString(CStr(value)) & "'"
         Case vbBoolean
-            FormatSqlValue = IIf(CBool(Value), "True", "False")
+            FormatSqlValue = IIf(CBool(value), "True", "False")
         Case vbDate
-            FormatSqlValue = "#" & Format$(CDate(Value), "yyyy-mm-dd") & "#"
+            FormatSqlValue = "#" & Format$(CDate(value), "yyyy-mm-dd") & "#"
         Case vbByte, vbInteger, vbLong, vbSingle, vbDouble, vbCurrency, vbDecimal
-            FormatSqlValue = CStr(Value)
+            FormatSqlValue = CStr(value)
         Case Else
-            FormatSqlValue = "'" & EscapeSqlString(CStr(Value)) & "'"
+            FormatSqlValue = "'" & EscapeSqlString(CStr(value)) & "'"
     End Select
 End Function
 
 '-------------------------------------------------------------------------------
-' LIKE 條件的值，預設使用 %Value%
+' LIKE 語句的值格式化，使用 * 作為萬用字元 (Jet SQL)
 '-------------------------------------------------------------------------------
-Private Function FormatLikeValue(ByVal Value As Variant) As String
+Private Function FormatLikeValue(ByVal value As Variant) As String
     Dim textValue As String
-    If IsNull(Value) Then Value = ""
-    textValue = "%" & EscapeSqlString(CStr(Value)) & "%"
+    If IsNull(value) Then value = ""
+    ' 根據需求使用 *keyword* 格式
+    textValue = "*" & EscapeSqlString(CStr(value)) & "*"
     FormatLikeValue = "'" & textValue & "'"
 End Function
 
 '-------------------------------------------------------------------------------
 ' 建立 IN (...) 內容
 '-------------------------------------------------------------------------------
-Private Function BuildInValues(ByVal Value As Variant) As String
+Private Function BuildInValues(ByVal value As Variant) As String
     Dim inClause As String
     Dim i As Long
+    Dim item As Variant
 
-    If IsArray(Value) Then
-        For i = LBound(Value) To UBound(Value)
-            inClause = AppendListValue(inClause, FormatSqlValue(Value(i)))
+    If IsArray(value) Then
+        For i = LBound(value) To UBound(value)
+            inClause = AppendListValue(inClause, FormatSqlValue(value(i)))
         Next i
-    Else
-        inClause = AppendListValue(inClause, FormatSqlValue(Value))
+    ElseIf TypeName(value) = "Collection" Then
+        For Each item In value
+            inClause = AppendListValue(inClause, FormatSqlValue(item))
+        Next item
+    ElseIf Not IsEmpty(value) And Not IsNull(value) Then
+        inClause = AppendListValue(inClause, FormatSqlValue(value))
     End If
-
     If Len(inClause) = 0 Then
         inClause = "(Null)"
     Else
@@ -318,39 +330,35 @@ End Function
 '-------------------------------------------------------------------------------
 ' 建立 BETWEEN 語句內容
 '-------------------------------------------------------------------------------
-Private Function BuildBetweenSql(ByVal fieldName As String, ByVal Value As Variant) As String
-    Dim startValue As Variant
-    Dim endValue As Variant
-
-    If IsArray(Value) And UBound(Value) >= LBound(Value) + 1 Then
-        startValue = Value(LBound(Value))
-        endValue = Value(LBound(Value) + 1)
+Private Function BuildBetweenSql(ByVal fieldName As String, ByVal value As Variant) As String
+    ' Value 預期為 Array(Start, End)
+    If IsArray(value) Then
+        Dim valStart As String
+        Dim valEnd As String
+        valStart = FormatSqlValue(value(0))
+        valEnd = FormatSqlValue(value(1))
+        BuildBetweenSql = fieldName & " BETWEEN " & valStart & " AND " & valEnd
     Else
-        startValue = Value
-        endValue = Value
+        BuildBetweenSql = ""
     End If
-
-    BuildBetweenSql = fieldName & " BETWEEN " & _
-                      FormatSqlValue(startValue) & " AND " & _
-                      FormatSqlValue(endValue)
 End Function
 
 '-------------------------------------------------------------------------------
 ' 串接清單值
 '-------------------------------------------------------------------------------
-Private Function AppendListValue(ByVal listText As String, ByVal ValueText As String) As String
-    If Len(ValueText) = 0 Then
+Private Function AppendListValue(ByVal listText As String, ByVal valueText As String) As String
+    If Len(valueText) = 0 Then
         AppendListValue = listText
     ElseIf Len(listText) = 0 Then
-        AppendListValue = ValueText
+        AppendListValue = valueText
     Else
-        AppendListValue = listText & ", " & ValueText
+        AppendListValue = listText & ", " & valueText
     End If
 End Function
 
 '-------------------------------------------------------------------------------
 ' SQL 字串跳脫
 '-------------------------------------------------------------------------------
-Private Function EscapeSqlString(ByVal ValueText As String) As String
-    EscapeSqlString = Replace(ValueText, "'", "''")
+Private Function EscapeSqlString(ByVal valueText As String) As String
+    EscapeSqlString = Replace(valueText, "'", "''")
 End Function

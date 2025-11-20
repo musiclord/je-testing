@@ -90,9 +90,9 @@ Public Function ExportTemplate(ws As Worksheet) As Boolean
     ws.Columns("B").NumberFormat = "@"
     ws.Columns("C").NumberFormat = "@"
     '-- 設置表頭名稱
-    ws.Range("A1").Value = colNum
-    ws.Range("B1").Value = colName
-    ws.Range("C1").Value = colStandardized
+    ws.Range("A1").value = colNum
+    ws.Range("B1").value = colName
+    ws.Range("C1").value = colStandardized
     ws.Range("A1:C1").Font.Bold = True
     
     '-- 填入資料
@@ -100,16 +100,16 @@ Public Function ExportTemplate(ws As Worksheet) As Boolean
     tableName = m_Schema.Tables.CompletenessDetail
     
     If Not m_DbValid.TableExists(tableName) Then
-        ws.Cells(2, 1).Value = "資料表 [" & tableName & "] 不存在"
+        ws.Cells(2, 1).value = "資料表 [" & tableName & "] 不存在"
     Else
         '-- 查詢字串
         Dim sql As String
         sql = "SELECT " & vbCrLf & _
-              "    [" & m_Schema.Fields.AccountMerged & "] AS [" & colNum & "], " & vbCrLf & _
+              "    [" & m_Schema.fields.AccountMerged & "] AS [" & colNum & "], " & vbCrLf & _
               "    [" & m_Schema.TB.AccountName & "] AS [" & colName & "], " & vbCrLf & _
               "    '' AS [" & colStandardized & "]" & vbCrLf & _
               "FROM [" & tableName & "] " & vbCrLf & _
-              "ORDER BY [" & m_Schema.Fields.AccountMerged & "];"
+              "ORDER BY [" & m_Schema.fields.AccountMerged & "];"
         
         '-- 查詢資料庫
         Dim rs As DAO.Recordset
@@ -117,7 +117,7 @@ Public Function ExportTemplate(ws As Worksheet) As Boolean
         
         If rs.BOF And rs.EOF Then
             '無資料情形
-            ws.Cells(2, 1).Value = "(無資料)"
+            ws.Cells(2, 1).value = "(無資料)"
             Exit Function
         Else
             '有資料情形，寫入
@@ -139,7 +139,7 @@ Public Function ExportTemplate(ws As Worksheet) As Boolean
 ErrorHandler:
     Debug.Print "ExportTemplate()"
     Debug.Print "  - 錯誤代碼: " & Err.Number
-    Debug.Print "  - 錯誤描述: " & Err.Description
+    Debug.Print "  - 錯誤描述: " & Err.description
 End Function
 
 '-------------------------------------------------------------------------------
@@ -173,6 +173,6 @@ Public Function ImportAccountMapping(ByVal rs As DAO.Recordset) As Boolean
 ErrorHandler:
     Debug.Print "ImportAccountMapping()"
     Debug.Print "  - 錯誤代碼: " & Err.Number
-    Debug.Print "  - 錯誤描述: " & Err.Description
+    Debug.Print "  - 錯誤描述: " & Err.description
 End Function
 

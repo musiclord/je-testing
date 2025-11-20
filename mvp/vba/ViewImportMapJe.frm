@@ -23,9 +23,9 @@ Public Event ApplyField(ByVal dict As Dictionary, ByVal method As Long)
 Private m_Method As Long
 
 Public Sub Initialize(ByRef db As DbAccess)
-    Dim Fields As Collection
-    Set Fields = db.GetTableFields("JE")
-    Call UpdateFields(Fields)
+    Dim fields As Collection
+    Set fields = db.GetTableFields("JE")
+    Call UpdateFields(fields)
     Call DisableControls
     Call btnMethod1_Click
 End Sub
@@ -36,13 +36,13 @@ End Sub
 Private Sub btnTestDefaults_Click()
     '//WARNING: ONLY FOR DEBUGGING
     Call btnMethod2_Click
-    Me.AccountName.Value = FindField(Me.AccountName, "項目名稱")
-    Me.AccountNumber.Value = FindField(Me.AccountNumber, "會計項目")
-    Me.DocumentNumber.Value = FindField(Me.DocumentNumber, "傳票號碼")
-    Me.EntryDescription.Value = FindField(Me.EntryDescription, "摘要")
-    Me.PostDate.Value = FindField(Me.PostDate, "日期")
-    Me.DebitAmount.Value = FindField(Me.DebitAmount, "借方金額")
-    Me.CreditAmount.Value = FindField(Me.CreditAmount, "貸方金額")
+    Me.AccountName.value = FindField(Me.AccountName, "項目名稱")
+    Me.AccountNumber.value = FindField(Me.AccountNumber, "會計項目")
+    Me.DocumentNumber.value = FindField(Me.DocumentNumber, "傳票號碼")
+    Me.EntryDescription.value = FindField(Me.EntryDescription, "摘要")
+    Me.PostDate.value = FindField(Me.PostDate, "日期")
+    Me.DebitAmount.value = FindField(Me.DebitAmount, "借方金額")
+    Me.CreditAmount.value = FindField(Me.CreditAmount, "貸方金額")
 End Sub
 Public Sub ApplyTestDefaults()
     '填入測試參數
@@ -56,25 +56,25 @@ End Sub
 Private Sub btnApplyField_Click()
     Dim dict As New Dictionary
     '金額欄位
-    dict("Amount") = Me.Amount.Value
-    dict("DebitAmount") = Me.DebitAmount.Value
-    dict("CreditAmount") = Me.CreditAmount.Value
-    dict("DrCr") = Me.DrCr.Value
-    dict("IsDebit") = Me.IsDebit.Value
+    dict("Amount") = Me.Amount.value
+    dict("DebitAmount") = Me.DebitAmount.value
+    dict("CreditAmount") = Me.CreditAmount.value
+    dict("DrCr") = Me.DrCr.value
+    dict("IsDebit") = Me.IsDebit.value
     '必選欄位
-    dict("AccountNumber") = Me.AccountNumber.Value
-    dict("AccountName") = Me.AccountName.Value
-    dict("DocumentNumber") = Me.DocumentNumber.Value
-    dict("LineItem") = Me.LineItem.Value
-    dict("PostDate") = Me.PostDate.Value
-    dict("EntryDescription") = Me.EntryDescription.Value
+    dict("AccountNumber") = Me.AccountNumber.value
+    dict("AccountName") = Me.AccountName.value
+    dict("DocumentNumber") = Me.DocumentNumber.value
+    dict("LineItem") = Me.LineItem.value
+    dict("PostDate") = Me.PostDate.value
+    dict("EntryDescription") = Me.EntryDescription.value
     '可選欄位
-    dict("ApprovalDate") = Me.ApprovalDate.Value
-    dict("ApprovedBy") = Me.ApprovedBy.Value
-    dict("CreatedBy") = Me.CreatedBy.Value
-    dict("SourceModule") = Me.SourceModule.Value
-    dict("IsManual") = Me.IsManual.Value
-    dict("IsApprovedDateAsLedgerDate") = Me.IsApprovedDateAsLedgerDate.Value
+    dict("ApprovalDate") = Me.ApprovalDate.value
+    dict("ApprovedBy") = Me.ApprovedBy.value
+    dict("CreatedBy") = Me.CreatedBy.value
+    dict("SourceModule") = Me.SourceModule.value
+    dict("IsManual") = Me.IsManual.value
+    dict("IsApprovedDateAsLedgerDate") = Me.IsApprovedDateAsLedgerDate.value
     '傳回
     RaiseEvent ApplyField(dict, m_Method)
 End Sub
@@ -113,22 +113,22 @@ Private Sub btnExit_Click()
     '檢查必填欄位
     Dim errors As Collection
     Set errors = New Collection
-    If Trim(Me.AccountNumber.Value & "") = "" Then
+    If Trim(Me.AccountNumber.value & "") = "" Then
         errors.Add "請選擇會計科目編號"
     End If
-    If Trim(Me.AccountName.Value & "") = "" Then
+    If Trim(Me.AccountName.value & "") = "" Then
         errors.Add "請選擇會計科目名稱"
     End If
-    If Trim(Me.DocumentNumber.Value & "") = "" Then
+    If Trim(Me.DocumentNumber.value & "") = "" Then
         errors.Add "請選擇傳票編號"
     End If
-    If Trim(Me.EntryDescription.Value & "") = "" Then
+    If Trim(Me.EntryDescription.value & "") = "" Then
         errors.Add "請選擇傳票摘要"
     End If
-    If Trim(Me.LineItem.Value & "") = "" Then
+    If Trim(Me.LineItem.value & "") = "" Then
         errors.Add "請選擇傳票項次"
     End If
-    If Trim(Me.PostDate.Value & "") = "" Then
+    If Trim(Me.PostDate.value & "") = "" Then
         errors.Add "請選擇總帳日期"
     End If
     '顯示錯誤訊息(若有)
@@ -146,19 +146,19 @@ Private Sub btnExit_Click()
 End Sub
 
 '--自訂方法
-Private Sub UpdateFields(ByVal Fields As Collection)
+Private Sub UpdateFields(ByVal fields As Collection)
     '更新欄位
     Dim ctrl As MSForms.Control
     Dim cbo As MSForms.ComboBox
     Dim i As Long
-    If Fields Is Nothing Then Exit Sub
+    If fields Is Nothing Then Exit Sub
     '遍歷控制項
     For Each ctrl In Me.Controls
         If TypeOf ctrl Is MSForms.ComboBox Then
             Set cbo = ctrl
             cbo.Clear
-            For i = 1 To Fields.Count
-                cbo.AddItem Fields.item(i)
+            For i = 1 To fields.Count
+                cbo.AddItem fields.item(i)
             Next i
         End If
     Next ctrl

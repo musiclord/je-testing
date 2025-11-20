@@ -57,23 +57,23 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
         tableName = CStr(Tables(idx))
         '檢查資料表是否存在
         If Not m_Db.TableExists(tableName) Then
-            ws.Cells(currentRow, 1).Value = "資料表 [" & tableName & "] 不存在"
+            ws.Cells(currentRow, 1).value = "資料表 [" & tableName & "] 不存在"
             ws.Cells(currentRow, 1).Font.Color = vbRed
             currentRow = currentRow + 2
         Else
             Set rs = m_Db.ExecuteQuery("SELECT * FROM [" & tableName & "];")
             rowsCopied = 0
             '寫入區塊標題列
-            ws.Cells(currentRow, 1).Value = tableName
+            ws.Cells(currentRow, 1).value = tableName
             ws.Cells(currentRow, 1).Font.Bold = True
             currentRow = currentRow + 1
             '寫入欄位名稱列
             Dim col As Long
-            For col = 0 To rs.Fields.Count - 1
-                ws.Cells(currentRow, col + 1).Value = rs.Fields(col).name
+            For col = 0 To rs.fields.Count - 1
+                ws.Cells(currentRow, col + 1).value = rs.fields(col).name
             Next col
             '格式化欄位名稱列
-            With ws.Range(ws.Cells(currentRow, 1), ws.Cells(currentRow, rs.Fields.Count))
+            With ws.Range(ws.Cells(currentRow, 1), ws.Cells(currentRow, rs.fields.Count))
                 .Font.Bold = True
                 .Interior.Color = RGB(245, 241, 222)
             End With
@@ -82,14 +82,14 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
             '處理資料
             If rs.BOF And rs.EOF Then
                 '無資料情形
-                ws.Cells(currentRow, 1).Value = "(無資料)"
+                ws.Cells(currentRow, 1).value = "(無資料)"
                 currentRow = currentRow + 2
             Else
                 '寫入資料
-                If rs.recordCount = -1 Then
+                If rs.RecordCount = -1 Then
                     rs.MoveLast
                 End If
-                rowsCopied = rs.recordCount
+                rowsCopied = rs.RecordCount
                 If rowsCopied < 0 Then rowsCopied = 0
                 rs.MoveFirst
                 ws.Cells(currentRow, 1).CopyFromRecordset rs
@@ -105,7 +105,7 @@ Private Sub RenderTablesToWorksheet(ByVal ws As Worksheet, _
     ws.Activate
     Exit Sub
 ErrorHandler:
-    Debug.Print "RenderTablesToWorksheet(): " & Err.Number & " - " & Err.Description
+    Debug.Print "RenderTablesToWorksheet(): " & Err.Number & " - " & Err.description
 End Sub
 
 Private Sub SetPassword(ByRef xlSheet As Excel.Worksheet)

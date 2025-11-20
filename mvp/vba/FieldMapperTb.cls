@@ -33,9 +33,9 @@ Private Sub Class_Initialize()
     ' 初始化 TB 資料實體物件
     '---------------------------------------------------------------------------
     m_Name = "TB"
-    Dim Fields As Variant
+    Dim fields As Variant
     Dim i As Long
-    Fields = Array( _
+    fields = Array( _
         "ChangeAmount", _
         "OpeningBalance", _
         "OpeningDebitBalance", _
@@ -48,17 +48,17 @@ Private Sub Class_Initialize()
         "AccountNumber", _
         "AccountName" _
     )
-    For i = LBound(Fields) To UBound(Fields)
-        m_Fields(Fields(i)) = Fields(i)
+    For i = LBound(fields) To UBound(fields)
+        m_Fields(fields(i)) = fields(i)
     Next i
 End Sub
 
-Public Sub SetField(ByVal key As String, ByVal Value As String)
+Public Sub SetField(ByVal key As String, ByVal value As String)
     '---------------------------------------------------------------------------
     ' 設定指定欄位鍵值對，僅在欄位已存在且值不為空字串時更新
     '---------------------------------------------------------------------------
-    If m_Fields.Exists(key) And Len(Value) > 0 Then
-        m_Fields(key) = Value
+    If m_Fields.Exists(key) And Len(value) > 0 Then
+        m_Fields(key) = value
     End If
 End Sub
 
@@ -79,17 +79,17 @@ End Sub
 Public Property Get name() As String
     name = m_Name
 End Property
-Public Property Let name(ByVal Value As String)
-    m_Name = Value
+Public Property Let name(ByVal value As String)
+    m_Name = value
 End Property
 Public Property Get method() As Long
     method = m_Method
 End Property
-Public Property Let method(ByVal Value As Long)
-    m_Method = Value
+Public Property Let method(ByVal value As Long)
+    m_Method = value
 End Property
-Public Property Get Fields() As Dictionary
-    Set Fields = m_Fields
+Public Property Get fields() As Dictionary
+    Set fields = m_Fields
 End Property
 
 '-- 屬性快速補全

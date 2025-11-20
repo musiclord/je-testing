@@ -38,8 +38,8 @@ Public Sub Initialize(db As DbAccess)
     
     
     'Field
-    Dim Fields As Collection
-    Set Fields = db.GetTableFields("JE")
+    Dim fields As Collection
+    Set fields = db.GetTableFields("JE")
     If db.GetTableFields("JE") Is Nothing Then Exit Sub
     For Each item In db.GetTableFields("JE")
         Me.lstField.AddItem item
