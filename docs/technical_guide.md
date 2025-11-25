@@ -4,16 +4,19 @@
 
 ## 架構設計決策
 
-### 1. 資料存取策略 (ADO vs DAO)
-在 Excel VBA 環境中，我們選擇主要使用 **ADO (ActiveX Data Objects)** 搭配 **ACE OLEDB** 驅動程式，而非 DAO。
+### 1. 資料存取策略 (DAO)
+在 Excel VBA 環境中，我們選擇使用 **DAO (Data Access Objects)** 來操作 Access 資料庫。
 
-*   **為什麼不使用 DAO?**
-    *   雖然 DAO 對 Access 資料庫有原生最佳化，但其 Text ISAM (文字檔驅動) 對現代 CSV (特別是 UTF-8) 支援較差。
-    *   DAO 的緩存機制 (TableDefs) 在大量動態 DDL 操作下有時不會自動更新。
-*   **ADO 的優勢**:
-    *   `Microsoft.ACE.OLEDB.16.0` 驅動程式對 CSV 支援更佳 (可設定 `CharacterSet=65001` 處理 UTF-8)。
-    *   通用性強，未來若需遷移至 SQL Server 變動較小。
-    *   **最佳實務**: 在 Excel 中使用 `ADO` + `ACE OLEDB 16.0` + `Text Driver` + `BeginTrans` 進行批次寫入。
+*   **為什麼使用 DAO?**
+    *   DAO 對 Access 資料庫有原生最佳化，效能優於 ADO。
+    *   TableDefs 和 Fields 集合提供完整的 DDL 支援，易於動態建立表結構。
+    *   緩存機制 (TableDefs.Refresh) 讓 schema 變更即時可見。
+    *   Transaction 支援完善 (Workspace.BeginTrans / CommitTrans / Rollback)。
+*   **DAO 的優勢**:
+    *   原生支援 Access .accdb/.mdb 檔案格式。
+    *   RecordSet 操作簡潔高效。
+    *   與 VBA 整合度高，無需額外參考設定。
+    *   **最佳實務**: 使用 `DBEngine.OpenDatabase` + `TableDefs` 進行 schema 管理 + `Workspace.BeginTrans` 進行批次寫入。
 
 ### 2. 依賴注入 (Dependency Injection)
 為了克服 VBA 類別不支援建構子參數 (Constructor Arguments) 的限制，我們採用 **模擬建構子** 或 **屬性注入** 的方式來實現 IoC (控制反轉)。
@@ -21,20 +24,20 @@
 **範例：模擬建構子注入**
 ```vb
 ' Service.cls
-Private m_dal As DbAccess
+Private m_Dal As DbAccess
 
 Public Sub Initialize(ByVal dal As DbAccess)
-    Set m_dal = dal
+    Set m_Dal = dal
 End Sub
 ```
 
 **範例：屬性注入**
 ```vb
 ' Service.cls
-Private m_dal As DbAccess
+Private m_Dal As DbAccess
 
-Public Property Set DAL(ByVal value As DbAccess)
-    Set m_dal = value
+Public Property Set Dal(ByVal value As DbAccess)
+    Set m_Dal = value
 End Property
 ```
 

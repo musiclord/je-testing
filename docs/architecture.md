@@ -24,7 +24,7 @@ graph TD
     end
     
     subgraph "Data Layer (Backend)"
-        DAL <-->|ADO / SQL| AccessDB[(Access Database <br/> .accdb)]
+        DAL <-->|DAO / SQL| AccessDB[(Access Database <br/> .accdb)]
     end
 ```
 
@@ -54,20 +54,21 @@ graph TD
 ### 4. Data Access (資料存取層)
 *   **檔案**: `DbAccess.cls`, `DbSchema.cls`
 *   **職責**:
-    *   處理所有與資料庫的低階互動 (Connection string, SQL Command)。
-    *   提供高階 API (例如 `ExecuteQuery`, `InsertBatch`) 供 Service 使用。
+    *   處理所有與資料庫的低階互動 (使用 DAO: Database, TableDefs, Recordset)。
+    *   提供高階 API (例如 `ExecuteQuery`, `ExecuteNonQuery`) 供 Service 使用。
+    *   管理 Transaction (BeginTrans, CommitTrans, Rollback)。
     *   確保 SQL 注入防護 (雖然在 Access 環境較少見，但仍應注意參數化查詢)。
 
 ## 資料流 (Data Flow)
 
 1.  **匯入資料**:
-    *   使用者在 `ViewProject` 選擇檔案 -> `Presenter` 接收路徑 -> 呼叫 `ServiceImport` -> `ServiceImport` 解析檔案並透過 `DbAccess` 寫入 Access 資料庫。
+    *   使用者在 `ViewProject` 選擇檔案 -> `Presenter` 接收路徑 -> 呼叫 `ServiceImport` -> `ServiceImport` 解析檔案並透過 `DbAccess` (DAO) 寫入 Access 資料庫。
 2.  **驗證資料**:
-    *   使用者點擊驗證 -> `Presenter` 呼叫 `ServiceValidation` -> `ServiceValidation` 透過 `DbAccess` 查詢資料並執行規則檢查 -> 回傳結果給 `Presenter` -> `Presenter` 更新 `ViewProject` 顯示結果。
+    *   使用者點擊驗證 -> `Presenter` 呼叫 `ServiceValidation` -> `ServiceValidation` 透過 `DbAccess` (DAO) 查詢資料並執行規則檢查 -> 回傳結果給 `Presenter` -> `Presenter` 更新 `ViewProject` 顯示結果。
 
 ## 技術選型
 
 *   **前端**: Excel VBA (UserForms)
 *   **後端**: Microsoft Access Database Engine (.accdb)
-*   **連線介面**: ADODB (Microsoft ActiveX Data Objects)
+*   **連線介面**: DAO (Data Access Objects)
 *   **版本控制**: Git (透過 Python 腳本匯出 VBA 原始碼)
