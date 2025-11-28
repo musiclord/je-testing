@@ -11,79 +11,131 @@ Option Explicit
 '===============================================================================
 ' Layer:    Schema
 ' Name:     Staging
-' Purpose:  ...
+' Purpose:  Êé•Á∫åË≥áÊñô‰æÜÊ∫êÂ±§ÔºåÂÆöÁæ© ETL ÈÅéÁ®ã‰∏≠ÁöÑ‰∏≠ÈñìË°® (Intermediate Tables)
 '
 '===============================================================================
-
 '--
+Private m_JeInPeriod As TypeEtlJeInPeriod
+Private m_JeNotInPeriod As TypeEtlJeNotInPeriod
+Private m_AccountSum As TypeEtlAccountSum
+Private m_CompletenessCal As TypeEtlCompletenessCal
+Private m_CompletenessDiff As TypeEtlCompletenessDiff
+Private m_CompletenessDetail As TypeEtlCompletenessDetail
+Private m_DocBalanceSum As TypeEtlDocBalanceSum
+Private m_DocBalanceDiff As TypeEtlDocBalanceDiff
+Private m_DocBalanceDetail As TypeEtlDocBalanceDetail
+Private m_InfRandom As TypeEtlInfRandom
+Private m_InfSorted As TypeEtlInfSorted
+Private m_NullAccount As TypeEtlNullAccount
+Private m_NullDoc As TypeEtlNullDoc
+Private m_NullDesc As TypeEtlNullDesc
 
+'-------------------------------------------------------------------------------
+'-- ÂàùÂßãÂåñ
+'-------------------------------------------------------------------------------
+Public Sub Initialize()
+    With m_JeInPeriod
+        .Name = "JE_IN_PERIOD"
+    End With
+    
+    With m_JeNotInPeriod
+        .Name = "JE_NOT_IN_PERIOD"
+    End With
+    
+    With m_AccountSum
+        .Name = "ACCOUNT_SUM"
+    End With
+    
+    With m_CompletenessCal
+        .Name = "COMPLETENESS_CALCULATED"
+        .AccountMerged = "K_ACCOUNT_MERGED"
+        .Diff = "K_TB_JE_DIFF"
+    End With
+    
+    With m_CompletenessDiff
+        .Name = "COMPLETENESS_DIFF"
+    End With
+    
+    With m_CompletenessDetail
+        .Name = "COMPLETENESS_DETAIL"
+    End With
+    
+    With m_InfRandom
+        .Name = "INF_RANDOM"
+    End With
+    
+    With m_InfSorted
+        .Name = "INF_SORTED"
+    End With
+    
+    With m_NullAccount
+        .Name = "NULL_ACCOUNT"
+    End With
+    
+    With m_NullDoc
+        .Name = "NULL_DOCUMENT"
+    End With
+    
+    With m_NullDesc
+        .Name = "NULL_DESCRIPTION"
+    End With
+End Sub
 
 '-------------------------------------------------------------------------------
 '-- Staging Layer
 '-------------------------------------------------------------------------------
-'-- Tables
-Public Property Get TBL_JE_IN_PERIOD() As String
-    ' ¥¡∂°§∫™∫ JE
-    TBL_JE_IN_PERIOD = "JE_IN_PERIOD"
+Public Property Get JeInPeriod() As TypeEtlJeInPeriod
+    JeInPeriod = m_JeInPeriod
 End Property
-Public Property Get TBL_JE_NOT_IN_PERIOD() As String
-    ' ¥¡∂°•~™∫ JE
-    TBL_JE_NOT_IN_PERIOD = "JE_NOT_IN_PERIOD"
+
+Public Property Get JeNotInPeriod() As TypeEtlJeNotInPeriod
+    JeNotInPeriod = m_JeNotInPeriod
 End Property
-Public Property Get TBL_ACCOUNT_SUM() As String
-    ' JE ´ˆ¨Ï•ÿ∑J¡`
-    TBL_ACCOUNT_SUM = "ACCOUNT_SUM"
+
+Public Property Get AccountSum() As TypeEtlAccountSum
+    AccountSum = m_AccountSum
 End Property
-Public Property Get TBL_COMPLETENESS_CAL() As String
-    ' ßπæ„© ≠p∫‚µ≤™G
-    TBL_COMPLETENESS_CAL = "COMPLETENESS_CALCULATED"
+
+Public Property Get CompletenessCal() As TypeEtlCompletenessCal
+    CompletenessCal = m_CompletenessCal
 End Property
-Public Property Get TBL_COMPLETENESS_DIFF() As String
-    ' ßπæ„© Æt≤ßµ≤™G
-    TBL_COMPLETENESS_DIFF = "COMPLETENESS_DIFF"
+
+Public Property Get CompletenessDiff() As TypeEtlCompletenessDiff
+    CompletenessDiff = m_CompletenessDiff
 End Property
-Public Property Get TBL_COMPLETENESS_DETAIL() As String
-    ' ßπæ„© ¥˙∏’©˙≤”
-    TBL_COMPLETENESS_DETAIL = "COMPLETENESS_DETAIL"
+
+Public Property Get CompletenessDetail() As TypeEtlCompletenessDetail
+    CompletenessDetail = m_CompletenessDetail
 End Property
-Public Property Get TBL_DOC_BALANCE_SUM() As String
-    ' ∂«≤º∑J¡`
-    TBL_DOC_BALANCE_SUM = "DOCUMENT_BALANCE_SUM"
+
+Public Property Get DocBalanceSum() As TypeEtlDocBalanceSum
+    DocBalanceSum = m_DocBalanceSum
 End Property
-Public Property Get TBL_DOC_BALANCE_DIFF() As String
-    ' ≠…∂U§£•≠µ≤™G
-    TBL_DOC_BALANCE_DIFF = "DOCUMENT_BALANCE_DIFF"
+
+Public Property Get DocBalanceDiff() As TypeEtlDocBalanceDiff
+    DocBalanceDiff = m_DocBalanceDiff
 End Property
-Public Property Get TBL_DOC_BALANCE_DETAIL() As String
-    ' ≠…∂U§£•≠©˙≤”
-    TBL_DOC_BALANCE_DETAIL = "DOCUMENT_BALANCE_DETAIL"
+
+Public Property Get DocBalanceDetail() As TypeEtlDocBalanceDetail
+    DocBalanceDetail = m_DocBalanceDetail
 End Property
-Public Property Get TBL_INF_RANDOM() As String
-    ' INF ¿Hæ˜©‚ºÀ
-    TBL_INF_RANDOM = "INF_RANDOM"
+
+Public Property Get InfRandom() As TypeEtlInfRandom
+    InfRandom = m_InfRandom
 End Property
-Public Property Get TBL_INF_SORTED() As String
-    ' INF ±∆ß«∏ÍÆ∆
-    TBL_INF_SORTED = "INF_SORTED"
+
+Public Property Get InfSorted() As TypeEtlInfSorted
+    InfSorted = m_InfSorted
 End Property
-Public Property Get TBL_NULL_ACCOUNT() As String
-    ' ™≈•’¨Ï•ÿ∞Oø˝
-    TBL_NULL_ACCOUNT = "NULL_ACCOUNT"
+
+Public Property Get NullAccount() As TypeEtlNullAccount
+    NullAccount = m_NullAccount
 End Property
-Public Property Get TBL_NULL_DOC() As String
-    ' ™≈•’∂«≤º∞Oø˝
-    TBL_NULL_DOC = "NULL_DOC"
+
+Public Property Get NullDoc() As TypeEtlNullDoc
+    NullDoc = m_NullDoc
 End Property
-Public Property Get TBL_NULL_DESC() As String
-    ' ™≈•’∫K≠n∞Oø˝
-    TBL_NULL_DESC = "NULL_DESCRIPTION"
-End Property
-'-- Fields
-Public Property Get FLD_COMPLETENESS_ACCOUNT_MERGED() As String
-    ' ¶X®÷ JE ©M TB ¨Ï•ÿΩs∏π
-    FLD_COMPLETENESS_ACCOUNT_MERGED = "K_ACCOUNT_MERGED"
-End Property
-Public Property Get FLD_COMPLETENESS_DIFF() As String
-    ' JE ©M TB Æt≤ß™˜√B
-    FLD_COMPLETENESS_DIFF = "K_TB_JE_DIFF"
+
+Public Property Get NullDesc() As TypeEtlNullDesc
+    NullDesc = m_NullDesc
 End Property
