@@ -2,20 +2,16 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "DbSchema"
+Attribute VB_Name = "DbSchemaSource"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
-' Layer:    Database
-' Name:     Schema
-' Purpose:  資料庫結構定義與管理。
-'           借鑑於 Kimball 的 ETL 架構，分為:
-'               1. Source Layer
-'               2. Staging Layer
-'               3. Target Layer
+' Layer:    Schema
+' Name:     Source
+' Purpose:  ...
 '
 '===============================================================================
 
@@ -23,15 +19,22 @@ Option Explicit
 Private m_GL As MapperFieldGl
 Private m_TB As MapperFieldTb
 
+'-------------------------------------------------------------------------------
+'-- Source Layer
+'-------------------------------------------------------------------------------
+'-- GL
+Public Property Get GL() As MapperFieldGl
+    Set GL = m_GL
+End Property
 
-'-------------------------------------------------------------------------------
-'-- 初始化
-'-------------------------------------------------------------------------------
-Public Sub Initialization( _
-    ByVal p_GL As MapperFieldGl, _
-    ByVal p_TB As MapperFieldTb _
-)
-    Set m_GL = p_GL
-    Set m_TB = p_TB
-End Sub
+'-- TB
+Public Property Get TB() As MapperFieldTb
+    Set TB = m_TB
+End Property
+
+'-- Account Mapping
+
+'-- Date Dimension
+
+
 

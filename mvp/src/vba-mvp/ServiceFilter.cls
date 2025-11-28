@@ -2,7 +2,7 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "ServiceImport"
+Attribute VB_Name = "ServiceFilter"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -10,10 +10,10 @@ Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
 ' Layer:    Service
-' Name:     Import
-' Purpose:  資料匯入服務。
-'           處理外部檔案 (CSV/Excel) 的解析與轉換，
-'           將總帳 (GL)、試算表 (TB) 等資料寫入 Access 資料庫。
+' Name:     Filter
+' Purpose:  資料篩選服務。
+'           根據使用者定義的條件 (金額區間、科目範圍、日期等)
+'           篩選日記帳分錄，產生待測試的抽樣母體。
 '===============================================================================
 
 '--
@@ -24,8 +24,3 @@ Public Sub Initialize(ByVal p_Context As CoreContext)
     Set m_Context = p_Context
     Set m_Db = p_Context.DbAccess
 End Sub
-
-
-Public Function ImportGl()
-
-End Function
