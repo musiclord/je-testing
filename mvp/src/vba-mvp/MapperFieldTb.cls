@@ -23,12 +23,12 @@ Private m_Fields As New Dictionary
 '--
 '-------------------------------------------------------------------------------
 Public Sub Initialize()
-    Dim Fields As Variant
+    Dim fields As Variant
     Dim i As Long
     '--
     m_Name = "TB"
     ' 設置初始化欄位陣列
-    Fields = Array( _
+    fields = Array( _
         "FLD_CHANGE_AMOUNT", _
         "FLD_OPENING_BALANCE", _
         "FLD_OPENING_DEBIT_BALANCE", _
@@ -43,8 +43,8 @@ Public Sub Initialize()
         "K_AMOUNT" _
     )
     ' 將陣列初始化給欄位字典
-    For i = LBound(Fields) To UBound(Fields)
-        m_Fields(Fields(i)) = Fields(i)
+    For i = LBound(fields) To UBound(fields)
+        m_Fields(fields(i)) = fields(i)
     Next i
 End Sub
 
@@ -73,8 +73,8 @@ Public Property Let Method(ByVal p_Value As Long)
     m_Method = p_Value
 End Property
 
-Public Property Get Fields() As Dictionary
-    Set Fields = m_Fields
+Public Property Get fields() As Dictionary
+    Set fields = m_Fields
 End Property
 
 '-------------------------------------------------------------------------------

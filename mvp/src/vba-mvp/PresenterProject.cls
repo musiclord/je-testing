@@ -15,3 +15,20 @@ Option Explicit
 '           處理專案建立、開啟、儲存等操作的 UI 事件，
 '           協調 View 與 CoreProject 之間的互動。
 '===============================================================================
+Private WithEvents v_Project As ViewProject
+Attribute v_Project.VB_VarHelpID = -1
+Private m_Context As CoreContext
+Private m_Project As CoreProject
+Private m_Logger As CoreLogger
+
+Public Sub Initialize()
+    m_Project.Initialize m_Context
+End Sub
+
+Private Sub v_Project_CreateProjectRequested(ByVal p_ProjectName As String)
+    m_Project.CreateProject p_ProjectName
+End Sub
+
+Private Sub v_Project_LoadProjectRequested(ByVal p_ProjectName As String)
+    m_Project.LoadProject p_ProjectName
+End Sub

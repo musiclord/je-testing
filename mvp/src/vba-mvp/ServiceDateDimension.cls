@@ -25,7 +25,7 @@ Private m_Db As DbAccess
 '-------------------------------------------------------------------------------
 Public Sub Initialize(ByVal p_Context As CoreContext)
     Set m_Context = p_Context
-    Set m_Db = p_Context.DbAccess
+    Set m_Db = p_Context.DbInput
 End Sub
 
 Public Sub MergeWeekends(ByVal p_SelectedDays As Variant)
@@ -42,5 +42,7 @@ End Sub
 
 Public Sub CreateDateDimensionTable()
     ' 設定日期維度表的起始日及結束日
+    Dim dateStart As Date, dateEnd As Date
+    
 End Sub
 

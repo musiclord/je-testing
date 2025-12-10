@@ -28,7 +28,7 @@ Private m_Target As DbSchemaTarget
 '-------------------------------------------------------------------------------
 '-- 初始化
 '-------------------------------------------------------------------------------
-Public Sub Initialization( _
+Public Sub Initialize( _
     ByVal p_GL As MapperFieldGl, _
     ByVal p_TB As MapperFieldTb _
 )

@@ -22,5 +22,5 @@ Private m_Db As DbAccess
 
 Public Sub Initialize(ByVal p_Context As CoreContext)
     Set m_Context = p_Context
-    Set m_Db = p_Context.DbAccess
+    Set m_Db = p_Context.DbCriteria
 End Sub

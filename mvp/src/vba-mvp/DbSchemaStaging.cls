@@ -139,3 +139,7 @@ End Property
 Public Property Get NullDesc() As TypeEtlNullDesc
     NullDesc = m_NullDesc
 End Property
+
+'-------------------------------------------------------------------------------
+'-- DDL (Data Definition Language)
+'-------------------------------------------------------------------------------

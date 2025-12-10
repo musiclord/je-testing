@@ -80,3 +80,43 @@ End Property
 Public Property Get DateDim() As TypeSourceDateDimension
     DateDim = m_DateDim
 End Property
+
+'-------------------------------------------------------------------------------
+'-- DDL (Data Definition Language)
+'-------------------------------------------------------------------------------
+Public Function GetCreateSql_AccountMapping() As String
+    ' 產生科目配對表的 CREATE TABLE SQL
+    Dim sql As String
+    With m_AccountMapping
+        sql = "CREATE TABLE [" & .Name & "] ( " & vbCrLf & _
+              "    ID AUTOINCREMENT PRIMARY KEY, " & vbCrLf & _
+              "    [" & .AccountCode & "] TEXT(50), " & vbCrLf & _
+              "    [" & .AccountName & "] TEXT(50), " & vbCrLf & _
+              "    [" & .AccountStandardized & "] TEXT(50) " & vbCrLf & _
+              ");"
+    End With
+    GetCreateSql_AccountMapping = sql
+End Function
+
+Public Function GetCreateSql_DateDim() As String
+    ' 產生日期維度表的 CREATE TABLE SQL
+    Dim sql As String
+    With m_DateDim
+        sql = "CREATE TABLE [" & .Name & "] ( " & vbCrLf & _
+              "    [" & .DateKey & "] LONG, " & vbCrLf & _
+              "    [" & .FullDate & "] DATE, " & vbCrLf & _
+              "    [" & .Year & "] SHORT, " & vbCrLf & _
+              "    [" & .Month & "] SHORT, " & vbCrLf & _
+              "    [" & .Day & "] SHORT, " & vbCrLf & _
+              "    [" & .DayOfWeek & "] SHORT, " & vbCrLf & _
+              "    [" & .IsWeekend & "] YESNO, " & vbCrLf & _
+              "    [" & .IsHolidays & "] YESNO, " & vbCrLf & _
+              "    [" & .IsMakeupDays & "] YESNO, " & vbCrLf & _
+              "    [" & .HolidaysDesc & "] TEXT(50), " & vbCrLf & _
+              "    [" & .MakeupDaysDesc & "] TEXT(50) " & vbCrLf & _
+              "    CONSTRAINT PK_" & .Name & _
+              " PRIMARY KEY ([" & .DateKey & "])" & vbCrLf & _
+              ");"
+    End With
+    GetCreateSql_DateDim = sql
+End Function

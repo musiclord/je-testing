@@ -78,7 +78,7 @@ Public Function Summarization( _
     ByVal groupFields As Variant, _
     ByVal aggregateFields As Variant, _
     Optional ByVal outputTable As String = "", _
-    Optional ByVal whereCondition As String = "", _
+    Optional ByVal WhereCondition As String = "", _
     Optional ByVal sourceDb As String = "", _
     Optional ByVal outputDb As String = "" _
 ) As String
@@ -98,9 +98,9 @@ End Function
 '-------------------------------------------------------------------------------
 Public Function ExtractWhere( _
     ByVal sourceTable As String, _
-    ByVal whereCondition As String, _
+    ByVal WhereCondition As String, _
     Optional ByVal outputTable As String = "", _
-    Optional ByVal Fields As Variant = Empty, _
+    Optional ByVal fields As Variant = Empty, _
     Optional ByVal sourceDb As String = "", _
     Optional ByVal outputDb As String = "" _
 ) As String
