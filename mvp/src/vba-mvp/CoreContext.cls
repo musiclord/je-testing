@@ -84,7 +84,7 @@ End Sub
 ' Properties - Core Dependencies
 '===============================================================================
 Public Property Get Logger() As CoreLogger
-    Set m_Logger = New CoreLogger
+    Set Logger = m_Logger
 End Property
 
 Public Property Get DbInput() As DbAccess

@@ -16,22 +16,33 @@ Option Explicit
 '           篩選設定、結果匯出等主要流程的事件處理。
 '===============================================================================
 
-Public Sub Initialize()
+'--
+Private WithEvents m_View As ViewMain
+Attribute m_View.VB_VarHelpID = -1
+Private m_Context As CoreContext
+
+Public Sub Initialize(ByVal p_Context As CoreContext)
     ' 初始化核心物件
+    Set m_Context = p_Context
 End Sub
 
-Public Sub DataPreparation()
-
+Private Sub m_View_DataPreparation()
+    App.ShowImportView
 End Sub
 
-Public Sub RunValidation()
-
+Private Sub m_View_RunValidation()
+    App.ShowValidationView
 End Sub
 
-Public Sub ConfigureFilters()
-
+Private Sub m_View_ConfigureFilters()
+    App.ShowFilterView
 End Sub
 
-Public Sub ExportResults()
+Private Sub m_View_ExportResults()
+    '...
+End Sub
 
+Private Sub m_View_OnClose()
+    m_View.Hide
+    Unload m_View
 End Sub

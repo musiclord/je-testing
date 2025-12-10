@@ -23,6 +23,7 @@ Option Explicit
 '===============================================================================
 Public Event CreateProjectRequested(ByVal p_ProjectName As String)
 Public Event LoadProjectRequested(ByVal p_ProjectName As String)
+Public Event OnClose()
 
 Private Sub btnCreateProject_Click()
     RaiseEvent CreateProjectRequested(Trim$(CStr(Me.txtbProjectName.value)))
@@ -34,10 +35,19 @@ Private Sub btnLoadProject_Click()
 End Sub
 
 Private Sub btnClose_Click()
-    Me.Hide
-    Unload Me
+    RaiseEvent OnClose
 End Sub
 
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    If CloseMode = vbFormControlMenu Then   ' 使用者點了 X 按鈕
+        Cancel = True       ' 阻止預設關閉行為
+        RaiseEvent OnClose  ' 交給 Presenter 關閉介面
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Helper
+'-------------------------------------------------------------------------------
 Private Sub UpdateProject()
     Dim projects As New Collection
     Dim item As Variant

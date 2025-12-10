@@ -21,3 +21,33 @@ Option Explicit
 '           提供檔案選擇、欄位對應設定的表單，顯示匯入進度，
 '           將操作事件委派給 PresenterImport 處理。
 '===============================================================================
+
+'--
+Public Event ImportGeneralLedger(ByVal p_Format As String)
+Public Event ImportTrialBalance(ByVal p_Format As String)
+Public Event MapGeneralLedgerField()
+Public Event MapTrialBalanceField()
+Public Event UpdateCalendar()
+Public Event Submitted()
+Public Event OnClose()
+'--
+Private m_Format As String
+'-- State Flags
+Private m_IsGlReady As Boolean
+Private m_IsTbReady As Boolean
+Private m_IsCalendarReady As Boolean
+
+Private Sub btnClose_Click()
+    RaiseEvent OnClose
+End Sub
+
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    If CloseMode = vbFormControlMenu Then   ' 使用者點了 X 按鈕
+        Cancel = True       ' 阻止預設關閉行為
+        RaiseEvent OnClose  ' 交給 Presenter 關閉介面
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Helper
+'-------------------------------------------------------------------------------

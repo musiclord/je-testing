@@ -2,7 +2,7 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "PresenterImport"
+Attribute VB_Name = "PresenterValidation"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -10,39 +10,33 @@ Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
 ' Layer:    Presenter
-' Name:     Import
-' Purpose:  資料匯入展示器。
-'           處理檔案選擇、欄位對應設定等 UI 事件，
-'           呼叫 ServiceImport 執行匯入並更新進度顯示。
+' Name:     Validation
+' Purpose:  資料驗證展示器。
+'
 '===============================================================================
 
 '--
-Private WithEvents m_View As ViewImport
+Private WithEvents m_View As ViewValidation
+Attribute m_View.VB_VarHelpID = -1
 Private m_Context As CoreContext
 
-
 Public Sub Initialize(ByVal p_Context As CoreContext)
-    ' 初始化核心物件
     Set m_Context = p_Context
 End Sub
 
-Private Sub m_View_ImportGeneralLedger(ByVal p_Format As String)
+Private Sub m_View_CheckCompleteness()
     '...
 End Sub
 
-Private Sub m_View_ImportTrialBalance(ByVal p_Format As String)
+Private Sub m_View_CheckDocumentBalance()
     '...
 End Sub
 
-Private Sub m_View_MapGeneralLedgerField()
+Private Sub m_View_CheckINF()
     '...
 End Sub
 
-Private Sub m_View_MapTrialBalanceField()
-    '...
-End Sub
-
-Private Sub m_View_UpdateCalendar()
+Private Sub m_View_CheckNullRecords()
     '...
 End Sub
 

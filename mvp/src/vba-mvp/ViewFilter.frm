@@ -22,3 +22,29 @@ Option Explicit
 '           將操作事件委派給 PresenterFilter 處理。
 '===============================================================================
 
+Public Event ShowAccountMapping()
+Public Event ImportAccountMapping()
+Public Event AddSql()
+Public Event AddCriteria()
+Public Event AddCriterion()
+Public Event RemoveCriteria()
+Public Event RemoveCriterion()
+Public Event ExecuteCriteria()
+Public Event Submitted()
+Public Event OnClose()
+
+
+Private Sub btnClose_Click()
+    RaiseEvent OnClose
+End Sub
+
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    If CloseMode = vbFormControlMenu Then   ' 使用者點了 X 按鈕
+        Cancel = True       ' 阻止預設關閉行為
+        RaiseEvent OnClose  ' 交給 Presenter 關閉介面
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Helper
+'-------------------------------------------------------------------------------

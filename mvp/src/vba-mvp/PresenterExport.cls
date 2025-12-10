@@ -2,7 +2,7 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "PresenterImport"
+Attribute VB_Name = "PresenterExport"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -10,43 +10,36 @@ Attribute VB_Exposed = False
 Option Explicit
 '===============================================================================
 ' Layer:    Presenter
-' Name:     Import
-' Purpose:  資料匯入展示器。
-'           處理檔案選擇、欄位對應設定等 UI 事件，
-'           呼叫 ServiceImport 執行匯入並更新進度顯示。
+' Name:     Export
+' Purpose:  資料匯出展示器
 '===============================================================================
 
 '--
-Private WithEvents m_View As ViewImport
+Private WithEvents m_View As ViewExport
+Attribute m_View.VB_VarHelpID = -1
 Private m_Context As CoreContext
 
-
 Public Sub Initialize(ByVal p_Context As CoreContext)
-    ' 初始化核心物件
     Set m_Context = p_Context
 End Sub
 
-Private Sub m_View_ImportGeneralLedger(ByVal p_Format As String)
+Private Sub m_View_ExportWorkingPaper()
     '...
 End Sub
 
-Private Sub m_View_ImportTrialBalance(ByVal p_Format As String)
+Private Sub m_View_ShowEngagementOverview()
     '...
 End Sub
 
-Private Sub m_View_MapGeneralLedgerField()
+Private Sub m_View_ShowValidationReport()
     '...
 End Sub
 
-Private Sub m_View_MapTrialBalanceField()
+Private Sub m_View_ShowCompletenessReport()
     '...
 End Sub
 
-Private Sub m_View_UpdateCalendar()
-    '...
-End Sub
-
-Private Sub m_View_Submitted()
+Private Sub m_View_ShowDocumentBalanceReport()
     '...
 End Sub
 

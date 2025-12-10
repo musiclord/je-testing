@@ -22,3 +22,24 @@ Option Explicit
 '           提供異常項目的檢視與匯出功能。
 '===============================================================================
 
+Public Event CheckCompleteness()
+Public Event CheckDocumentBalance()
+Public Event CheckINF()
+Public Event CheckNullRecords()
+Public Event Submitted()
+Public Event OnClose()
+
+Private Sub btnClose_Click()
+    RaiseEvent OnClose
+End Sub
+
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    If CloseMode = vbFormControlMenu Then   ' 使用者點了 X 按鈕
+        Cancel = True       ' 阻止預設關閉行為
+        RaiseEvent OnClose  ' 交給 Presenter 關閉介面
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Helper
+'-------------------------------------------------------------------------------

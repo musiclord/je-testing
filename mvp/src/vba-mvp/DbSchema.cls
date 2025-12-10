@@ -32,6 +32,10 @@ Public Sub Initialize( _
     ByVal p_GL As MapperFieldGl, _
     ByVal p_TB As MapperFieldTb _
 )
+    Set m_Source = New DbSchemaSource
+    Set m_Staging = New DbSchemaStaging
+    Set m_Target = New DbSchemaTarget
+    '--
     m_Source.Initialize p_GL, p_TB
     m_Staging.Initialize
     m_Target.Initialize
