@@ -1,77 +1,219 @@
 # 技術開發指南 (Technical Development Guide)
 
-本文件彙整了專案開發過程中的技術決策、最佳實務與編碼規範。
+本文件彙整了 .NET 版本專案的技術決策、開發策略與編碼規範。
 
-## 架構設計決策
+> VBA 版本的技術指南已歸檔至 `legacy/docs/technical_guide-vba.md`，供歷史參考。
 
-### 1. 資料存取策略 (DAO)
-在 Excel VBA 環境中，我們選擇使用 **DAO (Data Access Objects)** 來操作 Access 資料庫。
+---
 
-*   **為什麼使用 DAO?**
-    *   DAO 對 Access 資料庫有原生最佳化，效能優於 ADO。
-    *   TableDefs 和 Fields 集合提供完整的 DDL 支援，易於動態建立表結構。
-    *   緩存機制 (TableDefs.Refresh) 讓 schema 變更即時可見。
-    *   Transaction 支援完善 (Workspace.BeginTrans / CommitTrans / Rollback)。
-*   **DAO 的優勢**:
-    *   原生支援 Access .accdb/.mdb 檔案格式。
-    *   RecordSet 操作簡潔高效。
-    *   與 VBA 整合度高，無需額外參考設定。
-    *   **最佳實務**: 使用 `DBEngine.OpenDatabase` + `TableDefs` 進行 schema 管理 + `Workspace.BeginTrans` 進行批次寫入。
+## 1. 技術棧總覽
 
-### 2. 依賴注入 (Dependency Injection)
-為了克服 VBA 類別不支援建構子參數 (Constructor Arguments) 的限制，我們採用 **模擬建構子** 或 **屬性注入** 的方式來實現 IoC (控制反轉)。
-
-**範例：模擬建構子注入**
-```vb
-' Service.cls
-Private m_Dal As DbAccess
-
-Public Sub Initialize(ByVal dal As DbAccess)
-    Set m_Dal = dal
-End Sub
-```
-
-**範例：屬性注入**
-```vb
-' Service.cls
-Private m_Dal As DbAccess
-
-Public Property Set Dal(ByVal value As DbAccess)
-    Set m_Dal = value
-End Property
-```
-
-### 3. 命名慣例 (Naming Conventions)
-
-| 前綴 | 意義 | 範例 |
+| 項目 | 選擇 | 替代方案 (已排除) |
 |:---|:---|:---|
-| `m_` | 類別成員變數 (Member) | `m_dal`, `m_Name` |
-| `p_` | 函式參數 (Parameter) | `p_FilePath` |
-| `i_` | 介面 (Interface) | `i_Repository` |
-| `c_` | 控制器 (Controller) | `c_MainController` |
-| `v_` | 視圖 (View) | `v_MainForm` |
+| 語言 | **C#** | VB.NET — 社群資源少、AI 生成品質差 |
+| 框架 | **.NET 10 LTS** | .NET Framework — 不支援現代 CLI/AI workflow |
+| 桌面框架 | **WinForms** | WPF — Phase 1 過重；Blazor Hybrid — 多一層 runtime |
+| UI 引擎 | **WebView2 + HTML/CSS/JS** | 原生 WinForms UI — AI 不擅長生成 |
+| 資料庫 | **SQL Server** | Access — 不適合大量資料處理 |
+| IDE | **Visual Studio 2026** | VS Code — 對 WinForms/.NET 整合不如 VS |
 
-*   **變數**: 小寫開頭 (如 `m_name`)。
-*   **物件/類別**: 大寫開頭 (如 `m_Project`)。
+---
 
-## 效能優化技巧
+## 2. 架構設計決策
 
-1.  **資料庫交易 (Transactions)**: 進行大量寫入時，務必使用 `BeginTrans` / `CommitTrans`，可提升效能並確保資料一致性。
-2.  **避免 Excel 物件操作**: 盡量減少在迴圈中讀寫 Excel 儲存格。應使用陣列 (Array) 進行記憶體內處理，或直接透過 ADO 對工作表進行 SQL 查詢。
-3.  **大數據處理**:
-    *   使用 `GetRows` 將 Recordset 轉為陣列處理。
-    *   若資料量超過百萬筆，避免一次載入記憶體，改用 `Do While Not rs.EOF` 逐筆或分批處理。
+### 2.1 WebView2 Bridge 模式
 
-## 專案模組規劃
+前端與後端透過 WebView2 Bridge 通訊，採用 **action + payload** 模式：
 
-1.  **專案管理器 (ManagerProject)**: 負責持有專案組態 (Config) 與資料庫連線字串。
-2.  **上下文管理器 (Context Manager)**: 管理依賴注入的服務實體，確保單例 (Singleton) 或生命週期管理。
-3.  **資料存取層 (DAL)**: 統一封裝 SQL 執行邏輯，避免業務邏輯層直接依賴 ADODB 物件。
+```csharp
+// .NET 端 — 註冊 Bridge Method
+webView.CoreWebView2.AddHostObjectToScript("jet", bridgeObject);
 
-## 常見陷阱
+// JavaScript 端 — 呼叫 .NET 方法
+const result = await chrome.webview.hostObjects.jet.ImportFile(jsonPayload);
+```
 
-*   **DAO 緩存**: 透過同一連線建立新資料表後，DAO 可能不會立刻看到新表，需刷新 TableDefs。
-*   **VBA 括號**:
-    *   `Call Sub(arg)` 或 `Sub arg` (無回傳值)。
-    *   `result = Func(arg)` (有回傳值)。
-*   **物件指派**: 務必使用 `Set` 關鍵字 (如 `Set rs = New ADODB.Recordset`)，否則會報錯或變為預設屬性指派。
+**原則**:
+- 前端只送 action 名稱 + JSON payload
+- .NET Service Layer 負責驗證、轉換、執行
+- 結果以 JSON 格式回傳前端
+
+### 2.2 Service Layer 設計
+
+每個業務模組獨立一個 Service 類別：
+
+```csharp
+public class ServiceImport
+{
+    private readonly IDataAccess _dal;
+
+    public ServiceImport(IDataAccess dal)
+    {
+        _dal = dal;
+    }
+
+    public ImportResult ImportGeneralLedger(ImportPayload payload)
+    {
+        // 1. 驗證 payload
+        // 2. 解析檔案
+        // 3. 欄位映射
+        // 4. 呼叫 DAL 寫入 SQL Server
+        // 5. 回傳結果
+    }
+}
+```
+
+### 2.3 Data Access 策略
+
+使用 **ADO.NET** 搭配 Stored Procedures：
+
+- **為什麼用 ADO.NET?** 對 SQL Server 有最佳控制力，適合大量資料 ETL
+- **為什麼用 Stored Procedures?** 篩選規則邏輯適合在 SQL Server 端執行，減少資料傳輸
+- **參數化查詢**: 所有使用者輸入必須透過 `SqlParameter` 傳遞，防止 SQL Injection
+
+```csharp
+public class DataAccess : IDataAccess
+{
+    public DataTable ExecuteQuery(string storedProc, SqlParameter[] parameters)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        using var cmd = new SqlCommand(storedProc, conn);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.AddRange(parameters);
+        // ...
+    }
+}
+```
+
+### 2.4 依賴注入
+
+使用 .NET 內建的 DI 容器 (`Microsoft.Extensions.DependencyInjection`)：
+
+```csharp
+var services = new ServiceCollection();
+services.AddSingleton<IDataAccess, DataAccess>();
+services.AddTransient<ServiceImport>();
+services.AddTransient<ServiceValidation>();
+services.AddTransient<ServiceFilter>();
+services.AddTransient<ServiceExport>();
+```
+
+---
+
+## 3. SQL Server 資料庫設計
+
+### 3.1 Schema 分層
+
+| Schema | 用途 |
+|:---|:---|
+| `staging` | 原始匯入資料 (未經處理) |
+| `target` | 標準化後的 GL/TB 資料 |
+| `result` | 篩選結果與中間計算表 |
+| `config` | 規則定義、科目配對、假日曆 |
+
+### 3.2 ETL 流程
+
+```
+原始檔案 (Excel/CSV)
+  → .NET 解析 → staging.GL_Raw / staging.TB_Raw
+  → Stored Procedure → 欄位映射 + 型別轉換
+  → target.GeneralLedger / target.TrialBalance
+  → 衍生欄位計算 (DebitAmount, CreditAmount, DrCr)
+```
+
+### 3.3 預篩選 Stored Procedures
+
+每項預篩選程序對應一個 Stored Procedure：
+
+| Procedure | 對應規則 |
+|:---|:---|
+| `sp_PreScreen_R1` | 期末財報準備日後核准之分錄 |
+| `sp_PreScreen_R2` | 摘要出現特定描述 |
+| `sp_PreScreen_R3` | 未預期借貸組合 |
+| `sp_PreScreen_R4` | 整數金額 (連續零尾數) |
+| `sp_PreScreen_R5` | 依編製者彙總 |
+| `sp_PreScreen_R6` | 較少使用之科目 |
+| `sp_PreScreen_R7` | 週末過帳/核准 |
+| `sp_PreScreen_R8` | 假日過帳/核准 |
+
+---
+
+## 4. 開發環境與工具
+
+### 4.1 主力開發環境
+
+**Visual Studio 2026 + GitHub Copilot Agent Mode**
+
+Copilot Agent Mode 能力：
+- 讀整個 repo 結構
+- 跨檔修改
+- 執行 `dotnet build` / `dotnet test`
+- 自動偵測錯誤並修正
+
+### 4.2 雙機開發策略 (Mac + Windows)
+
+| 工作項目 | Mac (VS Code / Terminal) | Windows (Visual Studio 2026) |
+|:---|:---|:---|
+| HTML 前端開發 | ✓ | ✓ |
+| .NET Service Layer | ✓ (dotnet CLI) | ✓ |
+| DTO / Models / Tests | ✓ | ✓ |
+| SQL Scripts | ✓ | ✓ |
+| WinForms Host | ✗ | ✓ |
+| WebView2 整合 | ✗ | ✓ |
+| 打包與正式驗證 | ✗ | ✓ |
+
+### 4.3 AI 輔助開發適用範圍
+
+**適合交給 AI**:
+- Data Access Layer
+- DTO / Model 定義
+- Service Layer 業務邏輯
+- HTML/CSS/JS 前端 UI
+- WebView2 Bridge 方法
+- SQL Stored Procedures
+- 單元測試
+- 重構與命名整理
+
+**不適合完全交給 AI**:
+- WinForms Designer.cs (Visual Designer 管理)
+- 自訂複雜控制項
+- 涉及 Designer 序列化的部分
+
+---
+
+## 5. 專案結構規劃
+
+```
+src/
+├── JET.sln                         # Solution 檔案
+├── JET.Desktop/                    # WinForms + WebView2 Host
+│   ├── Program.cs
+│   ├── MainForm.cs
+│   ├── Bridge/                     # WebView2 Bridge 方法
+│   └── wwwroot/                    # HTML/CSS/JS 前端資源
+├── JET.Core/                       # 業務邏輯層 (Service Layer)
+│   ├── Services/
+│   ├── Models/
+│   └── Interfaces/
+├── JET.Data/                       # 資料存取層
+│   ├── DataAccess.cs
+│   ├── Repositories/
+│   └── Scripts/                    # SQL migration scripts
+└── JET.Tests/                      # 測試專案
+    ├── Services/
+    └── Data/
+```
+
+> 以上為規劃結構。實際專案將在 Visual Studio 2026 中建立，名稱待定。
+
+---
+
+## 6. 實務限制與考量
+
+| 限制 | 因應方式 |
+|:---|:---|
+| 不走內網 web server | 打包為本地 .exe，透過 WebView2 嵌入 HTML |
+| 避免額外安裝 | 使用 Windows 內建的 WebView2 Runtime |
+| Python 不可作為正式方案 | 全部以 C# / .NET 實作 |
+| 資安通報風險 | 單機部署，不開放網路端口 |
+| 資料量最大數千萬筆 | SQL Server 負責大量運算，.NET 僅處理結果集 |

@@ -1,3 +1,25 @@
+# IDE & OS
 .vs/
+.vscode/.ropeproject/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# .NET build outputs
+bin/
+obj/
+publish/
+out/
+
+# NuGet
+*.nupkg
+packages/
+
+# Legacy VBA artifacts
 *.frx
 *.accdb
+
+# Sensitive files
+*.env
+appsettings.Development.json
