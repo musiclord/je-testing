@@ -315,6 +315,8 @@ FilterNode (抽象)
 | `value` | `value` | 條件值 |
 
 > **重要**: 前端使用 react-querybuilder 元件時，其輸出 JSON 可直接作為本系統的 `FilterGroup` 輸入，僅需將 `combinator` 轉為大寫、`rules` 重命名為 `children`。此映射在 Thin-Bridge 層完成。
+>
+> **映射邊界處理**: 若 react-querybuilder 的 JSON 輸出不含必要欄位 (如 `combinator` 為空、`rules` 不是陣列)，Bridge 層必須回傳格式化錯誤訊息 `{ success: false, error: "INVALID_QUERY_FORMAT: ..." }`，不可將畸形資料轉發給 Handler。
 
 ---
 
@@ -619,8 +621,9 @@ function visit(node):
 | 欄位名引用方式 | 一律使用 `[ColumnName]` 方括號引用 |
 | SQL 關鍵字保護 | 運算子映射表已確保只產出安全的 SQL 片段 |
 | NULL 值處理 | `IS NULL` / `IS NOT NULL` 是獨立運算子，不與 `=` 混用 |
-| LIKE 跳脫 | 使用者輸入的 `%` 和 `_` 字元在 LIKE 運算中需跳脫 |
+| LIKE 跳脫 | 使用者輸入的 `%` 和 `_` 字元在 LIKE 運算中需跳脫，使用 `\` 作為跳脫字元並附加 `ESCAPE '\'` 子句。例如 `[Col] LIKE @p0 ESCAPE '\'`，其中 `@p0 = '%user\_input%'` |
 | Unicode | SQLite 原生支援 UTF-8，中文關鍵字直接作為參數值傳入 |
+| 安全事件記錄 | 所有被白名單拒絕的查詢嘗試 (SecurityException) 必須寫入應用程式日誌，記錄時間戳、被拒絕的欄位/運算子名稱與來源 action，以供安全稽核 |
 
 ---
 
@@ -754,6 +757,8 @@ CREATE TABLE IF NOT EXISTS config_filter_execution_history (
     FOREIGN KEY (ScenarioId) REFERENCES config_filter_scenarios(Id) ON DELETE CASCADE
 );
 ```
+
+> **時區規範**: 所有 datetime 欄位一律儲存為 **UTC** (使用 `datetime('now')` 在 SQLite 中即為 UTC)。C# 端使用 `DateTime.UtcNow`。前端顯示時由 JavaScript 轉換為本地時區 (`new Date(utcString).toLocaleString()`)。
 
 ### 12.3 為什麼用 JSON 欄位而非關聯式表
 
@@ -1176,6 +1181,17 @@ public record FilterRule(
     string Operator,
     JsonElement Value   // 使用 JsonElement 延遲解析，支援多種值型別
 ) : FilterNode("rule", Id);
+
+// JsonElement 值的型別驗證策略:
+// SqlVisitor 在處理每個 FilterRule 時，根據 Field Registry 查詢該欄位的 DataType，
+// 然後從 JsonElement 中提取對應型別的值:
+//   DataType.Number  → Value.GetDecimal() 或 Value.GetDouble()
+//   DataType.String  → Value.GetString()
+//   DataType.Boolean → Value.GetBoolean() → 轉為 SQLite 的 0/1
+//   DataType.Date    → Value.GetString() → 驗證 ISO 8601 格式
+//   between 運算子   → Value.EnumerateArray() → 取兩個元素
+//   in/notIn 運算子  → Value.EnumerateArray() → 取所有元素
+// 若型別不匹配 (例如 number 欄位收到 string)，拋出 ValidationException。
 
 public record FilterGroup(
     string Id,
