@@ -20,7 +20,7 @@
 
 ### 定案方案
 
-**Visual Studio 2026 + GitHub Copilot Agent Mode + C# + .NET 10 LTS + WinForms Host + WebView2 + AI 生成 HTML 前端 + SQL Server**
+**Visual Studio 2026 + C# + .NET 10 + WinForms + WebView2 + HTML/CSS/JS + SQLite + SQL Server**
 
 ### 架構概要
 
@@ -28,18 +28,20 @@
 |:---|:---|:---|
 | Frontend | HTML / CSS / JS | UI 操作介面 (由 AI 生成與迭代) |
 | Desktop Host | WinForms + WebView2 | 桌面容器、打包為單一 .exe |
-| Service Layer | C# / .NET 10 | 業務邏輯、參數驗證、流程控制 |
-| Database | SQL Server | ETL、規則引擎、大量運算、結果儲存 |
+| Thin Bridge | C# Bridge + Action Dispatcher | 固定綁定元素、接收前端 action、轉送後端處理 |
+| Application | C# / .NET 10 | 以 CQRS 管理命令/查詢、業務流程與驗證 |
+| Persistence | SQLite + SQL Server | 本機狀態/設定 + 大量資料運算與正式資料儲存 |
 
 ### 為什麼選擇這個方案
 
-- **SQL Server**: 支援數千至數千萬筆 GL/TB 資料處理
-- **.NET + WinForms**: 打包成本地 .exe，不需架 web server，符合資安要求
-- **WebView2 + HTML**: AI 最擅長生成的前端形式，可快速迭代
-- **Visual Studio 2026**: GitHub Copilot Agent Mode 深度整合，支援 AI 全流程開發
-- **C#**: 社群資源最豐富、AI 生成品質最佳、現代 .NET 生態主流
+- **WinForms + WebView2**：維持桌面應用形式，同時讓 HTML 前端可直接承載於本機 UI
+- **Thin-Bridge Action-Dispatcher**：讓前端綁定穩定、後端解耦，不把邏輯塞進 `Form1`
+- **Application CQRS**：方便把匯入、驗證、篩選、匯出拆成可維護的命令與查詢
+- **SQLite + SQL Server**：本機狀態與快取走 SQLite，大量正式資料與運算走 SQL Server
+- **`docs/jet-template.html`**：可作為前端目標模板，方便 AI 直接調整 UI/UX
+- **`docs/ideascript.bas`**：保留舊 JE Tool 的規則來源，利於後續遷移盤點
 
-詳細架構設計見 [`docs/architecture.md`](docs/architecture.md)，完整決策過程見 [`總結.md`](總結.md)。
+詳細架構設計見 [`docs/jet-architecture.md`](docs/jet-architecture.md)，開發規範見 [`docs/jet-technical-guide.md`](docs/jet-technical-guide.md)，目前整理結論見 [`docs/repo-cleanup-summary.md`](docs/repo-cleanup-summary.md)。
 
 ---
 
@@ -48,19 +50,28 @@
 ```text
 je-testing/
 ├── docs/                              # 文件
-│   ├── jet-domain-model.md            # [核心] JET 領域知識模型 — 業務邏輯 Single Source of Truth
-│   ├── architecture.md                # [核心] 系統架構設計 (.NET)
-│   ├── technical_guide.md             # [核心] 技術開發指南 (.NET)
-│   ├── ideascript.bas                 # [參考] 原始 IDEA 腳本 — 領域知識原始來源
+│   ├── README.md                      # 文件導覽索引
+│   ├── jet-domain-model.md            # [核心] JET 領域知識模型
+│   ├── jet-architecture.md            # [核心] 目標系統架構
+│   ├── jet-technical-guide.md         # [核心] 技術開發指南
+│   ├── repo-cleanup-summary.md        # [核心] 目前整理結論與後續規劃
+│   ├── ideascript.bas                 # [參考] 原始 IDEA 腳本
 │   ├── drawio/                        # [參考] 架構圖
-│   └── JE_Testing_Tool_1.html         # [參考] HTML UI 原型
+│   └── jet-template.html              # [參考] 前端目標模板
 ├── data/                              # 範例測試資料
 │   ├── JE.xlsx                        #   GL 範例資料
 │   ├── TB.xlsx                        #   TB 範例資料
 │   ├── _Holiday_2024_CN.xlsx          #   假日曆範例
 │   └── _MakeupDay_2024_CN.xlsx        #   補班日曆範例
 ├── src/                               # .NET 專案 (Visual Studio 2026)
-│   └── (待建立 — 專案名稱未定)
+│   └── JET/
+│       ├── JET.slnx                   # Visual Studio / dotnet solution
+│       └── JET/                       # WinForms app project
+│           ├── JET.csproj
+│           ├── Program.cs
+│           ├── Form1.cs
+│           ├── Form1.Designer.cs
+│           └── Form1.resx
 ├── legacy/                            # 已歸檔的 VBA 實作
 │   ├── vba-mvp/                       #   MVP 架構 VBA 原始碼
 │   ├── vba-1120/                      #   早期版本 VBA 原始碼
@@ -88,22 +99,41 @@ je-testing/
 
 ### 了解系統架構
 
-閱讀 **[`docs/architecture.md`](docs/architecture.md)** — 新版 .NET 系統架構設計：
+閱讀 **[`docs/jet-architecture.md`](docs/jet-architecture.md)** — 目前已定案的系統架構：
 
-- 五層架構 (Frontend → WinForms Host → Service Layer → Data Access → SQL Server)
-- WebView2 Bridge 通訊模式
-- 資料流設計
-- 技術選型依據
+- WinForms Host + WebView2 + HTML 前端
+- Thin-Bridge Action-Dispatcher
+- Application CQRS (`Commands` / `Queries`)
+- SQLite + SQL Server 的雙資料儲存定位
+- `jet-template.html` 與未來桌面專案的整合方式
 
 ### 開發指南
 
-閱讀 **[`docs/technical_guide.md`](docs/technical_guide.md)** — .NET 版本開發規範：
+閱讀 **[`docs/jet-technical-guide.md`](docs/jet-technical-guide.md)** — .NET 版本開發規範：
 
-- WebView2 Bridge 模式
-- Service Layer 設計
-- SQL Server 資料庫分層設計
-- AI 輔助開發範圍
-- 雙機開發策略 (Mac + Windows)
+- Frontend / Bridge / Application / Infrastructure 分層
+- 命令與查詢的切分原則
+- 前端固定綁定元素與 AI 協作方式
+- SQLite / SQL Server 的職責分工
+- 遷移 `ideascript.bas` 的拆解策略
+
+### 目前整理結論
+
+閱讀 **[`docs/repo-cleanup-summary.md`](docs/repo-cleanup-summary.md)**：
+
+- 目前 repo 已整理出的文件定位
+- 現階段骨架與缺口
+- 後續 planning → development 的銜接順序
+
+### 建置目前的 WinForms 專案
+
+目前 `src/JET/` 已包含可直接開啟的 WinForms 專案：
+
+1. 使用 **Visual Studio 2026** 開啟 `src/JET/JET.slnx`
+2. 確認已安裝 **.NET 10 SDK** 與 **Windows Desktop / WinForms** 工作負載
+3. 直接執行建置，或使用命令列：`dotnet build src/JET/JET.slnx`
+
+倉庫根目錄的 `global.json` 會固定 SDK 到 `.NET 10.0.201` 的 feature band，降低不同開發機器之間的版本差異。
 
 ### 參考歷史實作
 
@@ -121,7 +151,27 @@ VBA 版本的所有原始碼與文件已歸檔至 **[`legacy/`](legacy/)**，包
 |:---|:---|:---|
 | Phase 0 | Caseware IDEA + IDEAScript (~11,000 行) | 已棄用 (不再訂閱 IDEA) |
 | Phase 1 | Excel VBA + Access Database (MVP 架構) | 已歸檔至 `legacy/` |
-| **Phase 2** | **C# + .NET 10 + WinForms + WebView2 + SQL Server** | **當前開發方向** |
+| **Phase 2** | **C# + .NET 10 + WinForms + WebView2 + HTML + SQLite + SQL Server** | **當前開發方向** |
+
+---
+
+## 目前專案狀態
+
+### 已完成
+
+- `src/JET/JET.slnx` 可正常以 `.NET 10` 建置
+- `global.json` 已固定 SDK feature band
+- `.gitignore` 已補上 Visual Studio / .NET 常見忽略規則
+- 文件名稱與目前規劃方向已重新對齊
+
+### 尚未開始的正式開發內容
+
+- WinForms 內嵌 `WebView2`
+- 將 `docs/jet-template.html` 納入桌面專案資源
+- 建立 Thin Bridge 與 Action Dispatcher
+- 建立 `Application` 層的 `Commands` / `Queries`
+- 建立 SQLite / SQL Server 雙資料策略
+- 依 `docs/ideascript.bas` 盤點並遷移功能
 
 ---
 
@@ -130,4 +180,8 @@ VBA 版本的所有原始碼與文件已歸檔至 **[`legacy/`](legacy/)**，包
 - **領域優先 (Domain First)** — 先釐清業務邏輯，再決定實作技術
 - **平台無關 (Platform Agnostic)** — 領域知識文件不綁定任何特定工具或語言
 - **單一事實來源 (Single Source of Truth)** — `jet-domain-model.md` 為所有實作的業務規格依據
+- **Thin Host** — `Form1` / WinForms host 不承擔業務邏輯
+- **固定綁定，彈性前端** — 前端元素命名穩定，方便 AI 直接調整 UI/UX
+- **Action over Raw SQL** — 前端只送 action + payload，不直接拼 SQL
+- **CQRS Application Layer** — 命令負責變更，查詢負責讀取
 - **AI 最大化 (AI-First Development)** — 選擇最適合 AI 自動化開發與測試的技術框架

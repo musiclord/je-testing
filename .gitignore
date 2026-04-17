@@ -1,8 +1,12 @@
 # IDE & OS
 .vs/
 .vscode/.ropeproject/
+.idea/
 *.user
+*.rsuser
+*.userosscache
 *.suo
+*.sln.docstates
 .DS_Store
 Thumbs.db
 
@@ -11,6 +15,9 @@ bin/
 obj/
 publish/
 out/
+TestResults/
+x64/
+x86/
 
 # NuGet
 *.nupkg

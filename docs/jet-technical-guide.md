@@ -14,16 +14,17 @@
 | 框架 | **.NET 10 LTS** | .NET Framework — 不支援現代 CLI/AI workflow |
 | 桌面框架 | **WinForms** | WPF — Phase 1 過重；Blazor Hybrid — 多一層 runtime |
 | UI 引擎 | **WebView2 + HTML/CSS/JS** | 原生 WinForms UI — AI 不擅長生成 |
-| 資料庫 | **SQL Server** | Access — 不適合大量資料處理 |
+| 本機資料庫 | **SQLite** | JSON / 散落本機檔案 — 不利於狀態管理 |
+| 主資料庫 | **SQL Server** | Access — 不適合大量資料處理 |
 | IDE | **Visual Studio 2026** | VS Code — 對 WinForms/.NET 整合不如 VS |
 
 ---
 
 ## 2. 架構設計決策
 
-### 2.1 WebView2 Bridge 模式
+### 2.1 Thin-Bridge Action-Dispatcher 模式
 
-前端與後端透過 WebView2 Bridge 通訊，採用 **action + payload** 模式：
+前端與後端透過 WebView2 Bridge 通訊，但 Bridge 只負責協定與分派，不承擔業務邏輯。通訊採用 **action + payload** 模式：
 
 ```csharp
 // .NET 端 — 註冊 Bridge Method
@@ -35,37 +36,43 @@ const result = await chrome.webview.hostObjects.jet.ImportFile(jsonPayload);
 
 **原則**:
 - 前端只送 action 名稱 + JSON payload
-- .NET Service Layer 負責驗證、轉換、執行
+- Bridge / Dispatcher 只做分派與錯誤包裝
+- Application 層負責驗證、轉換、執行
 - 結果以 JSON 格式回傳前端
 
-### 2.2 Service Layer 設計
+### 2.2 Application CQRS 設計
 
-每個業務模組獨立一個 Service 類別：
+命令與查詢分離：
 
 ```csharp
-public class ServiceImport
-{
-    private readonly IDataAccess _dal;
+public sealed record ImportGlCommand(string ProjectId, string FilePath);
 
-    public ServiceImport(IDataAccess dal)
+public sealed class ImportGlCommandHandler
+{
+    private readonly IProjectRepository _projects;
+    private readonly IGlImportService _importService;
+
+    public ImportGlCommandHandler(IProjectRepository projects, IGlImportService importService)
     {
-        _dal = dal;
+        _projects = projects;
+        _importService = importService;
     }
 
-    public ImportResult ImportGeneralLedger(ImportPayload payload)
+    public Task<ImportResult> HandleAsync(ImportGlCommand command, CancellationToken cancellationToken)
     {
-        // 1. 驗證 payload
-        // 2. 解析檔案
-        // 3. 欄位映射
-        // 4. 呼叫 DAL 寫入 SQL Server
-        // 5. 回傳結果
+        // 驗證 → 呼叫服務 → 寫入狀態 → 回傳結果
     }
 }
 ```
 
-### 2.3 Data Access 策略
+### 2.3 Persistence 策略
 
-使用 **ADO.NET** 搭配 Stored Procedures：
+資料儲存分成兩層：
+
+- **SQLite**：本機專案狀態、欄位 mapping、前端 session state、暫存結果
+- **SQL Server**：大量 GL/TB、預篩選、進階篩選、正式結果與匯出基礎資料
+
+使用 **ADO.NET** 搭配 Repository / Query Service 與 Stored Procedures：
 
 - **為什麼用 ADO.NET?** 對 SQL Server 有最佳控制力，適合大量資料 ETL
 - **為什麼用 Stored Procedures?** 篩選規則邏輯適合在 SQL Server 端執行，減少資料傳輸
@@ -91,18 +98,37 @@ public class DataAccess : IDataAccess
 
 ```csharp
 var services = new ServiceCollection();
-services.AddSingleton<IDataAccess, DataAccess>();
-services.AddTransient<ServiceImport>();
-services.AddTransient<ServiceValidation>();
-services.AddTransient<ServiceFilter>();
-services.AddTransient<ServiceExport>();
+services.AddSingleton<ISqliteConnectionFactory, SqliteConnectionFactory>();
+services.AddSingleton<ISqlServerConnectionFactory, SqlServerConnectionFactory>();
+services.AddTransient<IActionDispatcher, ActionDispatcher>();
+services.AddTransient<ImportGlCommandHandler>();
+services.AddTransient<GetProjectStatusQueryHandler>();
 ```
 
 ---
 
-## 3. SQL Server 資料庫設計
+## 3. SQLite / SQL Server 資料設計
 
-### 3.1 Schema 分層
+### 3.1 SQLite 的用途
+
+建議先把下列內容放入 SQLite：
+
+- 專案基本資訊
+- GL / TB 欄位 mapping
+- 前端工作流程狀態
+- 使用者已保存的條件組合
+- 本機快取與暫存預覽資料
+
+### 3.2 SQL Server 的用途
+
+下列內容仍以 SQL Server 為主：
+
+- 大量 GL / TB 匯入資料
+- ETL / 標準化表
+- 預篩選與進階篩選查詢
+- 匯出工作底稿所需的正式結果集
+
+### 3.3 Schema 分層
 
 | Schema | 用途 |
 |:---|:---|
@@ -111,7 +137,7 @@ services.AddTransient<ServiceExport>();
 | `result` | 篩選結果與中間計算表 |
 | `config` | 規則定義、科目配對、假日曆 |
 
-### 3.2 ETL 流程
+### 3.4 ETL 流程
 
 ```
 原始檔案 (Excel/CSV)
@@ -121,7 +147,7 @@ services.AddTransient<ServiceExport>();
   → 衍生欄位計算 (DebitAmount, CreditAmount, DrCr)
 ```
 
-### 3.3 預篩選 Stored Procedures
+### 3.5 預篩選 Stored Procedures
 
 每項預篩選程序對應一個 Stored Procedure：
 
@@ -185,26 +211,33 @@ Copilot Agent Mode 能力：
 
 ```
 src/
-├── JET.sln                         # Solution 檔案
-├── JET.Desktop/                    # WinForms + WebView2 Host
-│   ├── Program.cs
-│   ├── MainForm.cs
-│   ├── Bridge/                     # WebView2 Bridge 方法
-│   └── wwwroot/                    # HTML/CSS/JS 前端資源
-├── JET.Core/                       # 業務邏輯層 (Service Layer)
-│   ├── Services/
-│   ├── Models/
-│   └── Interfaces/
-├── JET.Data/                       # 資料存取層
-│   ├── DataAccess.cs
-│   ├── Repositories/
-│   └── Scripts/                    # SQL migration scripts
-└── JET.Tests/                      # 測試專案
-    ├── Services/
-    └── Data/
+└── JET/
+    ├── JET.slnx
+    └── JET/
+        ├── Program.cs
+        ├── Form1.cs
+        ├── Bridge/                 # Thin Bridge / Action Dispatcher
+        ├── Application/
+        │   ├── Commands/
+        │   ├── Queries/
+        │   └── Contracts/
+        ├── Infrastructure/
+        │   ├── Persistence/
+        │   │   ├── Sqlite/
+        │   │   └── SqlServer/
+        │   ├── Importing/
+        │   └── Exporting/
+        └── wwwroot/                # WebView2 載入的 HTML/CSS/JS
 ```
 
-> 以上為規劃結構。實際專案將在 Visual Studio 2026 中建立，名稱待定。
+> 目前實際存在的是最小 WinForms 專案骨架；上表為接下來 planning / development 應逐步落地的目標結構。
+
+### 5.1 前端模板整合原則
+
+- `docs/jet-template.html` 目前是設計模板
+- 正式開發時應移入 `src/JET/JET/wwwroot/`
+- HTML 中具業務意義的 `id` / `data-*` 綁定元素應盡量穩定
+- AI 可以自由調整樣式與版面，但不應任意改掉固定綁定契約
 
 ---
 
@@ -217,3 +250,17 @@ src/
 | Python 不可作為正式方案 | 全部以 C# / .NET 實作 |
 | 資安通報風險 | 單機部署，不開放網路端口 |
 | 資料量最大數千萬筆 | SQL Server 負責大量運算，.NET 僅處理結果集 |
+| 前端需要利於 AI 直接改 UI | 保持固定綁定元素與 action contract，視覺層可彈性調整 |
+
+---
+
+## 7. 從 `ideascript.bas` 遷移的切分原則
+
+不要直接把 VBA 程式翻成 C#。應先拆成四類：
+
+1. **Domain Rules**：寫回 `jet-domain-model.md`
+2. **Application Use Cases**：轉成 Commands / Queries
+3. **Infrastructure Logic**：檔案、Excel、資料庫、匯出
+4. **UI Workflow**：映射到 `jet-template.html` 與 WebView2 action
+
+如果一段舊程式同時混了 UI、資料處理、資料庫操作、Excel 匯出，表示它需要被拆開，而不是被原樣移植。
