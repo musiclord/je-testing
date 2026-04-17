@@ -402,6 +402,7 @@
     JE Testing Tool <span>/ 分錄測試自動化工具</span>
   </div>
   <div class="header-right">
+    <button class="btn btn-secondary btn-sm" onclick="loadDemoData()">⚡ 快速填入假資料</button>
     <span class="badge" id="entityBadge">未設定案件</span>
     <span class="badge" style="color:var(--accent2)" id="statusBadge">步驟一 待執行</span>
   </div>
@@ -419,7 +420,7 @@
         <div class="step-num">2</div> 上傳輔助檔案
       </button>
       <button class="step-btn" onclick="goToStep(3)" id="sideBtn3">
-        <div class="step-num">3</div> 預先篩選程序
+        <div class="step-num">3</div> 驗證測試與預篩選
       </button>
       <button class="step-btn" onclick="goToStep(4)" id="sideBtn4">
         <div class="step-num">4</div> 進階篩選作業
@@ -619,19 +620,53 @@
 
     <!-- STEP 3 -->
     <div class="page" id="page3">
-      <div class="section-title">步驟三：預先篩選程序 (Pre-screening)</div>
-      <div class="section-sub">執行標準化的預先篩選程序，協助查核團隊識別潛在高風險分錄。</div>
+      <div class="section-title">步驟三：驗證測試與預篩選</div>
+      <div class="section-sub">先統一執行驗證測試與預篩選程序；真正要套用哪些預篩選結果，延後到步驟四再勾選組合。</div>
 
       <div class="alert alert-info">
         <span>ℹ️</span>
-        <span>執行預先篩選程序的目的，係協助查核團隊進一步定義出特定的高風險條件，以辨認不尋常的分錄進行測試。這些程序個別的用途僅作為初步判斷使用，其本身將不會是實際設定之高風險範圍條件。</span>
+        <span>本步驟會一次執行驗證測試（完整性測試、借貸不平測試、INF 抽樣、空值紀錄）與標準化預篩選程序。預篩選本身只是提供候選高風險條件，真正是否採用，請於步驟四再勾選。</span>
       </div>
 
       <div class="card">
-        <div class="card-title"><div class="dot"></div>標準化預先篩選程序</div>
+        <div class="card-title"><div class="dot"></div>驗證測試摘要</div>
+        <div id="validationList">
+          <div class="check-item checked" id="vCompletenessItem">
+            <div style="flex:1">
+              <div class="check-item-label">V1. 完整性測試 (Completeness Test)</div>
+              <div class="check-item-desc">核對 GL 按科目彙總是否與 TB 變動金額一致。</div>
+            </div>
+            <div class="check-count" id="vCompletenessCount">—</div>
+          </div>
+          <div class="check-item checked" id="vBalanceItem">
+            <div style="flex:1">
+              <div class="check-item-label">V2. 借貸不平測試 (Document Balance Test)</div>
+              <div class="check-item-desc">確認每張傳票借貸加總是否為 0。</div>
+            </div>
+            <div class="check-count" id="vBalanceCount">—</div>
+          </div>
+          <div class="check-item checked" id="vInfItem">
+            <div style="flex:1">
+              <div class="check-item-label">V3. INF 抽樣測試</div>
+              <div class="check-item-desc">抽取樣本供人工驗證非財務欄位與附件。</div>
+            </div>
+            <div class="check-count" id="vInfCount">—</div>
+          </div>
+          <div class="check-item checked" id="vNullItem">
+            <div style="flex:1">
+              <div class="check-item-label">V4. 空值紀錄測試 (Null Records Test)</div>
+              <div class="check-item-desc">彙總關鍵欄位空值紀錄：科目編號 / 傳票號碼 / 摘要。</div>
+            </div>
+            <div class="check-count" id="vNullCount">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>標準化預篩選執行摘要</div>
         <div id="routineList">
           <div class="check-item" id="r1item">
-            <input type="checkbox" id="r1check" onchange="toggleCheckItem('r1item',this)">
+            <input type="checkbox" id="r1check" disabled>
             <div style="flex:1">
               <div class="check-item-label">#1. 於期末財務報表準備期間核准之分錄</div>
               <div class="check-item-desc">將列出在期末財務報表準備期間開始日及之後核准的分錄</div>
@@ -639,7 +674,7 @@
             <div class="check-count" id="r1count">—</div>
           </div>
           <div class="check-item" id="r2item">
-            <input type="checkbox" id="r2check" onchange="toggleCheckItem('r2item',this)">
+            <input type="checkbox" id="r2check" disabled>
             <div style="flex:1">
               <div class="check-item-label">#2. 分錄摘要出現特定描述</div>
               <div class="check-item-desc">搜尋包含特定描述文字：Adj, Rev, Reclass, Suspense, Error, Wrong, 調整, 迴轉, 沖銷, 重分類, 避險, 重編, 錯誤, 計畫外, 預算外</div>
@@ -647,7 +682,7 @@
             <div class="check-count" id="r2count">—</div>
           </div>
           <div class="check-item" id="r3item">
-            <input type="checkbox" id="r3check" onchange="toggleCheckItem('r3item',this)">
+            <input type="checkbox" id="r3check" disabled>
             <div style="flex:1">
               <div class="check-item-label">#3. 未預期出現之特定借貸組合</div>
               <div class="check-item-desc">列出分錄貸方為收入，但借方不是應收帳款、現金或預收款之傳票</div>
@@ -655,7 +690,7 @@
             <div class="check-count" id="r3count">—</div>
           </div>
           <div class="check-item" id="r4item">
-            <input type="checkbox" id="r4check" onchange="toggleCheckItem('r4item',this)">
+            <input type="checkbox" id="r4check" disabled>
             <div style="flex:1">
               <div class="check-item-label">#4. 分錄金額中有連續 0 的尾數</div>
               <div class="check-item-desc">依 JE 母體中借方平均金額決定 0 的尾數位數（例如平均金額 2,391,281 → 篩選有 000,000 的連續尾數）</div>
@@ -663,7 +698,7 @@
             <div class="check-count" id="r4count">—</div>
           </div>
           <div class="check-item" id="r5item">
-            <input type="checkbox" id="r5check" onchange="toggleCheckItem('r5item',this)">
+            <input type="checkbox" id="r5check" disabled>
             <div style="flex:1">
               <div class="check-item-label">#5. 依分錄編製者彙總分錄</div>
               <div class="check-item-desc">依分錄建立人員彙總，列出各人員的分錄筆數及金額</div>
@@ -671,7 +706,7 @@
             <div class="check-count" id="r5count">—</div>
           </div>
           <div class="check-item" id="r6item">
-            <input type="checkbox" id="r6check" onchange="toggleCheckItem('r6item',this)">
+            <input type="checkbox" id="r6check" disabled>
             <div style="flex:1">
               <div class="check-item-label">#6. 較少使用之科目</div>
               <div class="check-item-desc">找出在總帳期間使用次數低於平均值的科目所對應之分錄</div>
@@ -688,7 +723,7 @@
 
       <div class="action-row">
         <button class="btn btn-secondary" onclick="goToStep(2)">← 返回</button>
-        <button class="btn btn-primary" onclick="runPreScreening()" id="btnRunPrescreen">確認執行預先篩選</button>
+        <button class="btn btn-primary" onclick="runPreScreening()" id="btnRunPrescreen">執行驗證測試與預篩選</button>
         <button class="btn btn-secondary" onclick="exportValidationReport()" id="btnExpValidation" style="display:none">📊 匯出 Validation Report</button>
         <button class="btn btn-secondary" onclick="exportPreScreeningReport()" id="btnExpPrescreen" style="display:none">📋 匯出 Pre-screening Report</button>
         <button class="btn btn-primary" onclick="goToStep(4)" id="btnGoStep4" style="display:none">進行進階篩選 →</button>
@@ -698,7 +733,7 @@
     <!-- STEP 4 -->
     <div class="page" id="page4">
       <div class="section-title">步驟四：進階篩選作業</div>
-      <div class="section-sub">設定高風險分錄的篩選條件，可保留最多 10 種篩選條件，逐一執行並查看結果。</div>
+      <div class="section-sub">設定高風險分錄的篩選條件，可保留最多 10 種篩選條件。步驟三已自動執行的預篩選結果，請在本步驟勾選後再納入正式篩選。</div>
 
       <!-- Filter Conditions -->
       <div class="card">
@@ -951,6 +986,8 @@ const state = {
 
   weekends: [6, 0], // Sat=6, Sun=0
 
+  validationResults: null,
+
   // Pre-screening results
   prescreenResults: { r1: [], r2: [], r3: [], r4: [], r5: [], r6: [] },
 
@@ -988,6 +1025,37 @@ const TB_FIELDS = [
   { key: 'debitAmt', label: '借方金額',     req: false },
   { key: 'creditAmt',label: '貸方金額',     req: false },
 ];
+
+const DEMO_GL_DATA = [
+  { 'Document Number': 'JE-0001', 'Line Item': 1, 'Post Date': '2024-12-31', 'Approval Date': '2025-01-03', 'Account Number': '1101', 'Account Name': '應收帳款', 'Description': 'Year-end revenue adjustment', 'Source Module': 'GL', 'Created By': 'amy.lin', 'Approved By': 'manager.chen', 'Manual': 1, 'Amount': 500000 },
+  { 'Document Number': 'JE-0001', 'Line Item': 2, 'Post Date': '2024-12-31', 'Approval Date': '2025-01-03', 'Account Number': '4001', 'Account Name': '銷貨收入', 'Description': 'Year-end revenue adjustment', 'Source Module': 'GL', 'Created By': 'amy.lin', 'Approved By': 'manager.chen', 'Manual': 1, 'Amount': -500000 },
+  { 'Document Number': 'JE-0002', 'Line Item': 1, 'Post Date': '2024-12-28', 'Approval Date': '2024-12-29', 'Account Number': '6105', 'Account Name': '雜項費用', 'Description': 'Adj manual correction', 'Source Module': 'GL', 'Created By': 'bob.wu', 'Approved By': 'manager.chen', 'Manual': 1, 'Amount': 120000 },
+  { 'Document Number': 'JE-0002', 'Line Item': 2, 'Post Date': '2024-12-28', 'Approval Date': '2024-12-29', 'Account Number': '4001', 'Account Name': '銷貨收入', 'Description': 'Adj manual correction', 'Source Module': 'GL', 'Created By': 'bob.wu', 'Approved By': 'manager.chen', 'Manual': 1, 'Amount': -120000 },
+  { 'Document Number': 'JE-0003', 'Line Item': 1, 'Post Date': '2024-11-15', 'Approval Date': '2024-11-15', 'Account Number': '', 'Account Name': '現金', 'Description': '', 'Source Module': 'AP', 'Created By': 'carol.tsai', 'Approved By': 'supervisor.lee', 'Manual': 0, 'Amount': 3000 },
+  { 'Document Number': 'JE-0003', 'Line Item': 2, 'Post Date': '2024-11-15', 'Approval Date': '2024-11-15', 'Account Number': '1001', 'Account Name': '現金', 'Description': '', 'Source Module': 'AP', 'Created By': 'carol.tsai', 'Approved By': 'supervisor.lee', 'Manual': 0, 'Amount': -2800 },
+  { 'Document Number': 'JE-0004', 'Line Item': 1, 'Post Date': '2024-06-30', 'Approval Date': '2024-06-30', 'Account Number': '6501', 'Account Name': '招待費', 'Description': 'budget outside approval', 'Source Module': 'GL', 'Created By': 'amy.lin', 'Approved By': 'supervisor.lee', 'Manual': 1, 'Amount': 100000 },
+  { 'Document Number': 'JE-0004', 'Line Item': 2, 'Post Date': '2024-06-30', 'Approval Date': '2024-06-30', 'Account Number': '1001', 'Account Name': '現金', 'Description': 'budget outside approval', 'Source Module': 'GL', 'Created By': 'amy.lin', 'Approved By': 'supervisor.lee', 'Manual': 1, 'Amount': -100000 }
+];
+
+const DEMO_TB_DATA = [
+  { 'Account Number': '1101', 'Account Name': '應收帳款', 'Change Amount': 500000 },
+  { 'Account Number': '4001', 'Account Name': '銷貨收入', 'Change Amount': -620000 },
+  { 'Account Number': '6105', 'Account Name': '雜項費用', 'Change Amount': 120000 },
+  { 'Account Number': '6501', 'Account Name': '招待費', 'Change Amount': 100000 },
+  { 'Account Number': '1001', 'Account Name': '現金', 'Change Amount': -102800 }
+];
+
+const DEMO_ACCOUNT_MAPPING = [
+  { 'Account Code': '4001', 'Account Name': '銷貨收入', 'Category': 'Revenue' },
+  { 'Account Code': '1101', 'Account Name': '應收帳款', 'Category': 'Receivables' },
+  { 'Account Code': '1001', 'Account Name': '現金', 'Category': 'Cash' },
+  { 'Account Code': '2105', 'Account Name': '預收款', 'Category': 'Receipt in advance' },
+  { 'Account Code': '6105', 'Account Name': '雜項費用', 'Category': 'Others' },
+  { 'Account Code': '6501', 'Account Name': '招待費', 'Category': 'Others' }
+];
+
+const DEMO_HOLIDAYS = ['2024-10-10', '2024-12-31'];
+const DEMO_MAKEUP_DAYS = ['2024-02-17'];
 
 // =================== UI HELPERS ===================
 function goToStep(n) {
@@ -1035,6 +1103,155 @@ function showModal(title, html) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalContent').innerHTML = html;
   document.getElementById('resultModal').style.display = 'block';
+}
+
+async function loadDemoData() {
+  const bridgeAvailable = window.jet && typeof window.jet.invoke === 'function' && Array.isArray(window.jet.supportedActions) && window.jet.supportedActions.includes('project.loadDemo');
+
+  try {
+    const demoPayload = bridgeAvailable
+      ? await window.jet.invoke('project.loadDemo', {})
+      : getLocalDemoPayload();
+
+    applyDemoPayload(demoPayload);
+  } catch (error) {
+    console.warn('project.loadDemo failed, fallback to local demo payload.', error);
+    applyDemoPayload(getLocalDemoPayload());
+  }
+}
+
+function getLocalDemoPayload() {
+  return {
+    entityName: 'DEMO Manufacturing Co.',
+    industry: '製造業',
+    periodStart: '2024-01-01',
+    periodEnd: '2024-12-31',
+    lastPeriodStart: '2024-12-25',
+    glFileName: 'demo-gl.xlsx',
+    tbFileName: 'demo-tb.xlsx',
+    accountMappingFileName: 'demo-account-mapping.xlsx',
+    glRows: structuredClone(DEMO_GL_DATA),
+    tbRows: structuredClone(DEMO_TB_DATA),
+    accountMappingRows: structuredClone(DEMO_ACCOUNT_MAPPING),
+    glMapping: {
+      docNum: 'Document Number',
+      lineID: 'Line Item',
+      postDate: 'Post Date',
+      docDate: 'Approval Date',
+      accNum: 'Account Number',
+      accName: 'Account Name',
+      description: 'Description',
+      jeSource: 'Source Module',
+      createBy: 'Created By',
+      approveBy: 'Approved By',
+      manual: 'Manual',
+      amount: 'Amount'
+    },
+    tbMapping: {
+      accNum: 'Account Number',
+      accName: 'Account Name',
+      amount: 'Change Amount'
+    },
+    holidays: [...DEMO_HOLIDAYS],
+    makeupDays: [...DEMO_MAKEUP_DAYS],
+    weekends: [6, 0]
+  };
+}
+
+function applyDemoPayload(demoPayload) {
+  state.validationResults = null;
+  state.prescreenResults = { r1: [], r2: [], r3: [], r4: [], r5: [], r6: [], descNull: [] };
+  state.savedCriteria = [];
+  state.wpRationale = {};
+
+  document.getElementById('entityName').value = demoPayload.entityName;
+  document.getElementById('industry').value = demoPayload.industry;
+  document.getElementById('periodStart').value = demoPayload.periodStart;
+  document.getElementById('periodEnd').value = demoPayload.periodEnd;
+  document.getElementById('lastPeriodStart').value = demoPayload.lastPeriodStart;
+  updateEntityBadge();
+  state.periodStart = demoPayload.periodStart;
+  state.periodEnd = demoPayload.periodEnd;
+  state.lastPeriodStart = demoPayload.lastPeriodStart;
+
+  state.glData = structuredClone(demoPayload.glRows || []);
+  state.glColumns = getColumns(state.glData);
+  state.glFile = demoPayload.glFileName;
+  Object.assign(state.glMapping, demoPayload.glMapping || {});
+
+  state.tbData = structuredClone(demoPayload.tbRows || []);
+  state.tbColumns = getColumns(state.tbData);
+  state.tbFile = demoPayload.tbFileName;
+  Object.assign(state.tbMapping, { debitAmt: '', creditAmt: '' }, demoPayload.tbMapping || {});
+
+  state.accMapData = structuredClone(demoPayload.accountMappingRows || []);
+  state.holidays = [...(demoPayload.holidays || [])];
+  state.makeupDays = [...(demoPayload.makeupDays || [])];
+  state.weekends = [...(demoPayload.weekends || [6, 0])];
+
+  document.getElementById('wkMon').checked = state.weekends.includes(1);
+  document.getElementById('wkTue').checked = state.weekends.includes(2);
+  document.getElementById('wkWed').checked = state.weekends.includes(3);
+  document.getElementById('wkThu').checked = state.weekends.includes(4);
+  document.getElementById('wkFri').checked = state.weekends.includes(5);
+  document.getElementById('wkSat').checked = state.weekends.includes(6);
+  document.getElementById('wkSun').checked = state.weekends.includes(0);
+
+  document.getElementById('glUploadZone').classList.add('file-loaded');
+  document.getElementById('tbUploadZone').classList.add('file-loaded');
+  document.getElementById('accMapZone').classList.add('file-loaded');
+  document.getElementById('holidayZone').classList.add('file-loaded');
+  document.getElementById('makeupZone').classList.add('file-loaded');
+
+  document.getElementById('glMappingArea').style.display = 'block';
+  document.getElementById('tbMappingArea').style.display = 'block';
+  document.getElementById('glFileLabel').textContent = `✅ 已載入：${state.glFile}（${state.glData.length.toLocaleString()} 筆）`;
+  document.getElementById('tbFileLabel').textContent = `✅ 已載入：${state.tbFile}（${state.tbData.length.toLocaleString()} 筆）`;
+  document.getElementById('accMapStatus').textContent = ` ✅ ${demoPayload.accountMappingFileName} (${state.accMapData.length} 筆)`;
+  document.getElementById('holidayStatus').textContent = ` ✅ ${state.holidays.length} 筆`;
+  document.getElementById('makeupStatus').textContent = ` ✅ ${state.makeupDays.length} 筆`;
+
+  document.getElementById('glStatus').textContent = `✅ GL 已載入 (${state.glData.length.toLocaleString()} 筆)`;
+  document.getElementById('glStatus').style.color = 'var(--accent2)';
+  document.getElementById('tbStatus').textContent = `✅ TB 已載入 (${state.tbData.length.toLocaleString()} 筆)`;
+  document.getElementById('tbStatus').style.color = 'var(--accent2)';
+
+  renderGLMapping();
+  renderTBMapping();
+  renderValidationSummary({});
+  ['r1','r2','r3','r4','r5','r6'].forEach(key => {
+    const countElement = document.getElementById(`${key}count`);
+    if (countElement) countElement.textContent = '—';
+    const checkbox = document.getElementById(`${key}check`);
+    if (checkbox) checkbox.checked = false;
+    const item = document.getElementById(`${key}item`);
+    if (item) item.classList.remove('checked');
+  });
+  ['fi_r1count','fi_r2count','fi_r3count','fi_r4count','fi_r5count','fi_r6count','fi_descNullCount'].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = '—';
+  });
+  document.getElementById('filterResultsArea').style.display = 'none';
+  updateSavedCriteriaCount();
+
+  document.getElementById('step1ValidationMsg').innerHTML = '<div class="alert alert-success"><span>✅</span><span>已快速填入前端測試用假資料，可直接繼續測試流程。</span></div>';
+}
+
+function renderValidationSummary(summary) {
+  const completeness = summary?.completenessDiffAccounts ?? '—';
+  const balance = summary?.outOfBalanceDocuments ?? '—';
+  const inf = summary?.infSampleSize ?? '—';
+  const nullRecords = summary?.nullRecordCount ?? '—';
+
+  document.getElementById('vCompletenessCount').textContent = completeness;
+  document.getElementById('vBalanceCount').textContent = balance;
+  document.getElementById('vInfCount').textContent = inf;
+  document.getElementById('vNullCount').textContent = nullRecords;
+}
+
+function pickInfSampleRows(rows, size = 60) {
+  const sampleSize = Math.min(size, rows.length);
+  return rows.slice(0, sampleSize);
 }
 
 // =================== FILE READING ===================
@@ -1324,16 +1541,46 @@ function trailingZeros(num) {
 
 async function runPreScreening() {
   if (!state.glData) { alert('請先完成步驟一，載入 GL 資料'); return; }
-  showLoading('執行預先篩選程序...');
+  showLoading('執行驗證測試與預篩選...');
 
   const logEl = document.getElementById('prescreenLog');
   document.getElementById('prescreenProgress').style.display = 'block';
+  logEl.innerHTML = '';
+
+  state.entityName = document.getElementById('entityName').value || state.entityName;
+  state.periodStart = document.getElementById('periodStart').value || state.periodStart;
+  state.periodEnd = document.getElementById('periodEnd').value || state.periodEnd;
+  state.lastPeriodStart = document.getElementById('lastPeriodStart').value || state.lastPeriodStart;
 
   const log = (msg) => { logEl.innerHTML += `<div>${msg}</div>`; };
   const gl = state.glData;
   const m = state.glMapping;
 
-  log('▶ 開始執行預先篩選程序...');
+  log('▶ 開始執行驗證測試...');
+
+  const validation = buildValidationData();
+  const infSampleRows = pickInfSampleRows(gl);
+  const nullRecordCount = validation.v1 + validation.v2 + validation.v3;
+
+  state.validationResults = {
+    summary: {
+      completenessDiffAccounts: validation.v5,
+      outOfBalanceDocuments: validation.v6,
+      infSampleSize: infSampleRows.length,
+      nullRecordCount
+    },
+    diffAccounts: validation.diffAccounts,
+    infSampleRows
+  };
+
+  renderValidationSummary(state.validationResults.summary);
+  log(`✅ V1 完整性測試：${validation.v5} 個差異科目`);
+  log(`✅ V2 借貸不平測試：${validation.v6} 張傳票`);
+  log(`✅ V3 INF 抽樣：${infSampleRows.length} 筆樣本`);
+  log(`✅ V4 空值紀錄測試：${nullRecordCount} 筆異常`);
+
+  log('');
+  log('▶ 開始執行預篩選程序...');
 
   // R1: 期末財務報表準備期間
   const r1 = [];
@@ -1468,7 +1715,7 @@ async function runPreScreening() {
   log(`✅ 空白摘要分錄：${descNullRows.length} 筆`);
 
   log('');
-  log(`✅ 預先篩選程序執行完成！`);
+  log(`✅ 驗證測試與預篩選執行完成！`);
 
   document.getElementById('btnExpValidation').style.display = 'inline-flex';
   document.getElementById('btnExpPrescreen').style.display = 'inline-flex';

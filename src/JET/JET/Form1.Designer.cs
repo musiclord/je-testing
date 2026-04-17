@@ -30,8 +30,11 @@
         {
             components = new System.ComponentModel.Container();
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
-            Text = "Form1";
+            ClientSize = new Size(1440, 960);
+            MinimumSize = new Size(1200, 800);
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "JET - Journal Entry Testing";
+            WindowState = FormWindowState.Maximized;
         }
 
         #endregion
