@@ -23,6 +23,9 @@ x86/
 *.nupkg
 packages/
 
+# Local .NET CLI home / cache
+.dotnet/
+
 # Legacy VBA artifacts
 *.frx
 *.accdb

@@ -537,6 +537,7 @@
     border: 1px dashed var(--border);
   }
   .btn-ghost:hover { color: var(--text); border-color: var(--surface4); }
+  [data-demo-control] { display: none !important; }
 
   /* STEP FOOTER */
   .action-bar {
@@ -637,13 +638,32 @@
   .check-item {
     display: flex; align-items: flex-start; gap: 10px;
     padding: 12px; border-radius: 6px; cursor: pointer;
-    transition: background 0.1s; border: 1px solid transparent;
+    transition: background 0.1s, border-color 0.1s, transform 0.1s; border: 1px solid transparent;
   }
-  .check-item:hover { background: var(--surface2); }
+  .check-item:hover {
+    background: rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.08);
+    transform: translateY(-1px);
+  }
   .check-item.checked { background: var(--surface2); border-color: rgba(255,255,255,0.10); }
   .check-item input[type=checkbox] { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
   .check-item-label { font-size: 13px; color: var(--text); }
   .check-item-desc { font-size: 11px; color: var(--text2); margin-top: 3px; }
+  .check-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .check-item-hint {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    letter-spacing: 0.3px;
+  }
+  .check-item.static { cursor: default; }
+  .check-item.interactive { cursor: pointer; }
   .check-count {
     margin-left: auto; font-family: var(--mono); font-size: 11px;
     color: var(--accent3); background: rgba(88,166,255,0.1);
@@ -1049,7 +1069,7 @@
           <div class="section-sub">上傳 GL / TB 與 Account Mapping，填妥案件資訊與日期維度。</div>
         </div>
         <div class="page-tools">
-          <button class="btn btn-secondary btn-sm" onclick="quickFillStep(1)">示範填入</button>
+          <button class="btn btn-secondary btn-sm" data-demo-control onclick="quickFillStep(1)">示範填入</button>
           <button class="btn btn-ghost btn-sm" onclick="resetStep(1)">重設這一步</button>
         </div>
       </div>
@@ -1198,7 +1218,7 @@
           <div class="section-sub">自動比對 GL / TB 欄位名稱後，手動修正不正確的映射。</div>
         </div>
         <div class="page-tools">
-          <button class="btn btn-secondary btn-sm" onclick="quickFillStep(2)">帶入示範映射</button>
+          <button class="btn btn-secondary btn-sm" data-demo-control onclick="quickFillStep(2)">帶入示範映射</button>
           <button class="btn btn-ghost btn-sm" onclick="resetStep(2)">重設欄位配對</button>
         </div>
       </div>
@@ -1253,7 +1273,7 @@
           <div class="section-sub">執行母體品質驗證與 Pre-screen，在進入篩選前確認資料可信度。</div>
         </div>
         <div class="page-tools">
-          <button class="btn btn-secondary btn-sm" onclick="quickFillStep(3)">載入示範測試結果</button>
+          <button class="btn btn-secondary btn-sm" data-demo-control onclick="quickFillStep(3)">載入示範測試結果</button>
           <button class="btn btn-ghost btn-sm" onclick="resetStep(3)">清除測試結果</button>
         </div>
       </div>
@@ -1274,31 +1294,31 @@
       <div class="card">
         <div class="card-title"><div class="dot"></div>資料驗證清單</div>
         <div id="validationList">
-          <div class="check-item checked" id="vCompletenessItem">
+          <div class="check-item interactive" id="vCompletenessItem" onclick="showInfoDialog('validation', 'completeness')">
             <div style="flex:1">
               <div class="check-item-label">V1. 完整性測試</div>
-              <div class="check-item-desc">核對 GL 按科目彙總是否與 TB 變動金額一致。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看測試說明</span></div>
             </div>
             <div class="check-count" id="vCompletenessCount">—</div>
           </div>
-          <div class="check-item checked" id="vBalanceItem">
+          <div class="check-item interactive" id="vBalanceItem" onclick="showInfoDialog('validation', 'balance')">
             <div style="flex:1">
               <div class="check-item-label">V2. 借貸不平測試</div>
-              <div class="check-item-desc">確認每張傳票借貸加總是否為 0。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看測試說明</span></div>
             </div>
             <div class="check-count" id="vBalanceCount">—</div>
           </div>
-          <div class="check-item checked" id="vInfItem">
+          <div class="check-item interactive" id="vInfItem" onclick="showInfoDialog('validation', 'inf')">
             <div style="flex:1">
               <div class="check-item-label">V3. INF 抽樣測試</div>
-              <div class="check-item-desc">抽取樣本供人工驗證非財務欄位與附件。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看測試說明</span></div>
             </div>
             <div class="check-count" id="vInfCount">—</div>
           </div>
-          <div class="check-item checked" id="vNullItem">
+          <div class="check-item interactive" id="vNullItem" onclick="showInfoDialog('validation', 'nulls')">
             <div style="flex:1">
               <div class="check-item-label">V4. 空值與日期超界測試</div>
-              <div class="check-item-desc">彙總科目編號、傳票號碼、摘要空值與日期超出期間的紀錄。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看測試說明</span></div>
             </div>
             <div class="check-count" id="vNullCount">—</div>
           </div>
@@ -1313,45 +1333,45 @@
         <div class="card-title"><div class="dot"></div>預篩選 (Pre-screen)</div>
         <div class="card-sub">產出高風險候選，下一步用 AND / OR 組合納入情境。</div>
         <div id="routineList">
-          <div class="check-item" id="r1item">
+          <div class="check-item interactive" id="r1item" onclick="showInfoDialog('prescreen', 'r1')">
             <div style="flex:1">
               <div class="check-item-label">#1 期末財務報表準備期間核准之分錄</div>
-              <div class="check-item-desc">以期末財務報表準備期間開始日為基準，其後核准之分錄。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看規則說明</span></div>
             </div>
             <div class="check-count" id="r1count">—</div>
           </div>
-          <div class="check-item" id="r2item">
+          <div class="check-item interactive" id="r2item" onclick="showInfoDialog('prescreen', 'r2')">
             <div style="flex:1">
               <div class="check-item-label">#2 分錄摘要出現特定描述</div>
-              <div class="check-item-desc">Adj / Rev / Reclass / Suspense / Error / Wrong / 調整 / 迴轉 / 沖銷 / 重分類 …</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看規則說明</span></div>
             </div>
             <div class="check-count" id="r2count">—</div>
           </div>
-          <div class="check-item" id="r3item">
+          <div class="check-item interactive" id="r3item" onclick="showInfoDialog('prescreen', 'r3')">
             <div style="flex:1">
               <div class="check-item-label">#3 未預期借貸組合</div>
-              <div class="check-item-desc">需要 Account Mapping，檢查貸方為收入時借方是否落在預期的科目分類。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看規則說明</span></div>
             </div>
             <div class="check-count" id="r3count">—</div>
           </div>
-          <div class="check-item" id="r4item">
+          <div class="check-item interactive" id="r4item" onclick="showInfoDialog('prescreen', 'r4')">
             <div style="flex:1">
               <div class="check-item-label">#4 分錄金額中有連續 0 尾數</div>
-              <div class="check-item-desc">依借方平均金額推估尾數敏感度，先標記可能需要關注的金額模式。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看規則說明</span></div>
             </div>
             <div class="check-count" id="r4count">—</div>
           </div>
-          <div class="check-item" id="r5item">
+          <div class="check-item interactive" id="r5item" onclick="showInfoDialog('prescreen', 'r5')">
             <div style="flex:1">
               <div class="check-item-label">#5 依分錄編製者彙總</div>
-              <div class="check-item-desc">作為工作底稿說明與使用者分布檢視的輔助摘要。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看規則說明</span></div>
             </div>
             <div class="check-count" id="r5count">—</div>
           </div>
-          <div class="check-item" id="r6item">
+          <div class="check-item interactive" id="r6item" onclick="showInfoDialog('prescreen', 'r6')">
             <div style="flex:1">
               <div class="check-item-label">#6 較少使用之科目</div>
-              <div class="check-item-desc">使用次數低於平均 25% 的科目所對應分錄。</div>
+              <div class="check-item-meta"><span class="check-item-hint">點擊查看規則說明</span></div>
             </div>
             <div class="check-count" id="r6count">—</div>
           </div>
@@ -1377,7 +1397,7 @@
           <div class="section-sub">組合條件建立篩選情境（最多 5 個），每個情境須附篩選動機。</div>
         </div>
         <div class="page-tools">
-          <button class="btn btn-secondary btn-sm" onclick="quickFillStep(4)">帶入示範情境</button>
+          <button class="btn btn-secondary btn-sm" data-demo-control onclick="quickFillStep(4)">帶入示範情境</button>
           <button class="btn btn-ghost btn-sm" onclick="resetStep(4)">清除情境草稿</button>
         </div>
       </div>
@@ -1568,6 +1588,17 @@ function updateBridgeBadge() {
   }
 }
 
+function applyDemoVisibility(enabled) {
+  document.querySelectorAll('[data-demo-control]').forEach(el => {
+    if (enabled) {
+      el.style.setProperty('display', 'inline-flex', 'important');
+      return;
+    }
+
+    el.style.setProperty('display', 'none', 'important');
+  });
+}
+
 // =====================================================================
 // STATE
 // =====================================================================
@@ -1633,6 +1664,23 @@ const ACTIONS = {
   EXPORT_PRESCREEN: 'export.prescreen',
   EXPORT_CRITERIA: 'export.criteria',
   EXPORT_WORKPAPER: 'export.workpaper',
+};
+
+const INFO_DIALOGS = {
+  validation: {
+    completeness: { title: 'V1 完整性測試', lines: ['核對 GL 按科目彙總是否與 TB 的期間變動額一致。', '如果兩邊有差異，代表 GL 母體可能不完整，必須先釐清。'] },
+    balance: { title: 'V2 借貸不平測試', lines: ['逐張傳票加總借貸金額，確認淨額是否為 0。', '借貸不平通常代表資料品質或匯入映射有問題。'] },
+    inf: { title: 'V3 INF 抽樣測試', lines: ['抽取樣本供人工驗證非財務欄位與附件。', '這用來確認摘要、日期、建立人等欄位的可靠性。'] },
+    nulls: { title: 'V4 空值與日期超界測試', lines: ['彙總科目編號、傳票號碼、摘要空值，以及日期超出查核期間的紀錄。', '這些都是後續規則判斷前必須先排除的資料品質問題。'] }
+  },
+  prescreen: {
+    r1: { title: 'R1 期末財務報表準備期間核准之分錄', lines: ['以期末財務報表準備期間開始日為基準，抓出其後才核准的分錄。', '這類分錄在審計上通常風險較高。'] },
+    r2: { title: 'R2 分錄摘要出現特定描述', lines: ['比對摘要中的調整、迴轉、沖銷、錯誤等關鍵字。', '這是最典型的高風險語意標記。'] },
+    r3: { title: 'R3 未預期借貸組合', lines: ['需要 Account Mapping。', '檢查貸方為收入時，借方是否落在預期的應收、現金或預收等分類。'] },
+    r4: { title: 'R4 分錄金額中有連續 0 尾數', lines: ['根據金額型態標記整數尾數異常明顯的分錄。', '這類金額常見於估計、人工調整或可疑分錄。'] },
+    r5: { title: 'R5 依分錄編製者彙總', lines: ['依建立人員彙總分錄數量與金額。', '用來檢查是否集中在少數使用者，輔助工作底稿說明。'] },
+    r6: { title: 'R6 較少使用之科目', lines: ['標記使用頻率顯著偏低的科目所對應分錄。', '低頻科目常被用來隱藏特殊交易。'] }
+  }
 };
 
 const WORKFLOW_STEPS = [
@@ -1751,40 +1799,6 @@ const AUTO_MATCH_KEYWORDS = {
 const KEYWORDS_R2 = ['adj','rev','reclass','suspense','error','wrong','調整','迴轉','沖銷','重分類','避險','重編','錯誤','計畫外','預算外'];
 
 // =====================================================================
-// DEMO DATA (for bridge-less preview)
-// =====================================================================
-const DEMO_GL_DATA = [
-  { 'Document Number': 'JE-0001', 'Line Item': 1, 'Post Date': '2024-12-31', 'Approval Date': '2025-01-03', 'Account Number': '1101', 'Account Name': '應收帳款', 'Description': 'Year-end revenue adjustment', 'Source Module': 'GL', 'Created By': 'amy.lin', 'Approved By': 'manager.chen', 'Manual': 1, 'Amount': 500000 },
-  { 'Document Number': 'JE-0001', 'Line Item': 2, 'Post Date': '2024-12-31', 'Approval Date': '2025-01-03', 'Account Number': '4001', 'Account Name': '銷貨收入', 'Description': 'Year-end revenue adjustment', 'Source Module': 'GL', 'Created By': 'amy.lin', 'Approved By': 'manager.chen', 'Manual': 1, 'Amount': -500000 },
-  { 'Document Number': 'JE-0002', 'Line Item': 1, 'Post Date': '2024-12-28', 'Approval Date': '2024-12-29', 'Account Number': '6105', 'Account Name': '雜項費用', 'Description': 'Adj manual correction', 'Source Module': 'GL', 'Created By': 'bob.wu', 'Approved By': 'manager.chen', 'Manual': 1, 'Amount': 120000 },
-  { 'Document Number': 'JE-0002', 'Line Item': 2, 'Post Date': '2024-12-28', 'Approval Date': '2024-12-29', 'Account Number': '4001', 'Account Name': '銷貨收入', 'Description': 'Adj manual correction', 'Source Module': 'GL', 'Created By': 'bob.wu', 'Approved By': 'manager.chen', 'Manual': 1, 'Amount': -120000 },
-  { 'Document Number': 'JE-0003', 'Line Item': 1, 'Post Date': '2024-11-15', 'Approval Date': '2024-11-15', 'Account Number': '', 'Account Name': '現金', 'Description': '', 'Source Module': 'AP', 'Created By': 'carol.tsai', 'Approved By': 'supervisor.lee', 'Manual': 0, 'Amount': 3000 },
-  { 'Document Number': 'JE-0003', 'Line Item': 2, 'Post Date': '2024-11-15', 'Approval Date': '2024-11-15', 'Account Number': '1001', 'Account Name': '現金', 'Description': '', 'Source Module': 'AP', 'Created By': 'carol.tsai', 'Approved By': 'supervisor.lee', 'Manual': 0, 'Amount': -2800 },
-  { 'Document Number': 'JE-0004', 'Line Item': 1, 'Post Date': '2024-06-30', 'Approval Date': '2024-06-30', 'Account Number': '6501', 'Account Name': '招待費', 'Description': 'budget outside approval', 'Source Module': 'GL', 'Created By': 'amy.lin', 'Approved By': 'supervisor.lee', 'Manual': 1, 'Amount': 100000 },
-  { 'Document Number': 'JE-0004', 'Line Item': 2, 'Post Date': '2024-06-30', 'Approval Date': '2024-06-30', 'Account Number': '1001', 'Account Name': '現金', 'Description': 'budget outside approval', 'Source Module': 'GL', 'Created By': 'amy.lin', 'Approved By': 'supervisor.lee', 'Manual': 1, 'Amount': -100000 }
-];
-
-const DEMO_TB_DATA = [
-  { 'Account Number': '1101', 'Account Name': '應收帳款', 'Change Amount': 500000 },
-  { 'Account Number': '4001', 'Account Name': '銷貨收入', 'Change Amount': -620000 },
-  { 'Account Number': '6105', 'Account Name': '雜項費用', 'Change Amount': 120000 },
-  { 'Account Number': '6501', 'Account Name': '招待費', 'Change Amount': 100000 },
-  { 'Account Number': '1001', 'Account Name': '現金', 'Change Amount': -102800 }
-];
-
-const DEMO_ACCOUNT_MAPPING = [
-  { 'Account Code': '4001', 'Account Name': '銷貨收入', 'Category': 'Revenue' },
-  { 'Account Code': '1101', 'Account Name': '應收帳款', 'Category': 'Receivables' },
-  { 'Account Code': '1001', 'Account Name': '現金', 'Category': 'Cash' },
-  { 'Account Code': '2105', 'Account Name': '預收款', 'Category': 'Receipt in advance' },
-  { 'Account Code': '6105', 'Account Name': '雜項費用', 'Category': 'Others' },
-  { 'Account Code': '6501', 'Account Name': '招待費', 'Category': 'Others' }
-];
-
-const DEMO_HOLIDAYS = ['2024-10-10', '2024-12-31'];
-const DEMO_MAKEUP_DAYS = ['2024-02-17'];
-
-// =====================================================================
 // TEMPLATE PREVIEW HANDLERS (fallback when no bridge available)
 // =====================================================================
 // Each handler receives the payload documented in docs/jet-guide.md §12
@@ -1793,31 +1807,9 @@ const DEMO_MAKEUP_DAYS = ['2024-02-17'];
 // =====================================================================
 
 const templatePreviewHandlers = {
-  [ACTIONS.LOAD_DEMO]: async () => ({
-    projectCode: 'JET-2024-001',
-    entityName: 'DEMO Manufacturing Co.',
-    operatorId: 'amy.lin',
-    industry: '製造業',
-    periodStart: '2024-01-01',
-    periodEnd: '2024-12-31',
-    lastPeriodStart: '2024-12-25',
-    glFileName: 'demo-gl.xlsx',
-    tbFileName: 'demo-tb.xlsx',
-    accountMappingFileName: 'demo-account-mapping.xlsx',
-    glRows: structuredClone(DEMO_GL_DATA),
-    tbRows: structuredClone(DEMO_TB_DATA),
-    accountMappingRows: structuredClone(DEMO_ACCOUNT_MAPPING),
-    glMapping: {
-      docNum: 'Document Number', lineID: 'Line Item', postDate: 'Post Date',
-      docDate: 'Approval Date', accNum: 'Account Number', accName: 'Account Name',
-      description: 'Description', jeSource: 'Source Module', createBy: 'Created By',
-      approveBy: 'Approved By', manual: 'Manual', amount: 'Amount'
-    },
-    tbMapping: { accNum: 'Account Number', accName: 'Account Name', amount: 'Change Amount' },
-    holidays: [...DEMO_HOLIDAYS],
-    makeupDays: [...DEMO_MAKEUP_DAYS],
-    weekends: [6, 0]
-  }),
+  [ACTIONS.LOAD_DEMO]: async () => {
+    throw new Error('project.loadDemo requires the host bridge. Demo data is no longer embedded in the HTML template.');
+  },
 
   [ACTIONS.CREATE_PROJECT]: async (payload) => ({ projectId: 'local-' + Date.now(), ...payload }),
 
@@ -1887,6 +1879,12 @@ function showModal(title, html) {
   document.getElementById('resultModal').style.display = 'block';
 }
 function closeModal() { document.getElementById('resultModal').style.display = 'none'; }
+
+function showInfoDialog(section, key) {
+  const info = INFO_DIALOGS[section]?.[key];
+  if (!info) return;
+  showModal(info.title, `<div class="stack-sm">${info.lines.map(line => `<div style="color:var(--text2);line-height:1.8">${line}</div>`).join('')}</div>`);
+}
 
 function toggleCheckItem(id, cb) {
   document.getElementById(id).classList.toggle('checked', cb.checked);
@@ -2345,7 +2343,6 @@ function renderGLMapping() {
           onchange="state.glMapping['${f.key}']=this.value"></td>
       </tr>`;
     }
-    if (state.glAutoSuggest) autoMatchIfEmpty(state.glMapping, f, state.glColumns);
     const selVal = state.glMapping[f.key] || '';
     const typeTag = f.type === 'date' ? '日期欄' : f.type === 'num' ? '數字欄' : '文字欄';
     return `<tr class="mapping-row">
@@ -2373,7 +2370,6 @@ function renderTBMapping() {
   }
   const cols = ['', ...state.tbColumns];
   const tbodyRows = TB_FIELDS.map(f => {
-    if (state.tbAutoSuggest) autoMatchIfEmpty(state.tbMapping, f, state.tbColumns);
     const selVal = state.tbMapping[f.key] || '';
     return `<tr class="mapping-row">
       <td data-bind="mapping.tb.${f.key}">${f.label} ${f.req ? '<span class="required-tag">必要</span>' : '<span class="optional-tag">選填</span>'}</td>
@@ -3226,13 +3222,26 @@ function computePrescreen() {
       if (t.includes('現金') || t.includes('cash') || t.includes('bank')) cashAccs.add(code);
       if (t.includes('預收') || t.includes('advance') || t.includes('deferred')) advanceAccs.add(code);
     });
-    result.r3 = gl.filter(row => {
-      const accNum = (getGLVal(row, 'accNum') || '').trim();
-      const amt = getEntryAmount(row);
-      const isCrIncome = amt < 0 && incomeAccs.has(accNum);
-      const isDrExpected = amt > 0 && (arAccs.has(accNum) || cashAccs.has(accNum) || advanceAccs.has(accNum));
-      return isCrIncome && !isDrExpected;
-    });
+    result.r3 = (() => {
+      // R3 per-voucher: voucher must have BOTH a credit-Revenue line AND a debit-AR/Cash/Advance line
+      const byDoc = {};
+      gl.forEach(row => {
+        const doc = (getGLVal(row, 'docNum') || '_').trim();
+        if (!byDoc[doc]) byDoc[doc] = [];
+        byDoc[doc].push(row);
+      });
+      const matched = [];
+      Object.values(byDoc).forEach(rows => {
+        const hasCrRevenue = rows.some(r => getEntryAmount(r) < 0 && incomeAccs.has((getGLVal(r, 'accNum')||'').trim()));
+        if (!hasCrRevenue) return;
+        const hasDrExpected = rows.some(r => {
+          const acc = (getGLVal(r, 'accNum')||'').trim();
+          return getEntryAmount(r) > 0 && (arAccs.has(acc) || cashAccs.has(acc) || advanceAccs.has(acc));
+        });
+        if (hasDrExpected) matched.push(...rows);
+      });
+      return matched;
+    })();
   }
 
   const debits = gl.map(r => getEntryDebit(r)).filter(v => v > 0);
@@ -4801,6 +4810,10 @@ renderScenarioBuilder();
 renderCriteriaResults();
 populateStep6();
 updateStep5Overview();
+applyDemoVisibility(Boolean(window.__JET_BOOTSTRAP__?.demo?.enabled));
+window.addEventListener('jet:bridge-ready', event => {
+  applyDemoVisibility(Boolean(event?.detail?.bootstrap?.demo?.enabled));
+});
 trace('ok', 'UI 就緒 — 等待第一個 action…');
 </script>
 </body>

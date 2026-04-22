@@ -790,6 +790,16 @@ tests/JET.Tests/                    # xUnit
 | HTML/CSS/JS 前端 | Copilot / Claude Code | 但**不可改 action 契約**與 fixed binding ID |
 | SQL 方言調整 | Copilot | SQLite ↔ SQL Server 方言差 |
 
+Visual Studio 內的 Copilot customization 建議層次：
+
+1. `.github/copilot-instructions.md`
+2. `.github/instructions/*.instructions.md`
+3. `.github/prompts/*.prompt.md`
+4. `.github/agents/*.agent.md`（Visual Studio 2026 18.4+）
+5. `.github/skills/`（Visual Studio 2026 18.5.0 依 release notes 可用）
+
+完整研究見 `docs/copilot-visualstudio-harness-spec.md`。
+
 ### 16.2 讓 AI 提速的關鍵：**穩定契約**
 
 AI 能快是因為**邊界清楚**；AI 會爛是因為**邊界模糊**。
@@ -797,10 +807,13 @@ AI 能快是因為**邊界清楚**；AI 會爛是因為**邊界模糊**。
 | 穩定邊界 | 放哪 |
 |:---|:---|
 | Action 名稱與 payload JSON schema | `docs/jet-guide.md` (本檔第 12 節) 與 `Bridge/ActionDispatcher.cs` 開頭註解 |
+| Frontend action contract / step data outline | `docs/action-contract-manifest.md` |
 | RuleSpec 表 | 本檔第 5 節 |
 | 欄位標準名稱 | 本檔第 18 節欄位對照 |
 | Repository 介面 | `Domain/Abstractions/*.cs` |
 | Frontend fixed binding ID | `wwwroot/index.html` 的 `data-bind="*"` 屬性 |
+
+建議採用 `AGENTS.md` 當短索引，詳細 AI 協作知識則放在 `docs/`。不要把所有規則都塞進單一 instruction blob。
 
 ### 16.3 AI 不該做的事
 
@@ -808,7 +821,7 @@ AI 能快是因為**邊界清楚**；AI 會爛是因為**邊界模糊**。
 - **不可自行更改** RuleSpec 的語意 (只能補實作，不能改規則)
 - **不可動** `Form1.Designer.cs` 與 `Form1.resx` 以外的 Designer 生成檔
 - **不可在 Application 層** 寫 provider 判斷 (`if (isSqlite) ...`) — 方言差異在 Infrastructure 處理
-- **不可新增** 文件，除非使用者明確要求。更新現有文件即可
+- **不可為了一次性對話新增零散文件**。若需 persistent AI context，優先維護 `AGENTS.md`、`docs/action-contract-manifest.md`、`docs/agent-harness.md` 與既有 `.github/` 客製化檔案
 
 ### 16.4 驗證與測試的 loop
 
@@ -817,6 +830,8 @@ AI 每次產碼後應執行：
 dotnet build src/JET/JET.slnx
 dotnet test tests/JET.Tests
 ```
+
+若 agent 當前不在具備 Visual Studio / Windows Desktop workload / 可用 package restore 的環境，應明確回報「本次跳過 build/test」，不要假裝已驗證。
 
 在 VS 2026，Copilot Agent Mode 會自動跑；在 Claude Code / Codex CLI，手動或由 agent 自己觸發。
 

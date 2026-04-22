@@ -87,7 +87,7 @@ namespace JET.Bridge
         }
 
         window.dispatchEvent(new CustomEvent('jet:bridge-ready', {
-            detail: { supportedActions }
+            detail: { supportedActions, bootstrap: window.__JET_BOOTSTRAP__ }
         }));
     }, { once: true });
 })();

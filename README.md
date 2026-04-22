@@ -6,6 +6,8 @@
 
 **深度文件**：所有業務規則、系統架構、資料策略、AI 協作指南與遷移計畫都在 [`docs/jet-guide.md`](docs/jet-guide.md)。**寫程式前讀這個。**
 
+**Agent 入口**：跨工具的 AI 上下文索引在 [`AGENTS.md`](AGENTS.md)，前後端契約總表在 [`docs/action-contract-manifest.md`](docs/action-contract-manifest.md)，agent harness 策略在 [`docs/agent-harness.md`](docs/agent-harness.md)，Visual Studio Copilot 深入規格在 [`docs/copilot-visualstudio-harness-spec.md`](docs/copilot-visualstudio-harness-spec.md)。
+
 ---
 
 ## 專案結構
@@ -13,9 +15,19 @@
 ```
 je-testing/
 ├── README.md                 # 本檔：識別、快速開始、目錄
+├── AGENTS.md                 # Agent 入口索引：先讀這個，再進 docs/
 ├── global.json               # 固定 .NET 10.0.201 feature band
+├── .github/
+│   ├── copilot-instructions.md  # Repository-wide Copilot 指引
+│   ├── instructions/            # Path-specific Copilot 指引
+│   ├── prompts/                 # 可重複的 Copilot prompt files
+│   ├── agents/                  # Visual Studio 2026 18.4+ custom agents
+│   └── skills/                  # skills（Visual Studio 2026 18.5+ / VS Code / CLI）
 ├── docs/
 │   ├── jet-guide.md          # 單一深度指南 (領域 + 架構 + 規則規格 + AI workflow)
+│   ├── action-contract-manifest.md # 前端/WebView2/C# action 契約總表
+│   ├── agent-harness.md      # AI workflow / prompts / skills / instructions 策略
+│   ├── copilot-visualstudio-harness-spec.md # Visual Studio Copilot / Agent / skills / prompt files 研究規格
 │   ├── jet-template.html     # 前端 UI 目標模板 (WebView2 將載入此頁面)
 │   └── drawio/               # 架構圖素材
 ├── data/                     # 範例測試資料 (GL / TB / 假日 / 補班日)

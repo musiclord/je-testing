@@ -27,7 +27,8 @@ namespace JET.Application.Queries.AppBootstrap
                     databaseStatus.Provider.ToString(),
                     databaseStatus.IsAvailable,
                     databaseStatus.ConnectionTarget,
-                    databaseStatus.Mode));
+                    databaseStatus.Mode),
+                new DemoBootstrapDto(_appOptions.Demo.Enabled));
         }
     }
 }

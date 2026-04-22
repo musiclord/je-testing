@@ -2,6 +2,7 @@ using JET.Bridge;
 using JET.Domain.Abstractions;
 using JET.Domain.Enums;
 using JET.Infrastructure.Configuration;
+using JET.Infrastructure.Persistence;
 using JET.Infrastructure.Persistence.SqlServer;
 using JET.Infrastructure.Persistence.Sqlite;
 
@@ -14,9 +15,10 @@ namespace JET
         {
             ApplicationConfiguration.Initialize();
 
-            var options = JetAppOptionsLoader.Load(Path.Combine(AppContext.BaseDirectory, "appsettings.json"));
+            var options = JetAppOptionsLoader.LoadWithEnvironment(Path.Combine(AppContext.BaseDirectory, "appsettings.json"), null);
             var appStateStore = CreateAppStateStore(options);
-            var actionDispatcher = new ActionDispatcher(options, appStateStore);
+            var sessionStore = new InMemoryProjectSessionStore();
+            var actionDispatcher = new ActionDispatcher(options, appStateStore, sessionStore);
 
             System.Windows.Forms.Application.Run(new Form1(options, actionDispatcher));
         }

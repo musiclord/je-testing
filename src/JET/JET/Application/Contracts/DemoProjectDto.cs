@@ -1,7 +1,9 @@
 namespace JET.Application.Contracts
 {
     public sealed record DemoProjectDto(
+        string ProjectCode,
         string EntityName,
+        string OperatorId,
         string Industry,
         string PeriodStart,
         string PeriodEnd,

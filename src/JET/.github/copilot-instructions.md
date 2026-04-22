@@ -1,5 +1,7 @@
-# Copilot Instructions
+# JET Solution Instructions
 
-## 專案指導方針
-- For the JET project, prefer a `Thin-Bridge Action-Dispatcher + Application CQRS` architecture with `.NET 10`, `WinForms`, `WebView2`, `HTML/CSS/JS`, `SQLite`, and `SQL Server`, using fixed frontend binding elements to connect the HTML UI to the WinForms/C# backend.
-- Verify features against current official web/Microsoft documentation before implementing, to avoid over-complex or non-pragmatic Visual Studio/WebView2 solutions.
+- If this folder is opened as the workspace root, first read `../../AGENTS.md`, `../../docs/jet-guide.md`, and `../../docs/action-contract-manifest.md`.
+- Keep the WinForms host thin and the WebView2 bridge thinner.
+- Before changing any frontend-visible action or payload, update the contract manifest first.
+- Do not edit designer-generated files unless the user explicitly asks.
+- In non-Visual-Studio environments, do not assume `.NET` build/test is available.

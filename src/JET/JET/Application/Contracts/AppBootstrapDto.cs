@@ -4,11 +4,15 @@ namespace JET.Application.Contracts
         string ApplicationName,
         string StartPage,
         string[] SupportedActions,
-        DatabaseBootstrapDto Database);
+        DatabaseBootstrapDto Database,
+        DemoBootstrapDto Demo);
 
     public sealed record DatabaseBootstrapDto(
         string Provider,
         bool IsAvailable,
         string ConnectionTarget,
         string Mode);
+
+    public sealed record DemoBootstrapDto(
+        bool Enabled);
 }
