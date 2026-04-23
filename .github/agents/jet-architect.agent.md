@@ -31,6 +31,18 @@ Rules:
 - Do not edit `Form1.Designer.cs` or other designer-generated files unless explicitly requested.
 - Call out contract drift, workflow drift, and documentation drift before suggesting code.
 
+## Maxim Cross-Check
+
+Before approving any architectural recommendation, cross-reference against:
+
+1. **Good Taste**: Does the proposal eliminate special-case branches? Is each component doing one thing?
+2. **Don't Break Userspace**: Does the proposal preserve all existing action contracts and fixed bindings?
+3. **Simplify Before Extending**: Is there a simpler approach using existing actions/patterns?
+4. **Paranoid About Simplicity**: Would a junior developer understand this without explanation?
+5. **Surgical Changes**: Does the proposal touch only what's necessary? No drive-by refactoring scope creep?
+
+If any maxim is violated, flag it explicitly before proceeding.
+
 When asked to plan work:
 
 1. Identify the affected workflow step.

@@ -26,6 +26,44 @@
 - 不可把 SQLite / SQL Server 差異寫進 Application 層。
 - 不可擅自改 action 契約；若必要，先更新 `docs/action-contract-manifest.md`。
 
+### 0.1 Harness / Architecture Review Update
+
+本計畫已依 `AGENTS.md`、`docs/agent-harness.md`、`docs/copilot-visualstudio-harness-spec.md`、`docs/action-contract-manifest.md`、`.github/copilot-instructions.md` 重新審閱。
+
+目前確認：
+
+- `.github/instructions/`、`.github/prompts/`、`.github/agents/`、`.github/skills/` 的 harness surface 已存在，且和 `docs/` 的 system-of-record 基本一致。
+- `Form1.cs` 與 `Bridge/*.cs` 整體仍維持 thin host / thin bridge 方向。
+- `Application` / `Infrastructure` 大方向仍符合 `Host -> Bridge -> Application -> Domain -> Infrastructure`。
+
+但有一個**必須先收斂的主要架構漂移**：
+
+- `docs/jet-template.html` 仍保留本地 fallback 的業務規則執行路徑，包含：
+  - `computeValidation()`
+  - `computePrescreen()`
+  - `evaluateScenario()`
+  - `templatePreviewHandlers` 中對 `validate.run` / `prescreen.run` / `filter.preview` 的本地 rule execution
+
+這與目前要求的 **Thin-Bridge + Backend-heavy** 邊界不一致。
+
+因此本計畫後續所有 phase 都必須以這個前提執行：
+
+1. 前端 fallback 只能保留最低限度的 template preview / UI shell 能力，不能再作為 validation / prescreen / scenario 規則來源。
+2. `validate.run`、`prescreen.run`、`filter.preview` 的 authoritative logic 必須只存在於 C# Application handlers / repositories。
+3. 若前端顯示欄位或 summary 命名與 `docs/jet-guide.md` / `docs/action-contract-manifest.md` 不一致，先修正契約與命名，再擴充功能。
+4. `ActionDispatcher` 雖目前仍可接受，但後續不可繼續累積 application orchestration；新的行為優先落到 handler / repository 邊界。
+
+### 0.2 Visual Studio Official Validation Baseline
+
+本 repo 目前主開發環境為 **Microsoft Visual Studio Community 2026 (18.5.1)**。
+
+因此每輪實作完成後，應優先使用 Visual Studio / .NET 官方支援的驗證流程：
+
+- `dotnet build src/JET/JET.slnx`
+- `dotnet test src/JET/JET.slnx`
+
+若是前端殼層 / WebView2 問題，驗證時應以 **Visual Studio 直接啟動 `JET.csproj`** 的實際輸出結果為準，不可以只看 source 檔案推論。
+
 ---
 
 ## 1. 這一輪的實作目標
@@ -34,6 +72,7 @@
 
 本輪應聚焦：
 
+0. 先收斂前端 fallback 業務規則，避免 HTML/JS 與 C# 雙份實作繼續漂移
 1. 資料庫儲存模型
 2. DTO 契約
 3. Application / Repository 邊界
@@ -44,6 +83,16 @@
 - 大量 HTML / UX 改版
 - 大量一次性 business rule 全部塞進一個大 handler
 - 把 provider 差異塞到 Application
+- 在 `docs/jet-template.html` 持續擴張 validation / prescreen / filter 的本地 fallback 邏輯
+
+### 1.1 本輪新增前置目標：先消除規則雙份實作
+
+在進入 database-first phase 前，應先完成一個小型收斂工作：
+
+1. 盤點 `docs/jet-template.html` 中所有會直接計算 validation / prescreen / filter 規則的本地函式。
+2. 定義哪些 fallback 只是 template preview 所需，哪些已屬於實際業務規則。
+3. 將業務規則路徑標記為 backend-authoritative，避免後續 phase 再沿用前端 fallback 實作。
+4. 若此收斂會影響 action response shape 或畫面綁定語意，先同步更新 `docs/action-contract-manifest.md`。
 
 ---
 
@@ -751,6 +800,13 @@ Application 不感知命名差異，由 provider 封裝。
 ---
 
 ## 10. 建議實作順序
+
+### Phase 0. Boundary Alignment / Contract Drift Cleanup
+
+1. 盤點 `docs/jet-template.html` 內所有 fallback business logic
+2. 收斂 `validate.run` / `prescreen.run` / `filter.preview` 的 authoritative owner 到 C# backend
+3. 檢查 `validate.run` 的 V1-V4 命名與 `docs/jet-guide.md` / `docs/action-contract-manifest.md` 是否一致
+4. 若有 drift，先修 manifest / docs，再進入後續 phase
 
 ### Phase 1. Import 最小閉環
 

@@ -104,42 +104,101 @@ JET 不是純 Web 專案，而是：
 
 ## 外部 repo 的採用方式
 
+JET 採用「方法論萃取」策略，而非直接複製外部 skill 文件。原因：
+
+- **Drift**：副本與上游脫節後變成過期規則墳墓
+- **Context Bloat**：數百行通用規則稀釋 agent 的注意力預算
+- **Rule Conflict**：外部 skill 的假設（Unix/Claude Code/iOS）與 JET 的 contract-first WebView2 架構不匹配
+
+每個外部 repo 的有價值方法論被萃取成 2-3 條 JET 語境化原則，嵌入已有的 instructions/prompts。
+
 ### `nextlevelbuilder/ui-ux-pro-max-skill`
 
-採用其**UI/UX 推理方法**，不整套安裝流程硬套進 repo。
+萃取了其 **UI 推理方法**。
 
-用法：
-
-- 透過 prompt file 與 frontend instructions 引導 agent 改善資訊層級、表格、狀態卡片、可讀性與互動
-- 但所有 UI 變更都必須服從 action contract 與 fixed binding ID
-
-### `obra/superpowers`
-
-採用其**方法論精華**，不整套把 worktree / mandatory TDD / 強制子代理流程搬進來。
-
-JET 實際採用的是：
-
-- brainstorm before code
-- docs 作為真相來源
-- 先定契約與計畫，再實作
-- 用 prompt file 做 drift review 與 planning
+| 萃取內容 | 落地位置 |
+|:---|:---|
+| 5 步 UI Reasoning Protocol（hierarchy → contrast → interaction → consistency → simplicity） | `.github/instructions/frontend.instructions.md` |
+| UI 交付前檢查（visual hierarchy + contrast + interaction feedback） | `.github/instructions/frontend.instructions.md` Taste Gate |
 
 沒有採用的部分：
 
-- 把所有任務都強制變成 worktree workflow
-- 在目前工具鏈未統一前強制多 agent orchestration
+- 整套 iOS/Android 設計系統規範（JET 是 WebView2 + HTML）
+- token-driven theming 體系（JET 的 UI 是單一 HTML shell）
+- 200+ 行平台特定 checklist
 
-### `oh-my-claudecode`
+### `obra/superpowers`
 
-目前**不作為主流程**導入。
+萃取了其 **設計先行方法論**。
+
+| 萃取內容 | 落地位置 |
+|:---|:---|
+| Design-before-code gate（先釐清再動手、先提方案再選擇） | `.github/copilot-instructions.md` Work Discipline |
+| YAGNI 作為強制設計原則 | `.github/copilot-instructions.md` Work Discipline |
+| Spec self-review checklist（佔位符掃描 + 一致性 + 範圍 + 歧義 + YAGNI） | `.github/prompts/jet-contract-plan.prompt.md` |
+
+沒有採用的部分：
+
+- Mandatory TDD / red-green-refactor 強制流程
+- Subagent-driven-development 多 agent 編排
+- Git worktree 強制工作流
+- Superpowers plugin marketplace 安裝體系
+
+### `Yeachan-Heo/oh-my-claudecode`
+
+維持**不作為主流程導入**。
 
 原因：
 
-- 它是 Claude Code first
-- JET 現在主流程是 VS Code Codex 與日後回到 Visual Studio + GitHub Copilot
-- 若現在再加一層工具專屬 orchestration，容易讓 repo 出現兩套彼此競爭的 agent 規則
+- 完全基於 Claude Code CLI + tmux 的 teams-first 多 agent 編排
+- JET 主流程是 Visual Studio + GitHub Copilot，agent 模型根本不同
+- 其核心有價值的方法論（先充分探索需求再動手）已被 superpowers 的 design-before-code gate 覆蓋
 
-如果未來真的需要 teams-first orchestration，應優先評估對應 Codex 的 sidecar 流程，而不是把 OMC 規則直接塞進主 repo。
+如果未來需要 teams-first orchestration，應優先評估 Visual Studio 自身的 multi-agent 能力或 Codex 的 sidecar 流程。
+
+### `kingkongshot/Pensieve` (Linus 式工程原則)
+
+採用其**可執行工程原則 (maxims) 方法論**，不安裝完整 Pensieve。
+
+| 萃取內容 | 落地位置 |
+|:---|:---|
+| 4 大 Linus 工程原則（Good Taste / Don't Break Userspace / Simplify Before Extending / Paranoid About Simplicity） | `.github/copilot-instructions.md` Engineering Maxims |
+| 可執行批判思考迴路 | `.github/instructions/*.instructions.md` Taste Gate |
+| Taste review prompt | `.github/prompts/jet-taste-review.prompt.md` |
+| Maxim 交叉檢查 | `.github/agents/jet-architect.agent.md` Maxim Cross-Check |
+
+沒有採用的部分：
+
+- 完整的四層知識模型（maxim / decision / knowledge / pipeline）
+- 自動知識圖譜與 hook 機制
+
+### `forrestchang/andrej-karpathy-skills` (Karpathy LLM 編碼陷阱)
+
+萃取了其**外科手術式變更原則與假設管理方法**。
+
+| 萃取內容 | 落地位置 |
+|:---|:---|
+| Surgical Changes — 只動該動的（每一行變更追溯到請求、不順手改善、匹配現有風格） | `.github/copilot-instructions.md` Engineering Maxims #5 |
+| 外科手術式變更檢查 | `.github/instructions/*.instructions.md` Taste Gate（全部 4 個） |
+| Surgical Changes review criteria | `.github/prompts/jet-taste-review.prompt.md` |
+| State assumptions / push back / stop when confused | `.github/copilot-instructions.md` Work Discipline |
+
+沒有採用的部分：
+
+- Goal-Driven Execution（已被 JET 的 Spec Self-Review + contract-first workflow 覆蓋）
+- Simplicity First（已被 Maxim #3 + #4 + YAGNI 覆蓋）
+- Think Before Coding 的基礎部分（已被 design-before-code 覆蓋）
+
+### 規則衛生 (Rule Hygiene)
+
+防止 `.github/` 演變成規則墳墓的衛生原則：
+
+1. **不複製外部 skill**：`.github/skills/` 只放 JET 專屬 skills。外部方法論萃取後嵌入 instructions/prompts，不保留原始副本。
+2. **能被 linter 處理的就不寫成 instruction**：把 agent 注意力預算留給架構決策。
+3. **Reference, Don't Duplicate**：指向 repo 中的真實文件（如 `docs/jet-guide.md`），不在 instruction 裡貼文件摘要。
+4. **Progressive Disclosure**：path-specific instructions 只在碰到對應文件時才觸發，避免全局上下文膨脹。
+5. **定期修剪**：當規則所對應的程式碼或架構已變更，直接刪除規則。不累積、不「以防萬一」。
+6. **溯源標記**：從外部方法論萃取的規則標注 `*(Extracted from: ...)*`，方便日後追溯與修剪。
 
 ## JET 的標準工作流
 

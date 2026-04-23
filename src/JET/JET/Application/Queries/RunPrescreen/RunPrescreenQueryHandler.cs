@@ -1,5 +1,5 @@
+using JET.Application.Common;
 using JET.Domain.Abstractions;
-using static JET.Application.Queries.RunValidation.RunValidationQueryHandler;
 
 namespace JET.Application.Queries.RunPrescreen
 {
@@ -31,7 +31,7 @@ namespace JET.Application.Queries.RunPrescreen
             var (r4, r4Threshold) = ComputeR4(gl, mapping);
             var r5Summary = ComputeR5(gl, mapping);
             var r6 = ComputeR6(gl, mapping);
-            var descNull = gl.Where(r => string.IsNullOrWhiteSpace(GetGlVal(r, "description", mapping))).ToList();
+            var descNull = gl.Where(r => string.IsNullOrWhiteSpace(GlRowAccess.GetGlVal(r, "description", mapping))).ToList();
 
             return Task.FromResult<object>(new
             {
@@ -57,8 +57,8 @@ namespace JET.Application.Queries.RunPrescreen
 
             return gl.Where(r =>
             {
-                var dateStr = GetGlVal(r, "docDate", mapping);
-                if (string.IsNullOrEmpty(dateStr)) dateStr = GetGlVal(r, "postDate", mapping);
+                var dateStr = GlRowAccess.GetGlVal(r, "docDate", mapping);
+                if (string.IsNullOrEmpty(dateStr)) dateStr = GlRowAccess.GetGlVal(r, "postDate", mapping);
                 return DateTime.TryParse(dateStr, out var d) && d >= threshold;
             }).ToList();
         }
@@ -69,7 +69,7 @@ namespace JET.Application.Queries.RunPrescreen
         {
             return gl.Where(r =>
             {
-                var desc = GetGlVal(r, "description", mapping).ToLowerInvariant();
+                var desc = GlRowAccess.GetGlVal(r, "description", mapping).ToLowerInvariant();
                 return KeywordsR2.Any(k => desc.Contains(k, StringComparison.OrdinalIgnoreCase));
             }).ToList();
         }
@@ -107,21 +107,21 @@ namespace JET.Application.Queries.RunPrescreen
             //   CreditSet: any line with Category=Revenue AND Amount<0
             //   DebitSet:  any line with Category∈{Receivables,Cash,Advance} AND Amount>0
             // All lines of such vouchers are returned.
-            var byDoc = gl.GroupBy(r => (GetGlVal(r, "docNum", mapping) is { Length: > 0 } v ? v : "_"));
+            var byDoc = gl.GroupBy(r => (GlRowAccess.GetGlVal(r, "docNum", mapping) is { Length: > 0 } v ? v : "_"));
             var matched = new List<Dictionary<string, object?>>();
             foreach (var group in byDoc)
             {
                 var hasCreditRevenue = group.Any(r =>
                 {
-                    var acc = GetGlVal(r, "accNum", mapping).Trim();
-                    return GetAmount(r, mapping) < 0 && incomeAccs.Contains(acc);
+                    var acc = GlRowAccess.GetGlVal(r, "accNum", mapping).Trim();
+                    return GlRowAccess.GetAmount(r, mapping) < 0 && incomeAccs.Contains(acc);
                 });
                 if (!hasCreditRevenue) continue;
 
                 var hasDebitExpected = group.Any(r =>
                 {
-                    var acc = GetGlVal(r, "accNum", mapping).Trim();
-                    var amt = GetAmount(r, mapping);
+                    var acc = GlRowAccess.GetGlVal(r, "accNum", mapping).Trim();
+                    var amt = GlRowAccess.GetAmount(r, mapping);
                     return amt > 0 && (arAccs.Contains(acc) || cashAccs.Contains(acc) || advanceAccs.Contains(acc));
                 });
                 if (!hasDebitExpected) continue;
@@ -136,7 +136,7 @@ namespace JET.Application.Queries.RunPrescreen
             Dictionary<string, string> mapping)
         {
             var debits = gl
-                .Select(r => GetAmount(r, mapping))
+                .Select(r => GlRowAccess.GetAmount(r, mapping))
                 .Where(a => a > 0)
                 .Select(a => (double)a)
                 .ToList();
@@ -147,7 +147,7 @@ namespace JET.Application.Queries.RunPrescreen
 
             var rows = gl.Where(r =>
             {
-                var amt = Math.Abs(GetAmount(r, mapping));
+                var amt = Math.Abs(GlRowAccess.GetAmount(r, mapping));
                 return TrailingZeros(amt) >= threshold;
             }).ToList();
 
@@ -162,7 +162,7 @@ namespace JET.Application.Queries.RunPrescreen
                 return null;
 
             var byCreator = new Dictionary<string, object>();
-            var groups = gl.GroupBy(r => GetGlVal(r, "createBy", mapping) is { Length: > 0 } v ? v : "(未知)");
+                var groups = gl.GroupBy(r => GlRowAccess.GetGlVal(r, "createBy", mapping) is { Length: > 0 } v ? v : "(未知)");
 
             foreach (var g in groups)
             {
@@ -179,7 +179,7 @@ namespace JET.Application.Queries.RunPrescreen
             var accFreq = new Dictionary<string, int>();
             foreach (var r in gl)
             {
-                var acc = GetGlVal(r, "accNum", mapping) is { Length: > 0 } v ? v : "?";
+                var acc = GlRowAccess.GetGlVal(r, "accNum", mapping) is { Length: > 0 } v ? v : "?";
                 accFreq[acc] = accFreq.GetValueOrDefault(acc) + 1;
             }
 
@@ -189,7 +189,7 @@ namespace JET.Application.Queries.RunPrescreen
 
             return gl.Where(r =>
             {
-                var acc = GetGlVal(r, "accNum", mapping) is { Length: > 0 } v ? v : "?";
+                var acc = GlRowAccess.GetGlVal(r, "accNum", mapping) is { Length: > 0 } v ? v : "?";
                 return rareAccs.Contains(acc);
             }).ToList();
         }

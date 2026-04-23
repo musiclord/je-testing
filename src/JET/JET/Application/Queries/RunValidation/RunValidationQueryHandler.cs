@@ -1,3 +1,4 @@
+using JET.Application.Common;
 using JET.Domain.Abstractions;
 
 namespace JET.Application.Queries.RunValidation
@@ -20,9 +21,9 @@ namespace JET.Application.Queries.RunValidation
 
             var stats = ComputeGlStats(gl, glMapping);
 
-            var v1NullAccounts = gl.Count(r => string.IsNullOrWhiteSpace(GetGlVal(r, "accNum", glMapping)));
-            var v2NullDocNums = gl.Count(r => string.IsNullOrWhiteSpace(GetGlVal(r, "docNum", glMapping)));
-            var v3NullDescriptions = gl.Count(r => string.IsNullOrWhiteSpace(GetGlVal(r, "description", glMapping)));
+            var v1NullAccounts = gl.Count(r => string.IsNullOrWhiteSpace(GlRowAccess.GetGlVal(r, "accNum", glMapping)));
+            var v2NullDocNums = gl.Count(r => string.IsNullOrWhiteSpace(GlRowAccess.GetGlVal(r, "docNum", glMapping)));
+            var v3NullDescriptions = gl.Count(r => string.IsNullOrWhiteSpace(GlRowAccess.GetGlVal(r, "description", glMapping)));
 
             var periodStart = _session.Project?.PeriodStart ?? string.Empty;
             var periodEnd = _session.Project?.PeriodEnd ?? string.Empty;
@@ -33,8 +34,8 @@ namespace JET.Application.Queries.RunValidation
                 var pEnd = DateTime.Parse(periodEnd);
                 v4OutOfPeriod = gl.Count(r =>
                 {
-                    var dateStr = GetGlVal(r, "docDate", glMapping);
-                    if (string.IsNullOrEmpty(dateStr)) dateStr = GetGlVal(r, "postDate", glMapping);
+                    var dateStr = GlRowAccess.GetGlVal(r, "docDate", glMapping);
+                    if (string.IsNullOrEmpty(dateStr)) dateStr = GlRowAccess.GetGlVal(r, "postDate", glMapping);
                     if (string.IsNullOrEmpty(dateStr) || !DateTime.TryParse(dateStr, out var dt)) return false;
                     return dt < pStart || dt > pEnd;
                 });
@@ -69,9 +70,9 @@ namespace JET.Application.Queries.RunValidation
 
             foreach (var r in gl)
             {
-                var amt = GetAmount(r, mapping);
+                var amt = GlRowAccess.GetAmount(r, mapping);
                 if (amt >= 0) totalDebit += amt; else totalCredit += Math.Abs(amt);
-                var doc = GetGlVal(r, "docNum", mapping);
+                var doc = GlRowAccess.GetGlVal(r, "docNum", mapping);
                 if (!string.IsNullOrEmpty(doc)) docSet.Add(doc);
             }
 
@@ -96,9 +97,9 @@ namespace JET.Application.Queries.RunValidation
             var glAccAmt = new Dictionary<string, decimal>();
             foreach (var r in gl)
             {
-                var acc = GetGlVal(r, "accNum", glMapping)?.Trim();
+                var acc = GlRowAccess.GetGlVal(r, "accNum", glMapping)?.Trim();
                 if (string.IsNullOrEmpty(acc)) continue;
-                glAccAmt[acc] = glAccAmt.GetValueOrDefault(acc) + GetAmount(r, glMapping);
+                glAccAmt[acc] = glAccAmt.GetValueOrDefault(acc) + GlRowAccess.GetAmount(r, glMapping);
             }
 
             var diffs = new List<object>();
@@ -119,39 +120,11 @@ namespace JET.Application.Queries.RunValidation
             var docBalance = new Dictionary<string, decimal>();
             foreach (var r in gl)
             {
-                var doc = (GetGlVal(r, "docNum", mapping) ?? "_").Trim();
-                docBalance[doc] = docBalance.GetValueOrDefault(doc) + GetAmount(r, mapping);
+                var doc = (GlRowAccess.GetGlVal(r, "docNum", mapping) ?? "_").Trim();
+                docBalance[doc] = docBalance.GetValueOrDefault(doc) + GlRowAccess.GetAmount(r, mapping);
             }
             return docBalance.Values.Count(v => Math.Abs(v) > 0.01m);
         }
 
-        internal static string GetGlVal(Dictionary<string, object?> row, string key, Dictionary<string, string> mapping)
-        {
-            if (!mapping.TryGetValue(key, out var col) || string.IsNullOrEmpty(col)) return string.Empty;
-            return GetVal(row, col) ?? string.Empty;
-        }
-
-        internal static decimal GetAmount(Dictionary<string, object?> row, Dictionary<string, string> mapping)
-        {
-            if (mapping.TryGetValue("amount", out var amtCol) && !string.IsNullOrEmpty(amtCol))
-                return ParseDecimal(GetVal(row, amtCol));
-
-            if (mapping.TryGetValue("debitAmount", out var drCol) && mapping.TryGetValue("creditAmount", out var crCol))
-                return ParseDecimal(GetVal(row, drCol)) - ParseDecimal(GetVal(row, crCol));
-
-            return 0m;
-        }
-
-        private static string? GetVal(Dictionary<string, object?> row, string col)
-        {
-            if (string.IsNullOrEmpty(col)) return null;
-            return row.TryGetValue(col, out var v) ? v?.ToString() : null;
-        }
-
-        private static decimal ParseDecimal(string? s)
-        {
-            if (string.IsNullOrWhiteSpace(s)) return 0m;
-            return decimal.TryParse(s, out var v) ? v : 0m;
-        }
     }
 }
