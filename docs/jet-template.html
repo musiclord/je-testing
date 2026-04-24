@@ -1519,12 +1519,16 @@
 // =====================================================================
 // THIN-BRIDGE ACTION-DISPATCHER
 // =====================================================================
-// 所有「像呼叫後端」的工作都走 jetBridge.invoke(action, payload)。
-// - 在 WinForms 下會路由到 WebView2 host object (window.jet.invoke)
-// - 在純瀏覽器下會 fallback 到 templatePreviewHandlers 做本地模擬
+// 所有 UI → backend 的呼叫必須走 JetApi.<method>()（由 WebView2 bootstrap 注入）。
+// 本檔中的 jetBridge.invoke() 僅用於 UI-preview-grade 的 IO echo handlers
+// （import.gl/tb/accountMapping/holiday/makeupDay/mapping.commit/exports）。
 //
-// 這個模式等同於 docs/jet-guide.md §11-12 所描述的：
-//   前端 → { requestId, action, payload } → Bridge → ActionDispatcher → Handler
+// Authoritative 業務規則（validate.run / prescreen.run / filter.preview）
+// 只能由 backend handler 執行，前端不得保留本地實作。
+// See: docs/action-contract-manifest.md#jetapi-typed-facade
+//
+// Thin-bridge 路徑：
+//   UI → JetApi.validateRun() → window.jet.invoke → WebView2 → ActionDispatcher → Handler
 // =====================================================================
 
 const traceLines = [];
@@ -1535,6 +1539,14 @@ function trace(kind, msg) {
   const el = document.getElementById('traceLog');
   if (el) { el.innerHTML = traceLines.join(''); el.scrollTop = el.scrollHeight; }
 }
+
+// Authoritative actions must never silently fall back to local template handlers.
+const AUTHORITATIVE_ACTIONS = new Set([
+  'validate.run',
+  'prescreen.run',
+  'filter.preview',
+  'filter.commit',
+]);
 
 const jetBridge = {
   get available() {
@@ -1555,8 +1567,15 @@ const jetBridge = {
         return result;
       } catch (error) {
         trace('err', `✗ ${action} [bridge] ${error?.message || error}`);
-        // fallthrough to local handler — template must keep working
+        // Authoritative actions: propagate the error, do NOT fall back to a local copy of the rule.
+        if (AUTHORITATIVE_ACTIONS.has(action)) throw error;
+        // IO-echo actions: allow template preview fallback below.
       }
+    } else if (AUTHORITATIVE_ACTIONS.has(action)) {
+      const msg = `Action "${action}" requires the WebView2 host bridge. ` +
+                  `Authoritative rules are backend-only; no local fallback exists.`;
+      trace('err', `✗ ${action} — ${msg}`);
+      throw new Error(msg);
     }
     const handler = templatePreviewHandlers[action];
     if (!handler) {
@@ -1565,7 +1584,7 @@ const jetBridge = {
     }
     try {
       const result = await handler(payload);
-      trace('warn', `← ${action} [local fallback]`);
+      trace('warn', `← ${action} [local preview]`);
       return result;
     } catch (err) {
       trace('err', `✗ ${action} [local] ${err?.message || err}`);
@@ -1647,6 +1666,9 @@ const state = {
 
 const ACTIONS = {
   LOAD_DEMO: 'project.loadDemo',
+  FETCH_DEMO_GL_ROWS: 'demo.fetchGlRows',
+  FETCH_DEMO_TB_ROWS: 'demo.fetchTbRows',
+  FETCH_DEMO_ACCOUNT_MAPPING_ROWS: 'demo.fetchAccountMappingRows',
   CREATE_PROJECT: 'project.create',
   IMPORT_GL: 'import.gl',
   IMPORT_TB: 'import.tb',
@@ -1850,13 +1872,10 @@ const templatePreviewHandlers = {
   [ACTIONS.COMMIT_GL_MAPPING]: async ({ mapping }) => ({ ok: true, mapping }),
   [ACTIONS.COMMIT_TB_MAPPING]: async ({ mapping }) => ({ ok: true, mapping }),
 
-  [ACTIONS.RUN_VALIDATION]: async () => computeValidation(),
-  [ACTIONS.RUN_PRESCREEN]: async () => computePrescreen(),
-
-  [ACTIONS.PREVIEW_FILTER]: async ({ scenario }) => {
-    return { scenario: evaluateScenario(state.glData || [], scenario) };
-  },
-  [ACTIONS.COMMIT_FILTER]: async ({ scenarios }) => ({ ok: true, count: scenarios.length }),
+  // NOTE: validate.run / prescreen.run / filter.preview / filter.commit
+  // are backend-authoritative. No local fallback is registered here.
+  // See AUTHORITATIVE_ACTIONS above and
+  // docs/action-contract-manifest.md#jetapi-typed-facade.
 
   [ACTIONS.EXPORT_VALIDATION]: async () => buildAndSaveValidationReport(),
   [ACTIONS.EXPORT_PRESCREEN]: async () => buildAndSavePrescreeningReport(),
@@ -4645,12 +4664,64 @@ function applyDemoStep4Data() {
 }
 
 async function ensureDemoBundle() {
-  if (!state.demoBundle) {
-    state.demoBundle = await dispatchAction(ACTIONS.LOAD_DEMO, {}, {
-      loading: '載入前端測試資料...',
-      errorPrefix: '載入示範資料失敗',
-    });
+  if (state.demoBundle) {
+    return structuredClone(state.demoBundle);
   }
+
+  // Contract per docs/action-contract-manifest.md `Demo Pipeline 對齊原則`:
+  // Demo must drive the same import.* pipeline as user uploads.
+  const metadata = await dispatchAction(ACTIONS.LOAD_DEMO, {}, {
+    loading: '載入前端測試資料...',
+    errorPrefix: '載入示範資料失敗',
+  });
+  const [glResp, tbResp, accMapResp] = await Promise.all([
+    dispatchAction(ACTIONS.FETCH_DEMO_GL_ROWS, {}, { errorPrefix: '載入示範 GL 失敗' }),
+    dispatchAction(ACTIONS.FETCH_DEMO_TB_ROWS, {}, { errorPrefix: '載入示範 TB 失敗' }),
+    dispatchAction(ACTIONS.FETCH_DEMO_ACCOUNT_MAPPING_ROWS, {}, { errorPrefix: '載入示範科目對照失敗' }),
+  ]);
+
+  await dispatchAction(ACTIONS.CREATE_PROJECT, {
+    projectCode: metadata.projectCode,
+    entityName: metadata.entityName,
+    operatorId: metadata.operatorId,
+    industry: metadata.industry,
+    periodStart: metadata.periodStart,
+    periodEnd: metadata.periodEnd,
+    lastPeriodStart: metadata.lastPeriodStart,
+  }, { errorPrefix: '建立示範專案失敗' });
+
+  await Promise.all([
+    dispatchAction(ACTIONS.IMPORT_GL, {
+      fileName: glResp.fileName,
+      rows: glResp.rows,
+      columns: glResp.columns,
+    }, { errorPrefix: '匯入示範 GL 失敗' }),
+    dispatchAction(ACTIONS.IMPORT_TB, {
+      fileName: tbResp.fileName,
+      rows: tbResp.rows,
+      columns: tbResp.columns,
+    }, { errorPrefix: '匯入示範 TB 失敗' }),
+    dispatchAction(ACTIONS.IMPORT_ACCOUNT_MAPPING, {
+      fileName: accMapResp.fileName,
+      rows: accMapResp.rows,
+    }, { errorPrefix: '匯入示範科目對照失敗' }),
+    dispatchAction(ACTIONS.IMPORT_HOLIDAY, {
+      dates: metadata.holidays || [],
+    }, { errorPrefix: '匯入示範假日失敗' }),
+    dispatchAction(ACTIONS.IMPORT_MAKEUP_DAY, {
+      dates: metadata.makeupDays || [],
+    }, { errorPrefix: '匯入示範補班日失敗' }),
+  ]);
+
+  state.demoBundle = {
+    ...metadata,
+    glFileName: glResp.fileName,
+    tbFileName: tbResp.fileName,
+    accountMappingFileName: accMapResp.fileName,
+    glRows: glResp.rows,
+    tbRows: tbResp.rows,
+    accountMappingRows: accMapResp.rows,
+  };
   return structuredClone(state.demoBundle);
 }
 

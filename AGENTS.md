@@ -21,6 +21,7 @@ Treat this file as the map, not the encyclopedia. The durable system of record l
 
 - `Form1.cs` is a thin host only. Do not put business logic in WinForms.
 - `Bridge/*.cs` only handles JSON transport and action dispatch.
+- Frontend calls backend exclusively through the auto-generated `window.JetApi.<method>()` facade (see `docs/action-contract-manifest.md#jetapi-typed-facade`). Raw `window.jet.invoke` / `window.chrome.webview.postMessage` are reserved for the bootstrap script.
 - `Application/*` owns commands, queries, and handlers.
 - `Domain/*` stays pure and framework-free.
 - `Infrastructure/*` owns provider-specific I/O and SQL differences.

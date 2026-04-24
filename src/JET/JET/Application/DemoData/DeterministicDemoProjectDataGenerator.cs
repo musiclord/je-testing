@@ -47,9 +47,6 @@ namespace JET.Application.DemoData
                 "demo-large-gl.xlsx",
                 "demo-large-tb.xlsx",
                 "demo-account-mapping.xlsx",
-                allGlRows,
-                tbRows,
-                accountMappingRows,
                 new Dictionary<string, string>
                 {
                     ["docNum"] = DocNumber,
@@ -75,7 +72,14 @@ namespace JET.Application.DemoData
                 new List<string> { "2024-02-17" },
                 new List<int> { 6, 0 });
 
-            return new DemoProjectDataBundle(project, invalidGlRows);
+            var glColumns = new List<string> { DocNumber, LineItem, PostDate, ApprovalDate, AccountNumber, AccountName, Description, SourceModule, CreatedBy, ApprovedBy, Manual, Amount };
+            var tbColumns = new List<string> { AccountNumber, AccountName, ChangeAmount };
+
+            var gl = new DemoGlRowsDto(project.GlFileName, allGlRows, glColumns);
+            var tb = new DemoTbRowsDto(project.TbFileName, tbRows, tbColumns);
+            var accountMapping = new DemoAccountMappingRowsDto(project.AccountMappingFileName, accountMappingRows);
+
+            return new DemoProjectDataBundle(project, gl, tb, accountMapping, invalidGlRows);
         }
 
         private static List<AccountSeed> BuildAccounts()

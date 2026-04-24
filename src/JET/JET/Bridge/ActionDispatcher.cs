@@ -25,6 +25,9 @@ namespace JET.Bridge
             var pingQueryHandler = new SystemPingQueryHandler();
             var bootstrapQueryHandler = new GetAppBootstrapQueryHandler(appOptions, appStateStore);
             var demoQueryHandler = new GetProjectDemoQueryHandler();
+            var demoGlRowsHandler = new FetchDemoGlRowsQueryHandler();
+            var demoTbRowsHandler = new FetchDemoTbRowsQueryHandler();
+            var demoAccountMappingRowsHandler = new FetchDemoAccountMappingRowsQueryHandler();
             var createProjectHandler = new CreateProjectCommandHandler(sessionStore);
             var importDataHandler = new ImportDataCommandHandler(sessionStore);
             var autoSuggestHandler = new AutoSuggestMappingQueryHandler();
@@ -39,6 +42,9 @@ namespace JET.Bridge
                 ["system.ping"] = async (_, ct) => await pingQueryHandler.HandleAsync(new SystemPingQuery(), ct),
                 ["app.bootstrap"] = async (_, ct) => await bootstrapQueryHandler.HandleAsync(new GetAppBootstrapQuery(_supportedActions), ct),
                 ["project.loadDemo"] = async (_, ct) => await demoQueryHandler.HandleAsync(new GetProjectDemoQuery(), ct),
+                ["demo.fetchGlRows"] = async (_, ct) => await demoGlRowsHandler.HandleAsync(new FetchDemoGlRowsQuery(), ct),
+                ["demo.fetchTbRows"] = async (_, ct) => await demoTbRowsHandler.HandleAsync(new FetchDemoTbRowsQuery(), ct),
+                ["demo.fetchAccountMappingRows"] = async (_, ct) => await demoAccountMappingRowsHandler.HandleAsync(new FetchDemoAccountMappingRowsQuery(), ct),
 
                 ["project.create"] = async (payload, ct) =>
                 {

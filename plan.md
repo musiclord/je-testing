@@ -1,920 +1,394 @@
-# JET Implementation Plan
+# JET Implementation Plan (v2, 重寫)
 
-本檔是給下一輪 Visual Studio + GitHub Copilot / Copilot Agent Mode 直接接手的臨時開發計畫。
+本檔是下一輪 Visual Studio 18.5 + GitHub Copilot / Agent Mode 進場時的臨時 working plan。  
+上一版 plan.md 過度偏向「資料庫與 DTO skeleton」，忽略了目前 repo 真實漂移點。本版以 **現況 → 差距 → 收斂順序** 的方式重寫，並且不脫離 `docs/jet-guide.md` 與 `docs/action-contract-manifest.md`。
 
-這份計畫基於下列既有規格整理，不應脫離它們另起爐灶：
+權威文件順序（衝突時以前者為準）：
 
-1. `README.md`
-2. `docs/jet-guide.md`
-3. `legacy/README.md`
-4. `docs/jet-template.html`
-5. `src/JET/.github/copilot-instructions.md`
-6. `docs/action-contract-manifest.md`
-7. `AGENTS.md`
-
----
-
-## 0. 開發原則
-
-- 前端只送 `action + payload`，不拼 SQL。
-- Bridge 只做 parsing / dispatch / response wrapping，不做業務邏輯。
-- Application 採 CQRS，Command / Query 分開。
-- Domain 只放純邏輯、實體、值物件、規則定義、repository abstractions。
-- Infrastructure 才能碰 SQLite / SQL Server / File I/O / Export。
-- SQLite 是當前主開發目標，但介面必須保留 SQL Server 相容能力。
-- 不可改寫既有業務語意：GL/TB 標準化欄位、V1-V4、R1-R8、A2-A4、進階篩選規格都以 `docs/jet-guide.md` 為準。
-- 不可把 SQLite / SQL Server 差異寫進 Application 層。
-- 不可擅自改 action 契約；若必要，先更新 `docs/action-contract-manifest.md`。
-
-### 0.1 Harness / Architecture Review Update
-
-本計畫已依 `AGENTS.md`、`docs/agent-harness.md`、`docs/copilot-visualstudio-harness-spec.md`、`docs/action-contract-manifest.md`、`.github/copilot-instructions.md` 重新審閱。
-
-目前確認：
-
-- `.github/instructions/`、`.github/prompts/`、`.github/agents/`、`.github/skills/` 的 harness surface 已存在，且和 `docs/` 的 system-of-record 基本一致。
-- `Form1.cs` 與 `Bridge/*.cs` 整體仍維持 thin host / thin bridge 方向。
-- `Application` / `Infrastructure` 大方向仍符合 `Host -> Bridge -> Application -> Domain -> Infrastructure`。
-
-但有一個**必須先收斂的主要架構漂移**：
-
-- `docs/jet-template.html` 仍保留本地 fallback 的業務規則執行路徑，包含：
-  - `computeValidation()`
-  - `computePrescreen()`
-  - `evaluateScenario()`
-  - `templatePreviewHandlers` 中對 `validate.run` / `prescreen.run` / `filter.preview` 的本地 rule execution
-
-這與目前要求的 **Thin-Bridge + Backend-heavy** 邊界不一致。
-
-因此本計畫後續所有 phase 都必須以這個前提執行：
-
-1. 前端 fallback 只能保留最低限度的 template preview / UI shell 能力，不能再作為 validation / prescreen / scenario 規則來源。
-2. `validate.run`、`prescreen.run`、`filter.preview` 的 authoritative logic 必須只存在於 C# Application handlers / repositories。
-3. 若前端顯示欄位或 summary 命名與 `docs/jet-guide.md` / `docs/action-contract-manifest.md` 不一致，先修正契約與命名，再擴充功能。
-4. `ActionDispatcher` 雖目前仍可接受，但後續不可繼續累積 application orchestration；新的行為優先落到 handler / repository 邊界。
-
-### 0.2 Visual Studio Official Validation Baseline
-
-本 repo 目前主開發環境為 **Microsoft Visual Studio Community 2026 (18.5.1)**。
-
-因此每輪實作完成後，應優先使用 Visual Studio / .NET 官方支援的驗證流程：
-
-- `dotnet build src/JET/JET.slnx`
-- `dotnet test src/JET/JET.slnx`
-
-若是前端殼層 / WebView2 問題，驗證時應以 **Visual Studio 直接啟動 `JET.csproj`** 的實際輸出結果為準，不可以只看 source 檔案推論。
+1. `docs/jet-guide.md`（業務規則與架構邊界）
+2. `docs/action-contract-manifest.md`（前後端契約）
+3. `AGENTS.md`（agent 導引地圖）
+4. `docs/agent-harness.md` / `docs/copilot-visualstudio-harness-spec.md`（harness 策略）
+5. `.github/copilot-instructions.md` + `.github/instructions/**` + `.github/skills/**`
+6. 本檔 `plan.md`（臨時 working plan；若與上述衝突，改上述，不要只改這裡）
 
 ---
 
-## 1. 這一輪的實作目標
+## 0. Engineering Maxims（每次改碼前自問）
 
-先做資料與邏輯骨架，不先大改 UI。
+遵循 `.github/copilot-instructions.md` 的五條原則，本計畫全部任務皆以此檢核：
 
-本輪應聚焦：
+1. **Good Taste** — 消除特殊分支。Provider 差異封裝在 Infrastructure，規則差異走 Handler + Strategy，不在 Application 出現 `if provider == Sqlite`。
+2. **Don't Break Userspace** — 不改既有 `action name` / `payload field` / fixed `data-bind` / `Designer.cs`。契約只做 additive change。
+3. **Simplify Before Extending** — 先確認是否可重用現有 action / handler / repository，再寫新碼。先改 `docs/action-contract-manifest.md`，再改實作。
+4. **Paranoid About Simplicity** — `Form1.cs` 只做 WebView2 host；Bridge 只做 JSON transport + dispatch；不建「聰明」的抽象層。
+5. **Surgical Changes** — 只動該動的，不順手重構相鄰程式碼。不為未來需求寫 code。
 
-0. 先收斂前端 fallback 業務規則，避免 HTML/JS 與 C# 雙份實作繼續漂移
-1. 資料庫儲存模型
-2. DTO 契約
-3. Application / Repository 邊界
-4. SQLite-first / SQL Server-compatible 架構
-
-不應優先做：
-
-- 大量 HTML / UX 改版
-- 大量一次性 business rule 全部塞進一個大 handler
-- 把 provider 差異塞到 Application
-- 在 `docs/jet-template.html` 持續擴張 validation / prescreen / filter 的本地 fallback 邏輯
-
-### 1.1 本輪新增前置目標：先消除規則雙份實作
-
-在進入 database-first phase 前，應先完成一個小型收斂工作：
-
-1. 盤點 `docs/jet-template.html` 中所有會直接計算 validation / prescreen / filter 規則的本地函式。
-2. 定義哪些 fallback 只是 template preview 所需，哪些已屬於實際業務規則。
-3. 將業務規則路徑標記為 backend-authoritative，避免後續 phase 再沿用前端 fallback 實作。
-4. 若此收斂會影響 action response shape 或畫面綁定語意，先同步更新 `docs/action-contract-manifest.md`。
+**JET 的業務定位提醒**：JET = 會計師查核用的 Journal Entry Testing 工具。資料量規模是 GL 10 萬～500 萬筆、TB 數千筆科目；輸出是工作底稿 (workpaper)。必須支援 SQLite（單機、查核現場）與 SQL Server（事務所集中）兩種 provider。前端是 WinForms + WebView2 載入 HTML shell，因此前端 fallback 不會有使用者看到——它只是 AI 生成 UI 時的 preview，不應該承擔業務邏輯。
 
 ---
 
-## 2. 系統資料流總覽
+## 1. 現況盤點（截至本輪）
 
-### Step 1. Project / Import
+### 1.1 已到位的東西
 
-- `project.create`
-  - 建立 `Project` 與初始 state
-- `import.gl`
-  - 建 `import batch`
-  - 保存 GL raw rows 到 staging
-- `import.tb`
-  - 建 `import batch`
-  - 保存 TB raw rows 到 staging
-- `import.accountMapping`
-  - 保存 raw mapping rows
-  - 寫 current `target.account_mapping`
-- `import.holiday`
-  - 保存 raw holiday rows
-- `import.makeupDay`
-  - 保存 raw makeup day rows
-  - 與 holiday 合併重建 `target.date_dimension`
+- `src/JET/JET.slnx`：`JET.csproj` + `JET.Tests.csproj` 兩個專案。
+- Bridge 層：
+  - `Bridge/ActionDispatcher.cs`：actions 以 dictionary 路由，所有既有 action 皆已實作（見 `docs/action-contract-manifest.md`）。
+  - `Bridge/JetBridgeScriptFactory.cs`：注入 `window.jet.invoke(action, payload)` 作為 WebView2 → host 的統一入口（已抽象，沒有讓 UI 直接寫 `window.chrome.webview.postMessage`）。
+- Application 層：CQRS 命名齊全（`Commands/*` + `Queries/*`）；每個 action 已有對應 handler。
+- Domain 層：`IAppStateStore`、`IProjectSessionStore`、`ProjectInfo`、`DatabaseProvider` enum。
+- Infrastructure 層：
+  - `Persistence/Sqlite/SqliteAppStateStore.cs`（只做 heartbeat 寫入 `AppState`）
+  - `Persistence/SqlServer/SqlServerAppStateStore.cs`
+  - `Persistence/InMemoryProjectSessionStore.cs`（目前所有 GL/TB/Mapping/Holiday/MakeupDay 資料「全部住在 RAM」）
+- Demo Data：`Application/DemoData/DeterministicDemoProjectDataGenerator.cs` 後端生成、`project.loadDemo` 回前端 raw rows，未把計算結果 bake 進前端。
+- Harness：`.github/{copilot-instructions.md, instructions, prompts, agents, skills}` 完整，與 `AGENTS.md` 一致。
 
-### Step 2. Mapping / Standardization
+### 1.2 明確的架構漂移（必須先收斂）
 
-- `mapping.autoSuggest`
-  - 根據 raw columns 與 field definition 回傳建議 mapping
-- `mapping.commit`
-  - 保存 mapping version
-  - 將 raw GL/TB 標準化為：
-    - `target.gl_entry`
-    - `target.tb_balance`
-  - 重建：
-    - `target.gl_document_summary`
-    - `target.gl_account_summary`
+以下為本計畫核心驅動項，**優先順序即為列出順序**：
 
-### Step 3. Validation
+#### D1. 前端仍保留 business fallback（Thin-Bridge 違規）
 
-- `validate.run`
-  - 以 target tables 執行 V1-V4
-  - 保存 run header 與 detail
-  - 前端收到 summary + 首屏 detail / count
+`docs/jet-template.html` 內：
 
-### Step 4. Prescreen
+- Line 1523-1561：`dispatchAction()` 先判斷 `window.jet` 是否存在，否則 fallback 到 `templatePreviewHandlers`。
+- Line 1809-1860：`templatePreviewHandlers` 中對 `validate.run`、`prescreen.run`、`filter.preview` 調用本地 `computeValidation()` / `computePrescreen()` / `evaluateScenario()`。
 
-- `prescreen.run`
-  - 以 target GL + account mapping + date dimension 執行 R1-R8 / A2-A4
-  - 保存 rule execution / hit rows / summary
+這代表「同一條業務規則在前端 JS 與後端 C# 同時存在」。任何改了一邊、沒改另一邊，demo 與正式版就會發散。
 
-### Step 5. Advanced Filter
+#### D2. 前端仍以 string action name 直接呼叫 bridge，沒有 typed facade
 
-- `filter.preview`
-  - 以 prescreen 結果 + target GL 計算 scenario preview
-- `filter.commit`
-  - 保存 scenario 與最終測試母體 snapshot
+目前任意 UI code 都可以寫 `window.jet.invoke('validate.run', {})`。這讓：
 
-### Step 6. Workpaper Export
+- 契約變更時沒有編譯期保護（action rename 無法被 linter 抓到）。
+- AI 生成新 HTML 時，很容易自行發明 action name（違反 `.github/skills/jet-contract-first-ui/SKILL.md`）。
+- 測試用 mock 要攔截也得靠字串匹配。
 
-- `export.workpaper`
-  - 讀 project / mapping / validation / prescreen / scenario commit
-  - 組成 workbook model
-  - 寫 export manifest / snapshot
-  - 由 exporter 產出 Excel
+我們需要一層 `JetApi.*` 的 typed facade，讓 UI 永遠寫 `await JetApi.runValidation()`，而不是 `await window.jet.invoke('validate.run', {})`。
 
----
+#### D3. 沒有真正的資料庫持久化，所有資料住在 `InMemoryProjectSessionStore`
 
-## 3. Database Layering
+- `import.gl` / `import.tb` / `import.accountMapping` 的 handler 把整份 rows 丟進 `InMemoryProjectSessionStore`。
+- `RunValidationQueryHandler` / `RunPrescreenQueryHandler` 直接讀 `session.GlData`，沒有走 Repository。
+- 沒有 schema initialization、沒有 migration、沒有 SQLite/SQL Server 的 DAO。
+- 結果：`docs/jet-guide.md` 宣稱的「SQLite-first / SQL Server 相容」目前完全沒實作。
 
-邏輯分四層：
+#### D4. `FilterScenarioCommandHandler.cs` ~20KB，把多條 rule 邏輯塞進同一個 handler
 
-- `config`
-- `staging`
-- `target`
-- `result`
+違反 Good Taste（單一 handler 多職責）。後續應該按 scenario rule type（`prescreen`、`text`、`dateRange`、`numRange`、`accountPair`、`drCrOnly`、`manualAuto`）拆分成策略類別。
 
-### SQLite 實作方式
+#### D5. Demo 資料注入路徑沒有獨立為「模擬上傳」流程
 
-SQLite 無 schema，建議用 table name prefix：
+目前 `project.loadDemo` 一次回一大坨 DTO 給前端，前端再逐步填入各 step 狀態。這讓「測試資料」與「前端 UI 狀態管理」緊耦合。理想：  
+demo = 產出與使用者上傳結構一致的 raw rows → 前端走跟使用者一樣的 `import.gl` / `import.tb` / `import.accountMapping` / `project.create` 流程 → 只是資料來源是 seed generator 而已。這樣 demo 才真正測試到 pipeline。
 
-- `config_project`
-- `staging_gl_raw_row`
-- `target_gl_entry`
-- `result_validation_run`
+### 1.3 現階段「看起來像問題，其實還好」的部分
 
-### SQL Server 實作方式
-
-SQL Server 可用正式 schema：
-
-- `config.project`
-- `staging.gl_raw_row`
-- `target.gl_entry`
-- `result.validation_run`
-
-Application 不感知命名差異，由 provider 封裝。
+- `src/JET/JET/` 目錄結構（`Application` / `Bridge` / `Domain` / `Infrastructure`）**尚未**太複雜，AI 仍能追蹤。暫不需要大重組。
+- `ActionDispatcher.cs` 使用 Dictionary routing 目前可接受；待 handler 數量 >30 或 DI 需求浮現時，再考慮轉 MediatR / 手刻 registration。
+- `.github/` harness 檔案與 `docs/` system-of-record 沒發現對立資訊。
 
 ---
 
-## 4. 建議資料表
+## 2. 本輪目標
 
-### 4.1 Project metadata
+**用一句話**：先把前端瘦成純 UI shell + 後端把資料落地到可插拔 Repository，讓 D1～D5 收斂到「下一輪可以放心做 Validation/Prescreen 的完整 DB 實作」。
 
-- `config.project`
-  - `ProjectId`
-  - `ProjectCode`
-  - `EntityName`
-  - `Industry`
-  - `OperatorId`
-  - `PeriodStart`
-  - `PeriodEnd`
-  - `LastAccountingPeriodDate`
-  - `CreatedAt`
-  - `UpdatedAt`
+不做：
 
-- `config.project_state`
-  - `ProjectId`
-  - `CurrentGlBatchId`
-  - `CurrentTbBatchId`
-  - `CurrentAccountMappingBatchId`
-  - `CurrentCalendarBatchId`
-  - `CurrentGlMappingVersion`
-  - `CurrentTbMappingVersion`
-  - `LatestValidationRunId`
-  - `LatestPrescreenRunId`
+- 不重組 `src/JET/JET/` 根目錄。
+- 不引入 MediatR / AutoMapper / FluentValidation 等第三方。
+- 不在本輪做 workpaper export 實作。
+- 不寫 WinForms Designer-level UI。
 
-- `config.project_option`
-  - `ProjectId`
-  - `OptionKey`
-  - `OptionValueJson`
+做：
 
-- `config.rule_parameter`
-  - `ParameterId`
-  - `ProjectId`
-  - `RuleId`
-  - `ParameterScope`
-  - `ParameterJson`
-  - `IsCurrent`
-
-- `config.field_mapping`
-  - `MappingId`
-  - `ProjectId`
-  - `DatasetKind`
-  - `ImportBatchId`
-  - `MappingVersion`
-  - `StandardField`
-  - `SourceColumn`
-  - `ExtraJson`
-  - `IsCurrent`
-
-### 4.2 Raw import
-
-- `config.import_batch`
-  - `ImportBatchId`
-  - `ProjectId`
-  - `DatasetKind`
-  - `FileName`
-  - `ImportedAt`
-  - `RowCount`
-  - `ColumnCount`
-  - `ContentHash`
-  - `Status`
-
-- `config.import_column`
-  - `ImportBatchId`
-  - `Ordinal`
-  - `ColumnName`
-  - `NormalizedName`
-  - `SampleValue`
-
-- `staging.gl_raw_row`
-  - `RawRowId`
-  - `ProjectId`
-  - `ImportBatchId`
-  - `RowNo`
-  - `RawJson`
-  - `SourceRowHash`
-
-- `staging.tb_raw_row`
-  - `RawRowId`
-  - `ProjectId`
-  - `ImportBatchId`
-  - `RowNo`
-  - `RawJson`
-  - `SourceRowHash`
-
-- `staging.account_mapping_raw_row`
-  - `RawRowId`
-  - `ProjectId`
-  - `ImportBatchId`
-  - `RowNo`
-  - `RawJson`
-
-- `staging.calendar_raw_day`
-  - `RawCalendarId`
-  - `ProjectId`
-  - `ImportBatchId`
-  - `CalendarType`
-  - `DateText`
-  - `Description`
-
-### 4.3 Standardized target
-
-- `target.gl_entry`
-  - `GlEntryId`
-  - `ProjectId`
-  - `SourceImportBatchId`
-  - `MappingVersion`
-  - `DocumentNumber`
-  - `LineItem`
-  - `Amount`
-  - `DebitAmount`
-  - `CreditAmount`
-  - `DrCr`
-  - `AccountCode`
-  - `AccountName`
-  - `DocumentDescription`
-  - `ApprovalDate`
-  - `PostDate`
-  - `CreatedBy`
-  - `ApprovedBy`
-  - `SourceModule`
-  - `IsManual`
-  - `SourceRawRowId`
-
-- `target.tb_balance`
-  - `TbBalanceId`
-  - `ProjectId`
-  - `SourceImportBatchId`
-  - `MappingVersion`
-  - `AccountCode`
-  - `AccountName`
-  - `ChangeAmount`
-  - `OpeningBalance`
-  - `ClosingBalance`
-  - `OpeningDebitBalance`
-  - `OpeningCreditBalance`
-  - `ClosingDebitBalance`
-  - `ClosingCreditBalance`
-  - `DebitAmount`
-  - `CreditAmount`
-  - `SourceRawRowId`
-
-- `target.gl_document_summary`
-  - `ProjectId`
-  - `DocumentNumber`
-  - `LineCount`
-  - `NetAmount`
-  - `DebitTotal`
-  - `CreditTotal`
-  - `FirstPostDate`
-  - `FirstApprovalDate`
-
-- `target.gl_account_summary`
-  - `ProjectId`
-  - `AccountCode`
-  - `LineCount`
-  - `AmountSum`
-  - `DebitTotal`
-  - `CreditTotal`
-
-### 4.4 Mapping / DateDimension
-
-- `target.account_mapping`
-  - `AccountMappingId`
-  - `ProjectId`
-  - `SourceImportBatchId`
-  - `AccountCode`
-  - `AccountName`
-  - `StandardizedCategory`
-  - `IsCurrent`
-
-- `target.date_dimension`
-  - `ProjectId`
-  - `DateKey`
-  - `FullDate`
-  - `DayOfWeek`
-  - `IsWeekend`
-  - `IsHoliday`
-  - `IsMakeupDay`
-  - `HolidayDesc`
-  - `MakeupDayDesc`
-
-### 4.5 Validation results
-
-- `result.validation_run`
-- `result.validation_v1_detail`
-- `result.validation_v2_document`
-- `result.validation_v3_sample`
-- `result.validation_v4_detail`
-
-### 4.6 Prescreen results
-
-- `result.prescreen_run`
-- `result.rule_execution`
-- `result.rule_hit_row`
-- `result.rule_document_hit`
-- `result.rule_summary`
-
-### 4.7 Scenario / advanced filter
-
-- `config.scenario`
-- `config.scenario_group`
-- `config.scenario_rule`
-- `result.scenario_preview`
-- `result.scenario_preview_row`
-- `result.scenario_commit`
-- `result.scenario_commit_row`
-
-### 4.8 Workpaper snapshot
-
-- `result.workpaper_export_run`
-- `result.workpaper_sheet_snapshot`
+- Phase 0：收斂 D1、D2（契約 / Thin-Bridge 邊界）
+- Phase 1：收斂 D5（Demo 改走正規 import 流程）
+- Phase 2：引入 Repository 抽象 + Schema 初始化（D3 骨架）
+- Phase 3：把既有 in-memory handler 切換到 Repository（D3 完成）
+- Phase 4：拆 `FilterScenarioCommandHandler`（D4）
 
 ---
 
-## 5. DTO 分層
+## 3. Phase 0：前端契約收斂（D1 + D2） ✅ **已完成**
 
-### 5.1 Frontend-visible DTO
+已交付（本輪）：
 
-- `BridgeRequestEnvelope`
-- `BridgeResponseEnvelope`
-- `BridgeErrorDto`
+- `docs/action-contract-manifest.md`：新增 `JetApi Typed Facade` 章節（20+ actions 的 camelCase 對照表）；`Anti-Patterns` 加三條禁令（前端不得實作 authoritative 規則、UI 不得直接 `window.jet.invoke` / `postMessage`、規則不得雙份實作）。
+- `src/JET/JET/Bridge/JetBridgeScriptFactory.cs`：在 bootstrap script 注入 `window.JetApi`，以 `SupportedActions` 為唯一事實來源自動生成 camelCase 方法；未知方法透過 `Proxy` 丟出帶提示的 Error。
+- `docs/jet-template.html`：新增 `AUTHORITATIVE_ACTIONS` 集合；`jetBridge.invoke` 對 authoritative 動作（`validate.run` / `prescreen.run` / `filter.preview` / `filter.commit`）直接丟錯、禁止 silent fallback；`templatePreviewHandlers` 移除 `RUN_VALIDATION` / `RUN_PRESCREEN` / `PREVIEW_FILTER` / `COMMIT_FILTER` entries。IO-echo handlers（import.*、mapping.commit.*、export.*）保留 UI-preview fallback。
+- `.github/skills/jet-contract-first-ui/SKILL.md`：加 Backend Access Rule 章節，範例正確/禁止兩側對照。
+- `.github/instructions/frontend.instructions.md`：加 `Backend Calls Go Through JetApi` 章節。
+- `.github/instructions/bridge.instructions.md`：加 `ActionDispatcher` 不得調用 repository、`JetBridgeScriptFactory` 為 facade 單一來源兩條規則。
+- `AGENTS.md` Non-Negotiable Architecture 加入 JetApi facade 一行。
+- 順手修復：重建缺失的 `src/JET/JET/Application/Common/GlRowAccess.cs`（pre-existing build break；CS0234 for `JET.Application.Common` 未定義），並把 `RunValidationQueryHandler.cs` 內三處未限定的 `GetVal` / `ParseDecimal` 改為 `GlRowAccess.GetVal` / `GlRowAccess.ParseDecimal`。
 
-- `CreateProjectRequestDto`
-- `CreateProjectResponseDto`
-- `LoadProjectRequestDto`
-- `LoadProjectResponseDto`
-- `ImportGlRequestDto`
-- `ImportGlResponseDto`
-- `ImportTbRequestDto`
-- `ImportTbResponseDto`
-- `ImportAccountMappingRequestDto`
-- `ImportAccountMappingResponseDto`
-- `ImportCalendarRequestDto`
-- `ImportCalendarResponseDto`
-- `CommitFieldMappingRequestDto`
-- `CommitFieldMappingResponseDto`
-- `RunValidationRequestDto`
-- `RunValidationResponseDto`
-- `RunPrescreenRequestDto`
-- `RunPrescreenResponseDto`
-- `PreviewScenarioRequestDto`
-- `PreviewScenarioResponseDto`
-- `CommitScenarioRequestDto`
-- `CommitScenarioResponseDto`
-- `ExportWorkpaperRequestDto`
-- `ExportWorkpaperResponseDto`
+Verification：
 
-### 5.2 Application internal DTO / command / query
+- `dotnet build src/JET/JET.slnx`：0 errors（僅 WindowsBase 既有 warning）。
+- `dotnet test src/JET/JET.slnx`：8/8 pass, 0 failures。
+- Grep：`templatePreviewHandlers` 內已無 `RUN_VALIDATION` / `RUN_PRESCREEN` / `PREVIEW_FILTER`；`AUTHORITATIVE_ACTIONS` gate 存在；`JetApi` facade / `toFacadeMethodName` 在 script factory 已注入。
 
-- `CreateProjectCommand`
-- `LoadProjectQuery`
-- `ImportGlCommand`
-- `ImportTbCommand`
-- `ImportAccountMappingCommand`
-- `ImportCalendarCommand`
-- `CommitFieldMappingCommand`
-- `RunValidationCommand`
-- `RunPrescreenCommand`
-- `PreviewScenarioQuery`
-- `CommitScenarioCommand`
-- `ExportWorkpaperCommand`
+尚未做（延後至下一輪）：
 
-- `ProjectCreatedResult`
-- `ProjectLoadedResult`
-- `ImportBatchAcceptedResult`
-- `FieldMappingCommittedResult`
-- `ValidationRunResult`
-- `PrescreenRunResult`
-- `ScenarioPreviewResult`
-- `ScenarioCommitResult`
-- `WorkpaperExportResult`
+- `docs/jet-template.html` 內 `computeValidation()` / `computePrescreen()` / `evaluateScenario()` 等函式**暫留**。它們仍被 `applyDemoStep3Data`、`applyDemoPayload`、`buildAndSaveValidationReport`、`buildAndSaveWorkPaper` 呼叫；這些是 demo / export 的 UI-preview 路徑，需在 Phase 1（demo 改走正規 import pipeline）/ Phase 3（export 改走 bridge）一併移除，避免違反 Surgical Changes maxim。
+- UI code 仍有少數地方直接呼叫 `window.jet.invoke`（Phase 1 會改走 `JetApi.*`）。
 
-### 5.3 Export internal DTO
+### 3.1 原 D1 收斂細節（備查）
 
-- `WorkpaperWorkbookModel`
-- `WorkpaperSheetModel`
-- `WorkpaperSectionModel`
-- `WorkpaperExportArtifactDto`
+**目標**：`docs/jet-template.html` 中，`validate.run` / `prescreen.run` / `filter.preview` **不再有 JS 本地實作**。
+
+步驟：
+
+1. 更新 `docs/action-contract-manifest.md` 的 `Anti-Patterns` 區塊，新增「不可在前端實作 authoritative 業務規則」。
+2. 在 `docs/jet-template.html`：
+   - 刪除 `computeValidation()`、`computePrescreen()`、`evaluateScenario()`、`applyCondition()` 等函式。
+   - 刪除 `templatePreviewHandlers` 中 `validate.run` / `prescreen.run` / `filter.preview` 的 entry。
+   - `dispatchAction()` 簡化：只走 `window.jet.invoke`；若 bridge 不存在，顯示 `{ ok: false, error: 'bridge_unavailable' }` 並停在錯誤訊息，不再做 silent fallback。
+3. 保留的 fallback 只允許 UI-only 的 template preview（例如純呈現假 layout 的 demo static table）；不可觸及 validation / prescreen / filter 規則。
+4. 驗證：`dotnet build src/JET/JET.slnx` + 手動啟動 `JET.csproj`，確認步驟 3/4/5 UI 仍能收到 handler 回傳結果。
+
+### 3.2 引入 `JetApi` typed facade（D2）
+
+**目標**：UI 層不再寫 `window.jet.invoke('xxx', payload)`；改寫 `await JetApi.runValidation()`。
+
+步驟：
+
+1. 在 `docs/action-contract-manifest.md` 新增章節「JetApi Typed Facade」：
+   - facade 方法名與 action name 一對一（e.g. `validate.run` → `JetApi.runValidation`）。
+   - 每個方法的 TypeScript-style 簽章（即使寫 JS，註解描述 payload/response 形狀）。
+   - 規定 AI 生成 UI 時必須呼叫 facade，不得直接呼叫 `window.jet.invoke`。
+2. 在 `Bridge/JetBridgeScriptFactory.cs` 產生的 bootstrap script 中，在 `window.jet` 之上再 freeze 一個 `window.JetApi`：
+   - 每個 supported action 自動對應一個 camelCase 方法。
+   - 以 `SupportedActions` 為單一事實來源自動生成，避免 C# 與 JS 兩邊維護兩份清單。
+   - 例：`validate.run` → `JetApi.validateRun()`；`mapping.commit.gl` → `JetApi.mappingCommitGl(payload)`。
+   - 若呼叫未知方法，丟出帶有提示「請先在 `docs/action-contract-manifest.md` 新增 action」的 Error。
+3. 更新 `docs/jet-template.html` 與 `.github/skills/jet-contract-first-ui/SKILL.md`：UI 範例全部改用 `JetApi.*`。
+4. 舊的 `window.jet.invoke` 保留作為 low-level escape hatch，但寫明「正式 UI 不應直接使用」。
+
+### 3.3 驗收標準
+
+- `Select-String -Path docs/jet-template.html -Pattern 'computeValidation|computePrescreen|evaluateScenario'` 回傳空。
+- `docs/action-contract-manifest.md` 已記載 JetApi facade 規則。
+- UI 內唯一還使用 `window.jet.invoke` 的地方，是 bootstrap 階段的 `app.bootstrap` 呼叫（facade 尚未組裝）。
 
 ---
 
-## 6. Repository Abstractions
+## 4. Phase 1：Demo 資料改走正規 import 流程（D5） ✅ **已完成**
 
-### `IProjectRepository`
+已交付（本輪）：
 
-- `CreateAsync`
-- `GetAsync`
-- `GetByCodeAsync`
-- `GetStateAsync`
-- `SaveOptionsAsync`
-- `SetCurrentPointersAsync`
+- `docs/action-contract-manifest.md`：`project.loadDemo` response 改為 metadata-only；新增 `demo.fetchGlRows` / `demo.fetchTbRows` / `demo.fetchAccountMappingRows` 三個 action（payload `{}`，response 對齊 `import.*` 形狀）；補上 `JetApi Typed Facade` 章節（lowerCamelCase 串接規則 + facade 為唯一前端入口）；新增 `Demo Pipeline 對齊原則` 章節。
+- `src/JET/JET/Application/Contracts/DemoProjectDto.cs`：移除 `GlRows` / `TbRows` / `AccountMappingRows`（metadata-only）；新增 `DemoGlRowsDto` / `DemoTbRowsDto` / `DemoAccountMappingRowsDto`。
+- `src/JET/JET/Application/DemoData/DemoProjectDataBundle.cs`：新增 `Gl` / `Tb` / `AccountMapping` slice；保留 `InvalidGlRows`。
+- `src/JET/JET/Application/DemoData/DeterministicDemoProjectDataGenerator.cs`：產生新 bundle 形狀（含 GL/TB columns）。
+- `src/JET/JET/Application/Queries/ProjectDemo/`：新增 `FetchDemoGlRowsQuery` / `FetchDemoTbRowsQuery` / `FetchDemoAccountMappingRowsQuery` 與對應 handler；`GetProjectDemoQueryHandler` 自動降級為 metadata。
+- `src/JET/JET/Bridge/ActionDispatcher.cs`：註冊三個 `demo.fetch*` 路由；`SupportedActions` 自動帶出，前端 `JetApi.demoFetchGlRows` 等方法無需額外註冊即可使用。
+- `docs/jet-template.html`：新增 `FETCH_DEMO_*` ACTIONS 常數；`ensureDemoBundle()` 重寫為「先取 metadata → 平行 fetch 三批 rows → 平行驅動 `project.create` 後再 `import.gl/tb/accountMapping/holiday/makeupDay`」與使用者上傳完全相同的 pipeline；前端 state 仍可繼承既有 `applyDemoStep1Data` 介面（surgical change）。
+- `src/JET/tests/JET.Tests/DemoData/DemoProjectDataGeneratorTests.cs`：四個既有測試改用 `bundle.Gl.Rows` / `bundle.Tb.Rows`；新增 `Generate_ShouldExposeColumnsConsistentWithRows` 確保 columns/file-name 與 rows 對齊。
 
-### `IGlRepository`
+Verification：
 
-- `CreateImportBatchAsync`
-- `StageRawAsync`
-- `GetRawColumnsAsync`
-- `StandardizeAsync`
-- `RebuildDocumentSummaryAsync`
-- `RebuildAccountSummaryAsync`
-- `GetPageAsync`
-- `GetByDocumentAsync`
+- `dotnet build src/JET/JET.slnx`：0 errors（僅 WindowsBase 既有 warning）。
+- `dotnet test src/JET/JET.slnx`：9/9 pass, 0 failures。
+- Grep：`docs/jet-template.html` 內已含 `FETCH_DEMO_GL_ROWS` / `FETCH_DEMO_TB_ROWS` / `FETCH_DEMO_ACCOUNT_MAPPING_ROWS` 常數與 `ensureDemoBundle` 的 import.* 平行呼叫。
 
-### `ITbRepository`
+尚未做（延後至下一輪）：
 
-- `CreateImportBatchAsync`
-- `StageRawAsync`
-- `GetRawColumnsAsync`
-- `StandardizeAsync`
-- `GetPageAsync`
+- 「demo 流程等價於使用者上傳」的 application-level integration test（涉及多 handler 串接 + InMemoryProjectSessionStore 端到端比對），會與 Phase 2/3 Repository 切換一起寫，避免本輪寫了等下又重寫。
+- `docs/jet-template.html` 內 `computeValidation()` / `computePrescreen()` / `evaluateScenario()` **仍保留**（被 `applyDemoStep3Data` / `applyDemoPayload` / `buildAndSaveValidationReport` / `buildAndSaveWorkPaper` 使用）。Phase 1 只負責 demo 入口與 import pipeline；UI-preview 路徑的 authoritative 化會在後續 phase 隨 export 重構一併處理（Surgical Changes maxim）。
 
-### `IAccountMappingRepository`
+### 4.1 原始步驟（備查）
 
-- `ReplaceCurrentAsync`
-- `GetCurrentAsync`
-- `GetCategoryLookupAsync`
+1. 把 `Application/DemoData/` 的 generator 拆成：
+   - `IDemoProjectScenario`：描述一個 demo 案例的 metadata（project 設定、holidays、makeup）。
+   - `IDemoGlRowsSource` / `IDemoTbRowsSource` / `IDemoAccountMappingSource`：分別產出 raw rows。
+2. 新增 action（contract 變更，先改 manifest）：
+   - 保留 `project.loadDemo` 回 metadata（project 欄位、file names、holiday/makeup dates、建議 mapping），但**不再回 rows**。
+   - 新增 `demo.fetchGlRows` / `demo.fetchTbRows` / `demo.fetchAccountMappingRows`。
+3. 前端的「載入測試資料」按鈕流程改寫為：
+   1. 呼叫 `JetApi.projectLoadDemo()` 拿 metadata，填 project form。
+   2. 呼叫 `JetApi.projectCreate(metadata)`。
+   3. 呼叫 `JetApi.demoFetchGlRows()` → 再用結果呼叫 `JetApi.importGl(rows, columns, fileName)`。
+   4. TB / AccountMapping 同理。
+   5. Holiday / Makeup 直接用 metadata 中的 dates 呼叫 `JetApi.importHoliday` / `JetApi.importMakeupDay`。
+4. 驗收：拔掉 `project.loadDemo` 中 `glRows`、`tbRows`、`accountMappingRows` 欄位後，前端仍能走完整個 pipeline。
+5. 單元測試：在 `JET.Tests/DemoData/` 補 integration 測試，驗證 demo 流程等價於「使用者上傳」流程（同一批 rows，經過同一組 handler，產生同一個結果）。
 
-### `IDateDimensionRepository`
-
-- `ReplaceCalendarInputAsync`
-- `RebuildDateDimensionAsync`
-- `GetRangeAsync`
-
-### `IValidationRepository`
-
-- `RunAsync`
-- `GetLatestRunAsync`
-- `GetSummaryAsync`
-- `GetV1DetailPageAsync`
-- `GetV2DocumentPageAsync`
-- `GetV3SampleAsync`
-- `GetV4DetailPageAsync`
-
-### `IPreScreenRepository`
-
-- `RunAsync`
-- `GetRunSummaryAsync`
-- `GetRuleExecutionAsync`
-- `GetRuleHitsPageAsync`
-- `GetRuleSummaryRowsAsync`
-
-### `IScenarioRepository`
-
-- `PreviewAsync`
-- `SaveAsync`
-- `CommitAsync`
-- `GetCommittedAsync`
-
-### `IWorkpaperExporter`
-
-- `ExportAsync`
-- `CreateManifestAsync`
+這一步讓 demo 與 production path **完全對齊**，未來 AI 生成新畫面時不會因為「demo 只有前端有」而誤解系統行為。
 
 ---
 
-## 7. Provider 差異責任
+## 5. Phase 2：Repository 抽象 + Schema 初始化（D3 骨架）
 
-以下差異必須封裝在 Infrastructure，不可上推到 Application：
+### 5.1 設計原則
 
-- SQLite raw import:
-  - prepared statement batch insert
-- SQL Server raw import:
-  - `SqlBulkCopy`
+- Application 層**只依賴 interface**（`IProjectRepository`、`IGlRepository`、`ITbRepository`、`IAccountMappingRepository`、`IDateDimensionRepository`、`IValidationRepository`、`IPreScreenRepository`、`IScenarioRepository`）。
+- Infrastructure 層為每個 provider 提供一組實作：`Infrastructure/Persistence/Sqlite/*Repository.cs`、`Infrastructure/Persistence/SqlServer/*Repository.cs`。
+- **Schema 名稱差異封裝在 `ISchemaNames`**（對應 legacy `DbSchema.cls` 的精神）：
+  - SQLite 實作回傳 `staging_gl_raw_row`（底線串接）。
+  - SQL Server 實作回傳 `staging.gl_raw_row`（schema 分離）。
+  - Application / Domain 永遠只引用邏輯名稱 `SchemaNames.StagingGlRawRow`，不自拼字串。
+- **DbAccess/Connection 差異封裝在 `IDbSession`**（對應 legacy `DbAccess.cls` 的精神）：
+  - 提供 `BeginTxAsync` / `CommitAsync` / `RollbackAsync` / `ExecuteNonQueryAsync` / `QueryAsync<T>` / `BulkInsertAsync<T>`。
+  - SQLite 實作用 `Microsoft.Data.Sqlite` + `Dapper` + prepared-statement batch insert。
+  - SQL Server 實作用 `Microsoft.Data.SqlClient` + `Dapper` + `SqlBulkCopy`。
 
-- V1 completeness:
-  - SQLite 用 UNION-based `FULL OUTER JOIN` 模擬
-  - SQL Server 用 native `FULL OUTER JOIN`
+### 5.2 目錄配置（不破壞既有）
 
-- R2 / A2 keyword / regex:
-  - SQLite 用 UDF 或 token strategy
-  - SQL Server 用 `LIKE` / `PATINDEX` / helper function
+新增（**只在 `Infrastructure` 下增加子資料夾**，不動 `Application` / `Domain` 根結構）：
 
-- V3 sample:
-  - 避免 `ORDER BY random()` 全表排序
-  - 使用 stable seed / hash
+```
+src/JET/JET/
+├─ Domain/
+│  ├─ Abstractions/
+│  │  ├─ Repositories/          ← 新增：IGlRepository 等
+│  │  └─ Persistence/           ← 新增：IDbSession、ISchemaNames
+│  └─ ...
+├─ Infrastructure/
+│  ├─ Persistence/
+│  │  ├─ Schema/                ← 新增：SqliteSchemaNames、SqlServerSchemaNames
+│  │  ├─ Sessions/              ← 新增：SqliteDbSession、SqlServerDbSession
+│  │  ├─ Sqlite/
+│  │  │  ├─ Repositories/       ← 新增：SqliteGlRepository 等
+│  │  │  └─ Migrations/         ← 新增：schema init SQL scripts
+│  │  └─ SqlServer/
+│  │     ├─ Repositories/
+│  │     └─ Migrations/
+│  └─ ...
+```
 
-- date series / date dimension rebuild:
-  - provider 內處理產生方式
+這個增量不會讓 AI 追蹤變難：每個 repository 在兩個 provider folder 下各一個檔，命名完全對應，透過 interface 匯合。
 
----
+### 5.3 Schema 初始化流程
 
-## 8. Action 對應 handler
+1. 新增 `Domain/Abstractions/Persistence/ISchemaInitializer`。
+2. Infrastructure 各 provider 提供 `SqliteSchemaInitializer` / `SqlServerSchemaInitializer`：
+   - 本輪先建：`config_project`、`config_project_state`、`config_import_batch`、`config_import_column`、`staging_gl_raw_row`、`staging_tb_raw_row`、`staging_account_mapping_raw_row`、`staging_calendar_raw_day`。
+   - `target_*` / `result_*` 留到下一輪。
+3. 在 `Program.cs` 啟動時呼叫 `await schemaInitializer.EnsureAsync()`。若 provider 不可用，記錄 warning 並讓 `app.bootstrap` 透過 `DatabaseStatus.IsAvailable = false` 通知前端。
 
-### `project.create`
+### 5.4 DI / 註冊
 
-- Request DTO: `CreateProjectRequestDto`
-- Dependencies: `IProjectRepository`
-- Write path:
-  - `config.project`
-  - `config.project_state`
-  - `config.project_option`
-- Output: `CreateProjectResponseDto`
-
-### `project.load`
-
-- Request DTO: `LoadProjectRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IValidationRepository`
-  - `IPreScreenRepository`
-  - `IScenarioRepository`
-- Read path:
-  - project metadata
-  - current batch pointers
-  - latest run headers
-- Output: `LoadProjectResponseDto`
-
-### `import.gl`
-
-- Request DTO: `ImportGlRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IGlRepository`
-  - optional file reader abstraction
-- Write path:
-  - `config.import_batch`
-  - `config.import_column`
-  - `staging.gl_raw_row`
-  - update current GL batch pointer
-- Output: `ImportGlResponseDto`
-
-### `import.tb`
-
-- Request DTO: `ImportTbRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `ITbRepository`
-- Write path:
-  - `config.import_batch`
-  - `config.import_column`
-  - `staging.tb_raw_row`
-  - update current TB batch pointer
-- Output: `ImportTbResponseDto`
-
-### `import.accountMapping`
-
-- Request DTO: `ImportAccountMappingRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IAccountMappingRepository`
-- Write path:
-  - `config.import_batch`
-  - `staging.account_mapping_raw_row`
-  - `target.account_mapping`
-- Output: `ImportAccountMappingResponseDto`
-
-### `import.holiday` / `import.makeupDay`
-
-- Request DTO: `ImportCalendarRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IDateDimensionRepository`
-- Write path:
-  - `config.import_batch`
-  - `staging.calendar_raw_day`
-  - rebuild `target.date_dimension`
-- Output: `ImportCalendarResponseDto`
-
-### `mapping.commit`
-
-- Request DTO: `CommitFieldMappingRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IGlRepository`
-  - `ITbRepository`
-- Write path:
-  - `config.field_mapping`
-  - rebuild `target.gl_entry` or `target.tb_balance`
-  - rebuild summaries
-- Output: `CommitFieldMappingResponseDto`
-
-### `validate.run`
-
-- Request DTO: `RunValidationRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IValidationRepository`
-- Read path:
-  - `target.gl_entry`
-  - `target.tb_balance`
-  - target summaries
-- Write path:
-  - `result.validation_*`
-- Output: `RunValidationResponseDto`
-
-### `prescreen.run`
-
-- Request DTO: `RunPrescreenRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IPreScreenRepository`
-- Read path:
-  - `target.gl_entry`
-  - `target.account_mapping`
-  - `target.date_dimension`
-  - `config.rule_parameter`
-- Write path:
-  - `result.prescreen_*`
-- Output: `RunPrescreenResponseDto`
-
-### `filter.preview`
-
-- Request DTO: `PreviewScenarioRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IScenarioRepository`
-- Read path:
-  - target GL
-  - prescreen hits
-- Optional write path:
-  - `result.scenario_preview*`
-- Output: `PreviewScenarioResponseDto`
-
-### `filter.commit`
-
-- Request DTO: `CommitScenarioRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IScenarioRepository`
-- Write path:
-  - `config.scenario*`
-  - `result.scenario_commit*`
-- Output: `CommitScenarioResponseDto`
-
-### `export.workpaper`
-
-- Request DTO: `ExportWorkpaperRequestDto`
-- Dependencies:
-  - `IProjectRepository`
-  - `IValidationRepository`
-  - `IPreScreenRepository`
-  - `IScenarioRepository`
-  - `IAccountMappingRepository`
-  - `IWorkpaperExporter`
-- Read path:
-  - config + target + result
-- Write path:
-  - `result.workpaper_export_run`
-  - `result.workpaper_sheet_snapshot`
-- Output: `ExportWorkpaperResponseDto`
+- 不引入 MS.Extensions.DependencyInjection（避免過度）。
+- 在 `Program.cs` 用 **手動組裝**（simple factory）：按 `options.Database.Provider` switch 一次，組出所有 repository 實例，注入 `ActionDispatcher`。
+- `ActionDispatcher` 建構子需擴充接收 repository 介面集合（保持 Thin-Bridge：dispatcher 只把 repo 傳給 handler，不自己調用 repo）。
 
 ---
 
-## 9. SQLite-first 效能策略
+## 6. Phase 3：Handler 切換到 Repository（D3 完成）
 
-### Bulk insert
+**原則**：每個 action 一個 PR 切換，不一次全切。切換順序按業務流程：
 
-- 正式版不要透過 WebView2 JSON 直接傳 100 萬到 500 萬筆 rows。
-- Host 應提供 `fileToken` / `sourceHandle`，Infrastructure 直接讀檔。
-- SQLite:
-  - prepared statement
-  - batched insert
-  - chunk size 約 `5,000 ~ 20,000`
-- SQL Server:
-  - `SqlBulkCopy`
+1. `project.create` → `IProjectRepository.CreateAsync`（同時寫 `config_project` + `config_project_state`）。
+2. `import.gl` → `IGlRepository.CreateImportBatchAsync` + `StageRawAsync`（SQLite 用 prepared statement batch size 5000~20000；SQL Server 用 `SqlBulkCopy`）。
+3. `import.tb` → 同上。
+4. `import.accountMapping` → `IAccountMappingRepository.ReplaceCurrentAsync`。
+5. `import.holiday` / `import.makeupDay` → `IDateDimensionRepository.ReplaceCalendarInputAsync`。
+6. `project.load`（新增）→ 從 repository 讀出目前 session pointers。
+7. `validate.run` / `prescreen.run` / `filter.preview` / `filter.commit` 本輪**不切到 DB**，繼續讀 `InMemoryProjectSessionStore` 做 in-memory 計算。下一輪再遷到 `target_*` tables。
 
-### Transaction
+這樣 `InMemoryProjectSessionStore` 在本輪末期會縮減為「僅保存 mapping + holidays 的 session cache」，真實大資料已落地到 DB。
 
-- raw import: 一個 outer transaction
-- 超大檔可 chunk transaction + batch finalize
-- standardize rebuild: 一個 dataset 一個 transaction
-- validation / prescreen / scenario commit / export manifest:
-  - 每次 run 一個 transaction
+### 驗證策略
 
-### Index
-
-- raw staging 只保留最小索引：
-  - `(ProjectId, ImportBatchId, RowNo)`
-- target 完成後建立：
-  - `DocumentNumber`
-  - `AccountCode`
-  - `PostDate`
-  - `ApprovalDate`
-  - `CreatedBy`
-
-### Paging
-
-- 大表一律 keyset paging
-- 不做深頁 OFFSET
-- `validate.run` / `prescreen.run` 回 summary，不回完整大明細
-
-### Materialized strategy
-
-建議 materialize：
-
-- `target.gl_document_summary`
-- `target.gl_account_summary`
-- `result.rule_document_hit`
-
-### Raw vs summarized
-
-- raw rows 必留，因為 mapping 可能重做
-- standardized target tables 必留，因為後續所有流程都依賴它
-- repeated aggregation 應以 summary table 保存
-
-### 建議切 SQL Server 的情況
-
-- 單專案 GL 穩定超過 500 萬且反覆 rerun
-- 多使用者並行
-- 長期保留大量 snapshot
-- 大量全文條件反覆掃描
-- 匯出與查詢同時密集發生
+- `JET.Tests` 為每個 repository 新增 SQLite `:memory:` 測試（快、無副作用）。
+- `project.create` → `import.gl` → `mapping.commit.gl` 一條 happy path 的 integration test，跑滿 100 筆 demo GL。
+- SQL Server 實作先寫好但暫不跑 CI（需要 local instance）；留 `[Trait("Category", "SqlServer")]` 標籤。
 
 ---
 
-## 10. 建議實作順序
+## 7. Phase 4：拆 `FilterScenarioCommandHandler`（D4）
 
-### Phase 0. Boundary Alignment / Contract Drift Cleanup
+`Application/Commands/FilterScenario/` 下新增：
 
-1. 盤點 `docs/jet-template.html` 內所有 fallback business logic
-2. 收斂 `validate.run` / `prescreen.run` / `filter.preview` 的 authoritative owner 到 C# backend
-3. 檢查 `validate.run` 的 V1-V4 命名與 `docs/jet-guide.md` / `docs/action-contract-manifest.md` 是否一致
-4. 若有 drift，先修 manifest / docs，再進入後續 phase
+```
+Rules/
+├─ IScenarioRuleEvaluator.cs
+├─ PrescreenRuleEvaluator.cs
+├─ TextRuleEvaluator.cs
+├─ DateRangeRuleEvaluator.cs
+├─ NumRangeRuleEvaluator.cs
+├─ AccountPairRuleEvaluator.cs
+├─ DrCrOnlyRuleEvaluator.cs
+└─ ManualAutoRuleEvaluator.cs
+```
 
-### Phase 1. Import 最小閉環
-
-1. 建：
-   - `config.project`
-   - `config.project_state`
-   - `config.import_batch`
-   - `config.import_column`
-   - `staging.gl_raw_row`
-   - `staging.tb_raw_row`
-2. 完成 `project.create`
-3. 完成 `import.gl`
-4. 完成 `import.tb`
-5. 完成 `project.load`
-
-### Phase 2. Standardized schema
-
-1. 建 `config.field_mapping`
-2. 建 `target.gl_entry`
-3. 建 `target.tb_balance`
-4. 建 `target.gl_document_summary`
-5. 建 `target.gl_account_summary`
-6. 完成 `mapping.commit`
-
-### Phase 3. Validation
-
-1. 建 `result.validation_run`
-2. 先做 V2
-3. 再做 V4
-4. 再做 V1
-5. 最後做 V3
-
-### Phase 4. Prescreen
-
-1. 建 `target.account_mapping`
-2. 建 `target.date_dimension`
-3. 建 `result.prescreen_run`
-4. 建 `result.rule_execution`
-5. 建 `result.rule_hit_row`
-6. 建 `result.rule_summary`
-7. 先做：
-   - `R1`
-   - `R2`
-   - `R4`
-8. 再做：
-   - `R5`
-   - `R6`
-9. 再做：
-   - `R3`
-   - `R7`
-   - `R8`
-10. 最後補：
-   - `A2`
-   - `A3`
-   - `A4`
-
-### Phase 5. Advanced filter
-
-1. 建 `config.scenario*`
-2. 建 `result.scenario_preview*`
-3. 建 `result.scenario_commit*`
-4. 完成 `filter.preview`
-5. 完成 `filter.commit`
-
-### Phase 6. Workpaper export
-
-1. 建 `result.workpaper_export_run`
-2. 建 `result.workpaper_sheet_snapshot`
-3. 建 workbook model
-4. 先輸出：
-   - `Engagement Overview`
-   - `Data Overview`
-   - `Validation Overview`
-5. 再輸出 validation details
-6. 再輸出 rules sheets
-7. 再輸出 mapping info / field mapping info
+`FilterScenarioCommandHandler` 變成 orchestrator：根據 rule type 選 evaluator，把 AND/OR 組合交給 `ScenarioGroupComposer`。  
+每個 evaluator ≤ 150 行、單一職責、可獨立測試。  
+**本階段不改契約**：payload / response shape 維持現狀（見 manifest Filter 章節）。
 
 ---
 
-## 11. 建議交給 AI 的小任務拆法
+## 8. Harness / `.github/` 更新清單
 
-1. 建 project/config/import batch schema 與 repository skeleton
-2. 做 GL raw import pipeline
-3. 做 TB raw import pipeline
-4. 做 project.load state DTO
-5. 做 GL mapping commit + standardization
-6. 做 TB mapping commit + standardization
-7. 做 V2 + V4
-8. 做 V1
-9. 做 V3
-10. 做 account mapping import
-11. 做 holiday / makeup day import + date dimension rebuild
-12. 做 R1 / R2 / R4
-13. 做 R5 / R6
-14. 做 R3 / R7 / R8
-15. 做 A2 / A3 / A4
-16. 做 scenario schema + preview engine
-17. 做 scenario commit snapshot
-18. 做 workpaper manifest + first 3 sheets
-19. 做 full workpaper export
+本計畫在執行期間，下列 harness 檔需要同步維護（僅在該主題真的改動時才更新）：
+
+- `docs/action-contract-manifest.md`：
+  - 新增 **JetApi Typed Facade** 章節（Phase 0.2）
+  - 新增 `demo.fetchGlRows` / `demo.fetchTbRows` / `demo.fetchAccountMappingRows`（Phase 1）
+  - Anti-Patterns 新增：前端不得實作 authoritative validation / prescreen / filter 規則；UI 不得直接呼叫 `window.jet.invoke`。
+- `.github/skills/jet-contract-first-ui/SKILL.md`：補充 JetApi facade 使用範例，並明確禁止寫 `window.chrome.webview.postMessage` 與 `window.jet.invoke`（除 bootstrap）。
+- `.github/instructions/frontend.instructions.md`：加入 JetApi facade 規則。
+- `.github/instructions/bridge.instructions.md`：加入「ActionDispatcher 不得調用 repository；只能把 repo 傳給 handler」。
+- `.github/skills/jet-engineering-maxims/SKILL.md`：如五條原則未涵蓋「前端只看 facade」則補一句；不另立新原則。
+- `AGENTS.md`：維持簡短，不加新章節；只在 `Non-Negotiable Architecture` 加一行：「Frontend calls backend exclusively through `JetApi` facade」。
+- `.github/copilot-instructions.md`：維持中文精要版；若原則沒變，不動。
+
+**不新增**新的 agent / prompt / skill 檔，除非現有檔真的無處放。
+
+---
+
+## 9. 驗證與交付（Visual Studio 18.5 baseline）
+
+每個 Phase 完成後：
+
+```
+dotnet build src/JET/JET.slnx
+dotnet test  src/JET/JET.slnx
+```
+
+以及：
+
+- Visual Studio F5 啟動 `JET.csproj`，手動確認：
+  - 步驟 1/2/3/4/5 UI 仍可正常互動
+  - `app.bootstrap` 回傳 `database.provider` 正確
+  - 載入 demo → import → mapping → validate → prescreen → filter 能跑完 happy path
+- 若使用 Copilot Agent Mode，確認 `.github/skills/*` 被 agent discovery 起效（18.5.0 起自動）。
+
+---
+
+## 10. 本輪「不要做」清單（避免 scope creep）
+
+- 不實作 `target_*` / `result_*` 資料表（下一輪才做，否則這輪會爆）。
+- 不做 workpaper exporter（留最末 phase）。
+- 不引入第三方 DI / mapper / validation library。
+- 不重寫 `Form1.cs`（目前已經夠 thin）。
+- 不動 `Form1.Designer.cs`。
+- 不合併 `Application/Commands` 與 `Application/Queries`（CQRS 分離仍合理）。
+- 不把前端 HTML 拆成多檔 SPA（仍維持單一 shell）。
+
+---
+
+## 11. 下一輪 working plan 的候選題目
+
+待本版 Phase 0～4 完成後，下一版 plan.md 應聚焦：
+
+1. `target_gl_entry` / `target_tb_balance` + mapping 標準化寫入
+2. `target_gl_document_summary` / `target_gl_account_summary` 彙總表
+3. `target_account_mapping` / `target_date_dimension`
+4. Validation V1~V4 與 Prescreen R1~R8 / A2~A4 的 repository 實作（provider-specific SQL）
+5. `result_*` 系列表 + keyset paging
+6. Workpaper exporter + manifest
+7. SQL Server 的 `SqlBulkCopy` 路徑正式跑 CI
 
 ---
 
 ## 12. 本檔用途
 
-本檔是臨時開發計畫，用來讓下一輪 Visual Studio 的 GitHub Copilot 直接依照這裡開始實作。
-
-若本計畫與 `docs/jet-guide.md`、`docs/action-contract-manifest.md` 發生衝突：
-
-- 以 `docs/jet-guide.md` 與正式規格文件為準
-- 實作時若修正本計畫，應同步更新正式文件，而不是只改這份臨時計畫
+本檔是臨時 working plan，用來讓下一輪 VS 18.5 Copilot / Agent 直接接手。  
+若本檔與權威文件（`docs/jet-guide.md`、`docs/action-contract-manifest.md`、`AGENTS.md`、`.github/**`）衝突，以權威文件為準。  
+實作時若發現需要修正權威文件（例如 D1~D5 造成契約漂移），**先更新權威文件，再寫碼**；不要只改本檔。

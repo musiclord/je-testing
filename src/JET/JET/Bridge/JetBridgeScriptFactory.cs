@@ -45,6 +45,39 @@ namespace JET.Bridge
         }
     });
 
+    function toFacadeMethodName(action) {
+        const segments = String(action).split('.');
+        return segments
+            .map((seg, idx) => {
+                if (seg.length === 0) return seg;
+                if (idx === 0) return seg;
+                return seg.charAt(0).toUpperCase() + seg.slice(1);
+            })
+            .join('');
+    }
+
+    const facade = Object.create(null);
+    for (const action of supportedActions) {
+        const methodName = toFacadeMethodName(action);
+        facade[methodName] = function (payload) {
+            return window.jet.invoke(action, payload);
+        };
+    }
+    facade.__unknown = function (methodName) {
+        return Promise.reject(new Error(
+            'JetApi method "' + methodName + '" not found. ' +
+            'Add action to docs/action-contract-manifest.md first.'
+        ));
+    };
+
+    window.JetApi = new Proxy(Object.freeze(facade), {
+        get(target, prop) {
+            if (prop in target) return target[prop];
+            if (typeof prop === 'symbol') return undefined;
+            return function () { return target.__unknown(prop); };
+        }
+    });
+
     window.chrome.webview.addEventListener('message', event => {
         const message = event.data;
         if (!message || !message.requestId) {

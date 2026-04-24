@@ -54,7 +54,10 @@ Bridge 回傳的標準回應：
 |:---|:---|:---|:---|
 | `system.ping` | `{}` | `{ message, utcNow }` | 基本 host 通訊檢查 |
 | `app.bootstrap` | `{}` | `AppBootstrapDto` | 啟動 shell、顯示 DB provider 與 supported actions |
-| `project.loadDemo` | `{}` | `DemoProjectDto` | 載入 deterministic demo project |
+| `project.loadDemo` | `{}` | `DemoProjectDto` (metadata only，不含 rows) | 載入 deterministic demo project metadata |
+| `demo.fetchGlRows` | `{}` | `{ fileName, rows, columns }` | 取得 demo GL raw rows（驅動與使用者一致的 `import.gl` 流程） |
+| `demo.fetchTbRows` | `{}` | `{ fileName, rows, columns }` | 取得 demo TB raw rows（驅動 `import.tb`） |
+| `demo.fetchAccountMappingRows` | `{}` | `{ fileName, rows }` | 取得 demo account mapping rows（驅動 `import.accountMapping`） |
 
 `AppBootstrapDto` 結構：
 
@@ -180,6 +183,33 @@ Bridge 回傳的標準回應：
 | `export.criteria` | `{}` | `{ ok, message }` | criteria 匯出委派前端 |
 | `export.workpaper` | `{ selected }` | `{ ok, message }` | workpaper 匯出委派前端 |
 
+## JetApi Typed Facade
+
+前端**唯一**呼叫 bridge 的管道是 `window.JetApi.*`。此 facade 由 `JetBridgeScriptFactory` 以 `SupportedActions` 為單一事實來源自動產生；action name 與 facade method 對照規則為：
+
+1. 以 `.` 切段。
+2. 第一段小寫；後續每段首字母大寫（lowerCamelCase 串接）。
+3. 例：`validate.run` → `JetApi.validateRun`；`mapping.commit.gl` → `JetApi.mappingCommitGl`；`demo.fetchGlRows` → `JetApi.demoFetchGlRows`。
+
+規則：
+
+- UI/demo/workflow code 一律呼叫 `await JetApi.xxx(payload)`，不得直接呼叫 `window.jet.invoke(...)` 或 `window.chrome.webview.postMessage(...)`（除 bootstrap script 本身）。
+- 若呼叫未註冊的 method，facade 會丟出 Error，提示先在本 manifest 新增對應 action。
+- 新增 action 時必定先改本 manifest、`SupportedActions`、handler，最後才在 UI 使用 `JetApi.<newMethod>`。
+
+## Demo Pipeline 對齊原則
+
+Demo 載入流程**必須**走與使用者上傳完全相同的 `import.*` pipeline：
+
+1. `JetApi.projectLoadDemo()` → 取 metadata（專案欄位、file names、holidays、makeup、建議 mapping）。
+2. `JetApi.projectCreate(metadata)`。
+3. `JetApi.demoFetchGlRows()` → `JetApi.importGl({ fileName, rows, columns })`。
+4. `JetApi.demoFetchTbRows()` → `JetApi.importTb(...)`。
+5. `JetApi.demoFetchAccountMappingRows()` → `JetApi.importAccountMapping(...)`。
+6. `JetApi.importHoliday({ dates })` / `JetApi.importMakeupDay({ dates })`。
+
+Demo 與 production path 從此完全對齊；任何 pipeline 變更必須同時通過 demo。
+
 ## Current Logical Mapping Keys
 
 ### GL Mapping Keys
@@ -250,3 +280,6 @@ Bridge 回傳的標準回應：
 - 把 bridge 當 application service 寫
 - 改了 action payload，卻不更新 manifest
 - 對同一需求同時發明 `query.*`、`load.*`、`fetch.*` 三種名稱空間
+- 在前端實作 authoritative 的 validation / prescreen / filter 規則（必須走 handler）
+- UI code 直接呼叫 `window.jet.invoke('xxx', payload)` 或 `window.chrome.webview.postMessage(...)`；一律改走 `JetApi.*`
+- 同一條業務規則在 HTML/JS 與 C# handler 各寫一份（必然發散）

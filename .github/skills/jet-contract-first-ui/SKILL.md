@@ -37,3 +37,30 @@ JET is not a free-form web UI project. It is a contract-bound WebView2 frontend 
 - Do not move business logic into the frontend or bridge.
 - Prefer the smallest contract change that satisfies the workflow.
 - If the request is only visual polish, keep the contract untouched.
+
+## Backend Access Rule
+
+UI code must call backend through `window.JetApi.<method>()` only. Example:
+
+```js
+// ✅ Correct — typed facade, one per action
+const result = await JetApi.validateRun();
+renderValidationSummary(result);
+
+const suggest = await JetApi.mappingAutoSuggest({ fields, columns });
+```
+
+Forbidden forms (except inside the bootstrap script itself):
+
+```js
+// ❌ Raw low-level bridge call
+await window.jet.invoke('validate.run', {});
+
+// ❌ Raw WebView2 postMessage
+window.chrome.webview.postMessage({ action: 'validate.run' });
+
+// ❌ Local reimplementation of authoritative rules
+const result = computeValidation(); // there is no such function in the authoritative UI
+```
+
+When adding a new action: update `docs/action-contract-manifest.md` and `ActionDispatcher` first — the facade method will appear automatically on `window.JetApi` because `JetBridgeScriptFactory` derives it from `SupportedActions`.

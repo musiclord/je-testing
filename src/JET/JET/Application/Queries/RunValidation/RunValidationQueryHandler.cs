@@ -88,9 +88,9 @@ namespace JET.Application.Queries.RunValidation
             var tbAccAmt = new Dictionary<string, decimal>();
             foreach (var r in tb)
             {
-                var acc = GetVal(r, tbMapping.GetValueOrDefault("accNum") ?? "")?.Trim();
+                var acc = GlRowAccess.GetVal(r, tbMapping.GetValueOrDefault("accNum") ?? "")?.Trim();
                 if (string.IsNullOrEmpty(acc)) continue;
-                var amt = ParseDecimal(GetVal(r, tbMapping.GetValueOrDefault("amount") ?? ""));
+                var amt = GlRowAccess.ParseDecimal(GlRowAccess.GetVal(r, tbMapping.GetValueOrDefault("amount") ?? ""));
                 tbAccAmt[acc] = tbAccAmt.GetValueOrDefault(acc) + amt;
             }
 

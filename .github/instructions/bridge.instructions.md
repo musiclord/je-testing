@@ -10,6 +10,8 @@ applyTo: "src/JET/JET/Bridge/**/*.cs,src/JET/JET/Application/Contracts/**/*.cs"
 - Payloads and responses must stay plain JSON-friendly structures.
 - Any action or payload change must be reflected in `docs/action-contract-manifest.md`.
 - Prefer additive contract evolution over silent breaking changes.
+- `ActionDispatcher` must not call repositories or DB sessions directly; it only routes payloads to handlers and wraps their result/error into the bridge envelope.
+- `JetBridgeScriptFactory` must keep `window.JetApi` derived from `SupportedActions` as the single source of truth; do not hand-maintain a second facade list in JS or docs.
 
 ## Taste Gate
 
