@@ -26,6 +26,7 @@ Treat this file as the map, not the encyclopedia. The durable system of record l
 - `Domain/*` stays pure and framework-free.
 - `Infrastructure/*` owns provider-specific I/O and SQL differences.
 - Provider branching belongs in Infrastructure, not in Application or frontend code.
+- **Set-based pushdown to the SQL engine is the only acceptable execution path for V1-V4 / R1-R8 / A2-A4 / custom filter rules.** Do not load GL/TB row collections into Application memory for LINQ-style computation. Bridge payloads/responses must not carry full row sets at scale (see `docs/jet-guide.md` §1.5).
 - Do not edit `Form1.Designer.cs` or other designer-generated files unless the user explicitly asks.
 
 ## Contract-First Workflow

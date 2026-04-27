@@ -52,6 +52,101 @@ JET 的工作 = **把「有風險的分錄」從幾十萬筆分錄中篩出來**
 
 ---
 
+## 1.5 資料量規模與處理原則 (Non-Negotiable)
+
+JET 的所有設計決策都受**母體規模**驅動。違反本節原則的程式碼，無論寫得多漂亮，在真實案件上都會崩潰，必須拒絕合入。
+
+### 1.5.1 規模假設
+
+| 維度 | 典型 | 上界 (必須能跑) |
+|:---|:---|:---|
+| GL rows | 10 萬 ～ 50 萬 | **500 萬** |
+| TB rows | 數百 ～ 數千 | 1 萬 |
+| AccountMapping rows | 數百 | 5 千 |
+| 單次 V/R 規則查詢延遲 | < 1 秒 (10 萬筆) | < 30 秒 (500 萬筆) |
+| Workpaper Excel 大小 | 數 MB | 數百 MB |
+
+ISA 240 要求對**全母體**執行 JET，不允許抽樣替代規則篩選；因此 V1-V4 / R1-R8 / A2-A4 / 自訂 filter 都必須以**全母體**為計算基底。
+
+### 1.5.2 唯一允許的計算位置：DB 引擎 (Set-Based Pushdown)
+
+**禁止**在 Application 層 (C# / LINQ) 對 GL/TB row 集合執行 V/R/Filter 規則。所有規則都必須以 SQL 表達，由 SQLite / SQL Server 引擎以 set-based 方式執行。
+
+理由：
+1. **記憶體**：500 萬 GL rows × 12 欄 × 平均 50 byte ≈ 3 GB；C# Dictionary 額外 overhead 再 ×2~3。Application 程序會 OOM。
+2. **效能**：DB 引擎的 hash join、index scan、parallel aggregation 比手寫 LINQ 快 1-3 個數量級。
+3. **可重現**：SQL 規則可以單獨在 DB tool 中重跑驗證，C# LINQ 規則無法。
+
+**正確形狀**（對應 §13 設計）：
+
+```csharp
+public interface IGlRepository
+{
+    Task<RuleResult> RunValidationAsync(ProjectId id, ValidationKind kind, CancellationToken ct);
+    Task<RuleResult> RunPrescreenAsync(ProjectId id, RuleSpec rule, CancellationToken ct);
+    Task<FilterResult> RunFilterAsync(ProjectId id, ScenarioSpec scenario, CancellationToken ct);
+}
+```
+
+Repository 內部生成 SQL，例如 V2 借貸不平：
+
+```sql
+SELECT doc_num, SUM(amount) AS net
+FROM target_gl_entry
+WHERE project_id = @projectId
+GROUP BY doc_num
+HAVING ABS(SUM(amount)) > 0;
+```
+
+**反例**（目前 `RunValidationQueryHandler.cs` 的寫法）：
+
+```csharp
+var v2NullDocNums = gl.Count(r => string.IsNullOrWhiteSpace(GetGlVal(r, "docNum", mapping)));
+// 整個 gl 已經被 InMemoryProjectSessionStore 載入記憶體 → 規模禁忌
+```
+
+### 1.5.3 Bridge 不得搬運完整 row 集合
+
+WebView2 ↔ .NET 的 `postMessage` 通道是 JSON-over-string；對 100 萬 row × 數十欄做 `JSON.stringify` 會：
+
+- 在 JS 端 OOM
+- 序列化耗時 10+ 秒、阻塞 UI thread
+- 反序列化在 .NET 端再耗一次
+
+**規則**：
+
+| 動作 | Prototype 契約 (現況) | 規模化目標契約 (Phase 3+) |
+|:---|:---|:---|
+| `import.gl` / `import.tb` | `{ fileName, rows, columns }` | `{ filePath, mode, columnMap }` — handler 透過 `IGlFileReader` streaming 直入 DB |
+| `validate.run` | 回完整 `diffAccounts` / row counts | 回 summary 數字 + `resultRef` token；明細透過 `query.validationDetailsPage` 分頁拉 |
+| `prescreen.run` | 回 r1..r6 完整 row lists | 回每條規則的命中數 + `resultRef`；明細走 `query.prescreenPage` |
+| `filter.preview` | 回完整 `resultRows` | 回 count + voucherCount + 前 N 筆 preview + `resultRef` |
+| `query.glPage` (新) | — | `{ projectId, cursor, pageSize }` → keyset paging |
+
+**Demo 例外**：示範資料約 2200 GL row，是 prototype 契約能存活的唯一情境，未來規模化後仍以 streaming 路徑跑（demo 不應被特別對待，否則違反 Phase 1 已建立的「demo == upload pipeline」原則）。
+
+### 1.5.4 Excel Workpaper 採 Streaming Writer
+
+`export.workpaper` 預期輸出多工作表、合計可達數百 MB（明細層）。實作必須走 **OpenXML SAX writer**（例如 `DocumentFormat.OpenXml` `OpenXmlWriter`）或 `ClosedXML` 的 streaming API，禁止把整份 result set 載入 `DataTable` / List 後再寫。
+
+### 1.5.5 InMemoryProjectSessionStore 的退場路徑
+
+目前 `InMemoryProjectSessionStore` 是 prototype 過渡品。Phase 3 結束時，它必須只保留**輕量 session pointer**（current projectId、current mappings、UI 篩選暫態），不再持有 GL/TB rows。GL/TB raw rows 一律落地 `staging_*`，標準化後的資料落地 `target_*`，規則結果落地 `result_*`。
+
+### 1.5.6 自我檢查清單
+
+每次新增/修改 handler 時自問：
+
+1. 我有沒有把任何 GL/TB row 集合載入 `List<>` / `Dictionary<>` 然後跑 LINQ？
+2. 我有沒有讓 bridge payload 或 response 攜帶超過 1000 row 的明細？
+3. 我有沒有建立 in-memory cache 取代 DB 查詢？
+4. 我寫的 SQL 在 500 萬筆 GL 上跑得動嗎？（有沒有用 index、有沒有避免 SELECT *、有沒有 keyset 分頁？）
+5. 我的 Excel 寫入是 streaming 的嗎？
+
+任何一題答 "是 / 否（不安全）" → 設計需要重做。
+
+---
+
 ## 2. 核心資料實體
 
 JET 全系統只操作 **5 個核心實體**：GL、TB、AccountMapping、DateDimension、RuleResult。

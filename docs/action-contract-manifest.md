@@ -55,9 +55,12 @@ Bridge 回傳的標準回應：
 | `system.ping` | `{}` | `{ message, utcNow }` | 基本 host 通訊檢查 |
 | `app.bootstrap` | `{}` | `AppBootstrapDto` | 啟動 shell、顯示 DB provider 與 supported actions |
 | `project.loadDemo` | `{}` | `DemoProjectDto` (metadata only，不含 rows) | 載入 deterministic demo project metadata |
-| `demo.fetchGlRows` | `{}` | `{ fileName, rows, columns }` | 取得 demo GL raw rows（驅動與使用者一致的 `import.gl` 流程） |
-| `demo.fetchTbRows` | `{}` | `{ fileName, rows, columns }` | 取得 demo TB raw rows（驅動 `import.tb`） |
-| `demo.fetchAccountMappingRows` | `{}` | `{ fileName, rows }` | 取得 demo account mapping rows（驅動 `import.accountMapping`） |
+| `demo.exportGlFile` | `{}` | `{ filePath, fileName }` | 將 deterministic demo GL 寫成 xlsx 檔；前端接 `import.gl.fromFile` |
+| `demo.exportTbFile` | `{}` | `{ filePath, fileName }` | 將 deterministic demo TB 寫成 xlsx 檔；前端接 `import.tb.fromFile` |
+| `demo.exportAccountMappingFile` | `{}` | `{ filePath, fileName }` | 將 deterministic demo account mapping 寫成 xlsx 檔；前端接 `import.accountMapping.fromFile` |
+| `demo.fetchGlRows` | `{}` | `{ fileName, rows, columns }` | **Deprecated**：demo 小檔 fallback；新流程請改用 `demo.exportGlFile` → `import.gl.fromFile` |
+| `demo.fetchTbRows` | `{}` | `{ fileName, rows, columns }` | **Deprecated**：demo 小檔 fallback；新流程請改用 `demo.exportTbFile` → `import.tb.fromFile` |
+| `demo.fetchAccountMappingRows` | `{}` | `{ fileName, rows }` | **Deprecated**：demo 小檔 fallback；新流程請改用 `demo.exportAccountMappingFile` → `import.accountMapping.fromFile` |
 
 `AppBootstrapDto` 結構：
 
@@ -82,25 +85,33 @@ Bridge 回傳的標準回應：
 
 | Action | Payload | Response | 用途 |
 |:---|:---|:---|:---|
-| `project.create` | `{ projectCode, entityName, operatorId, industry, periodStart, periodEnd, lastPeriodStart }` | `{ projectId, ok }` | 建立記憶體中的專案 session |
-| `import.gl` | `{ fileName, rows, columns }` | `{ fileName, rows, columns }` | 載入 GL 主檔到 session |
-| `import.tb` | `{ fileName, rows, columns }` | `{ fileName, rows, columns }` | 載入 TB 主檔到 session |
-| `import.accountMapping` | `{ fileName, rows }` | `{ fileName, rows }` | 載入科目配對表 |
-| `import.holiday` | `{ dates }` | `{ dates }` | 載入假日 |
-| `import.makeupDay` | `{ dates }` | `{ dates }` | 載入補班日 |
+| `project.create` | `{ projectCode, entityName, operatorId, industry, periodStart, periodEnd, lastPeriodStart }` | `{ projectId, ok }` | 建立專案；寫入 `config_project` + `config_project_state` |
+| `project.load` | `{ projectId }` | `{ project, mapping, latestRuns }` | 從 repository 讀取既有專案的 metadata、mapping cache pointer 與最新 `runId`（validation/prescreen/scenario） |
+| `import.gl.fromFile` | `{ filePath, fileName?, mode? }` | `{ batchId, rowCount, columns }` | **Scale-aware**：從檔案路徑串流讀 GL 寫入 `staging_gl_raw_row`；payload 不帶 rows |
+| `import.gl` | `{ fileName, rows, columns }` | `{ fileName, rows, columns }` | **Deprecated**：仍存在以支援 demo / 小檔 fallback；新代碼請改用 `import.gl.fromFile` |
+| `import.tb.fromFile` | `{ filePath, fileName?, mode? }` | `{ batchId, rowCount, columns }` | **Scale-aware**：從檔案路徑串流讀 TB 寫入 `staging_tb_raw_row`；payload 不帶 rows。語意對齊 `import.gl.fromFile` |
+| `import.tb` | `{ fileName, rows, columns }` | `{ fileName, rows, columns }` | **Deprecated**：仍存在以支援 demo / 小檔 fallback；新代碼請改用 `import.tb.fromFile` |
+| `import.accountMapping.fromFile` | `{ filePath, fileName?, mode? }` | `{ batchId, rowCount, columns }` | **Scale-aware**：從檔案路徑串流讀科目配對表寫入 `staging_account_mapping_raw_row`；payload 不帶 rows。語意對齊 `import.gl.fromFile` |
+| `import.accountMapping` | `{ fileName, rows }` | `{ fileName, rows }` | **Deprecated**：仍存在以支援 demo / 小檔 fallback；新代碼請改用 `import.accountMapping.fromFile` |
+| `import.holiday` | `{ dates }` | `{ dates, batchId? }` | 載入假日；當有 `CurrentProjectId` 時寫入 `staging_calendar_raw_day` (replace 語意) |
+| `import.makeupDay` | `{ dates }` | `{ dates, batchId? }` | 載入補班日；同上 |
 
-備註：
+`import.gl.fromFile` 細節：
 
-- 目前 prototype 直接傳 `rows` 陣列，不是檔案路徑。
-- `rows` 為 `Array<Record<string, string | number | boolean | null>>`。
+- `filePath`：本機絕對路徑 (xlsx)；handler 用 `IGlFileReader` 串流讀取。
+- `fileName`：可選，預設取自 `filePath`。
+- `mode`：`"replace"` (預設) 或 `"append"`；`replace` 會先刪除同 project + dataset_kind=`gl` 的舊批次。
+- Response `columns`：實際讀到的 header row，供下一步 `mapping.autoSuggest` / `mapping.commit.gl` 使用。
+- **Scale constraint**：response **絕對不**回 rows；明細只透過後續 keyset paging query 取（pending §3.3）。
+- 大檔（10 萬～500 萬 row）必須走此 action；`import.gl` 僅保留給 demo / 小檔 fallback。
 
 ### Mapping
 
 | Action | Payload | Response | 用途 |
 |:---|:---|:---|:---|
 | `mapping.autoSuggest` | `{ fields, columns }` | `{ suggested }` | 依欄位標籤與關鍵字自動配對 |
-| `mapping.commit.gl` | `{ mapping }` | `{ ok, mapping }` | 提交 GL logical mapping |
-| `mapping.commit.tb` | `{ mapping }` | `{ ok, mapping }` | 提交 TB logical mapping |
+| `mapping.commit.gl` | `{ mapping }` | `{ ok, mapping, batchId?, projectedRowCount }` | 提交 GL logical mapping，並將最新 GL staging 批次 set-based 投影到 `target_gl_entry` |
+| `mapping.commit.tb` | `{ mapping }` | `{ ok, mapping, batchId?, projectedRowCount }` | 提交 TB logical mapping，並將最新 TB staging 批次 set-based 投影到 `target_tb_balance` |
 
 `fields` 來源通常為 UI 的欄位定義陣列。每個元素：
 
@@ -117,7 +128,8 @@ Bridge 回傳的標準回應：
 
 | Action | Payload | Response | 用途 |
 |:---|:---|:---|:---|
-| `validate.run` | `{}` | `{ stats, summary, v1, v2, v3, v4, diffAccounts }` | 執行 prototype validation summary |
+| `validate.run` | `{}` | `{ stats, summary, v1, v2, v3, v4, diffAccounts, resultRef }` | 以 SQL set-based 執行 validation summary；明細寫入 `result_validation_*` |
+| `query.validationDetailsPage` | `{ projectId, kind, cursor?, pageSize? }` | `{ rows, nextCursor }` | 從 `result_validation_v{1-4}` 以 keyset paging 讀 validation 明細；`kind` = `v1`~`v4` |
 
 `validate.run` 的 response 應被前端視為：
 
@@ -125,24 +137,27 @@ Bridge 回傳的標準回應：
 - `summary`: validation card summary
 - `v1` ~ `v4`: 各 validation 指標數值
 - `diffAccounts`: completeness 差異科目清單
+- `resultRef`: `{ runId }`，明細由 `query.validationDetailsPage` keyset paging 讀取（pending §3.3.b）
 
 ### Prescreen
 
 | Action | Payload | Response | 用途 |
 |:---|:---|:---|:---|
-| `prescreen.run` | `{}` | `{ r1, r2, r3, r4, r4ZerosThreshold, r5, r5Summary, r6, descNull }` | 執行 prototype prescreen 結果 |
+| `prescreen.run` | `{}` | `{ r1, r2, r3, r4, r4ZerosThreshold, r5Summary, r6, r7, r8, a2, a3, a4, descNullCount, resultRef }` | 以 SQL set-based 執行 prescreen summary；明細寫入 `result_prescreen_*`，不回完整 rows |
+| `query.prescreenPage` | `{ projectId, kind, cursor?, pageSize? }` | `{ rows, nextCursor }` | 從 `result_prescreen_*` 以 keyset paging 讀 prescreen 明細 |
 
 備註：
 
-- `r1` ~ `r6` 目前多為 row list
-- `r5Summary` 為建立人員彙總
-- `descNull` 是摘要缺漏 row list
+- `r1` ~ `r8` / `a2` ~ `a4` 是 summary counts，不是 row list
+- `r5Summary` 為建立人員彙總，不包含明細 rows
+- `descNullCount` 是摘要缺漏 count；明細走 `query.prescreenPage`
 
 ### Filter / Criteria
 
 | Action | Payload | Response | 用途 |
 |:---|:---|:---|:---|
-| `filter.preview` | `{ scenario }` | `{ scenario: { label, resultRows, count, voucherCount, summary } }` | 預覽單一情境篩選結果 |
+| `filter.preview` | `{ scenario }` | `{ scenario: { label, count, voucherCount, summary, previewRows, resultRef } }` | 以 SQL set-based 評估情境，明細寫入 `result_filter_run`；`previewRows` ≤ 1000，`resultRef = { runId }`，後續分頁走 `query.filterPage` |
+| `query.filterPage` | `{ projectId, runId?, cursor?, pageSize? }` | `{ rows, nextCursor }` | 從 `result_filter_run` 以 keyset paging 讀情境明細；省略 `runId` 時取最新一次 |
 | `filter.commit` | `{ scenarios }` | `{ ok }` | 保留已選條件 |
 
 `scenario` schema：
@@ -252,10 +267,10 @@ Demo 與 production path 從此完全對齊；任何 pipeline 變更必須同時
 | Step | 前端需要的資料 | 建議 action |
 |:---|:---|:---|
 | Step 0 Shell | app name, DB provider, supported actions, demo enabled | `app.bootstrap`, `system.ping` |
-| Step 1 Project / Import | project metadata, import file names, raw rows/columns, holidays, makeup days | `project.create`, `import.*`, `project.loadDemo` |
+| Step 1 Project / Import | project metadata, import file names, streaming import columns, holidays, makeup days | `project.create`, `import.*.fromFile`, `project.loadDemo` |
 | Step 2 Mapping | GL/TB field definitions, uploaded columns, suggested mappings, committed mappings | `mapping.autoSuggest`, `mapping.commit.gl`, `mapping.commit.tb` |
-| Step 3 Validation | stats, summary cards, V1-V4 counts, diff account grid | `validate.run` |
-| Step 4 Prescreen / Criteria | R1-R6 row sets, scenario preview counts, voucher counts, saved scenarios | `prescreen.run`, `filter.preview`, `filter.commit` |
+| Step 3 Validation | stats, summary cards, V1-V4 counts, resultRef, paged detail grids | `validate.run`, `query.validationDetailsPage` |
+| Step 4 Prescreen / Criteria | R/A summary counts, resultRef, paged detail grids, scenario preview rows ≤1000 | `prescreen.run`, `query.prescreenPage`, `filter.preview`, `query.filterPage`, `filter.commit` |
 | Step 5 Export | selected outputs, export feedback | `export.validation`, `export.prescreen`, `export.criteria`, `export.workpaper` |
 
 ## Change Process For New UI Or New Actions
@@ -283,3 +298,45 @@ Demo 與 production path 從此完全對齊；任何 pipeline 變更必須同時
 - 在前端實作 authoritative 的 validation / prescreen / filter 規則（必須走 handler）
 - UI code 直接呼叫 `window.jet.invoke('xxx', payload)` 或 `window.chrome.webview.postMessage(...)`；一律改走 `JetApi.*`
 - 同一條業務規則在 HTML/JS 與 C# handler 各寫一份（必然發散）
+- **Bridge payload / response 攜帶超過 1000 筆明細 row**（500 萬筆 GL 會炸 JS 端與 postMessage；違反 `docs/jet-guide.md` §1.5）
+- **在 Application/Bridge 層對 GL/TB row 集合做 LINQ 計算 V/R/Filter 規則**（必須由 DB 引擎 set-based 處理；違反 §1.5.2）
+
+## Scale-First Contract Evolution (Roadmap)
+
+本章記錄目前 prototype 契約 → 規模化目標契約的 **additive 演進路徑**。Phase 3+ 切換時遵循「先在 manifest 加 v2 contract，舊契約保留為 deprecated alias 一段時間」的順序，避免 silent break（Maxim #2）。完整背景見 `docs/jet-guide.md` §1.5。
+
+### Ingest 契約演進
+
+| 動作 | Prototype (現況) | 規模化目標 | 切換策略 |
+|:---|:---|:---|:---|
+| `import.gl` | `{ fileName, rows[], columns[] }` | `{ filePath, mode, columnMap }` — 後端透過 `IGlFileReader` streaming 讀檔，直接 `BulkInsert` 進 `staging_gl_raw_row` | 新增 `import.gl.fromFile`，舊版只在 demo / 小檔保留 |
+| `import.tb` | `{ fileName, rows[], columns[] }` | `{ filePath, mode, columnMap }` | 同上，新增 `import.tb.fromFile` |
+| `import.accountMapping` | `{ fileName, rows[] }` | `{ filePath }` | 同上 |
+
+### Query 契約演進（Result Reference + Paging）
+
+| 動作 | Prototype 回傳 | 規模化目標回傳 | 切換策略 |
+|:---|:---|:---|:---|
+| `validate.run` | `{ stats, summary, v1, v2, v3, v4, diffAccounts[] }` | `{ stats, summary, v1, v2, v3, v4, resultRef }` — `diffAccounts` 改走分頁 | 新增 `query.validationDetailsPage` |
+| `prescreen.run` | `{ r1[], r2[], ..., r6[], descNull[] }` | `{ counts: { r1, r2, ... }, resultRef }` | 新增 `query.prescreenPage` (按 ruleKey + cursor) |
+| `filter.preview` | `{ scenario: { resultRows[], count, voucherCount, summary } }` | `{ scenario: { count, voucherCount, summary, previewRows[≤1000], resultRef } }` | 同 action 內欄位演進；前端讀取改用 `previewRows` + `query.filterPage` |
+| `filter.commit` | `{ ok }` | `{ ok, savedRef }` | additive 加 `savedRef` |
+
+### 新增動作（規模化必備）
+
+| 動作 | Payload | Response | 用途 |
+|:---|:---|:---|:---|
+| `query.glPage` | `{ projectId, cursor, pageSize, sort? }` | `{ rows[], nextCursor }` | GL keyset paging（給 step 1 預覽 / step 5 工作底稿明細） |
+| `query.validationDetailsPage` | `{ projectId, kind, cursor, pageSize }` | `{ rows[], nextCursor }` | V1-V4 明細分頁 |
+| `query.prescreenPage` | `{ projectId, ruleKey, cursor, pageSize }` | `{ rows[], nextCursor }` | R1-R8 / A2-A4 明細分頁 |
+| `query.filterPage` | `{ projectId, scenarioId, cursor, pageSize }` | `{ rows[], nextCursor }` | 自訂篩選明細分頁 |
+| `export.workpaperStream` | `{ projectId, sheets[], outputPath }` | `{ ok, bytesWritten, sheetStats }` | 走 OpenXML SAX writer 直接寫檔 |
+
+### Result Reference 概念
+
+`resultRef = { projectId, runId, generatedUtc }`。用途：
+
+1. 後續分頁 query 以 `runId` 鎖定同一次執行的結果（避免重跑時資料不一致）。
+2. Workpaper export 以 `runId` 確認匯出的是哪一次規則執行。
+3. 結果落地 `result_*` 表時 `runId` 是 partition key。
+

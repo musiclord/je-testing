@@ -33,4 +33,8 @@ namespace JET.Application.Contracts
     public sealed record DemoAccountMappingRowsDto(
         string FileName,
         IReadOnlyList<Dictionary<string, object?>> Rows);
+
+    public sealed record DemoExportFileDto(
+        string FilePath,
+        string FileName);
 }

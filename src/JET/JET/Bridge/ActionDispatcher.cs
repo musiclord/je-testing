@@ -6,11 +6,14 @@ using JET.Application.Commands.FilterScenario;
 using JET.Application.Commands.ImportData;
 using JET.Application.Queries.AppBootstrap;
 using JET.Application.Queries.AutoSuggestMapping;
+using JET.Application.Queries.LoadProject;
 using JET.Application.Queries.ProjectDemo;
 using JET.Application.Queries.RunPrescreen;
 using JET.Application.Queries.RunValidation;
 using JET.Application.Queries.SystemPing;
 using JET.Domain.Abstractions;
+using JET.Domain.Abstractions.Files;
+using JET.Domain.Abstractions.Repositories;
 using JET.Infrastructure.Configuration;
 
 namespace JET.Bridge
@@ -20,21 +23,44 @@ namespace JET.Bridge
         private readonly Dictionary<string, Func<JsonElement, CancellationToken, Task<object?>>> _routes;
         private readonly IReadOnlyCollection<string> _supportedActions = Array.Empty<string>();
 
-        public ActionDispatcher(JetAppOptions appOptions, IAppStateStore appStateStore, IProjectSessionStore sessionStore)
+        public ActionDispatcher(
+            JetAppOptions appOptions,
+            IAppStateStore appStateStore,
+            IProjectSessionStore sessionStore,
+            IProjectRepository projectRepository,
+            IDateDimensionRepository dateDimensionRepository,
+            IGlFileReader glFileReader,
+            IGlRepository glRepository,
+            ITbRepository tbRepository,
+            IAccountMappingRepository accountMappingRepository,
+            IGlProjectionRepository? glProjectionRepository = null,
+            ITbProjectionRepository? tbProjectionRepository = null,
+            IValidationRepository? validationRepository = null,
+            IPreScreenRepository? preScreenRepository = null,
+            IScenarioRepository? scenarioRepository = null)
         {
             var pingQueryHandler = new SystemPingQueryHandler();
             var bootstrapQueryHandler = new GetAppBootstrapQueryHandler(appOptions, appStateStore);
             var demoQueryHandler = new GetProjectDemoQueryHandler();
+            var demoGlFileHandler = new ExportDemoGlFileQueryHandler();
+            var demoTbFileHandler = new ExportDemoTbFileQueryHandler();
+            var demoAccountMappingFileHandler = new ExportDemoAccountMappingFileQueryHandler();
             var demoGlRowsHandler = new FetchDemoGlRowsQueryHandler();
             var demoTbRowsHandler = new FetchDemoTbRowsQueryHandler();
             var demoAccountMappingRowsHandler = new FetchDemoAccountMappingRowsQueryHandler();
-            var createProjectHandler = new CreateProjectCommandHandler(sessionStore);
-            var importDataHandler = new ImportDataCommandHandler(sessionStore);
+            var createProjectHandler = new CreateProjectCommandHandler(sessionStore, projectRepository);
+            var importDataHandler = new ImportDataCommandHandler(sessionStore, dateDimensionRepository);
+            var importGlFromFileHandler = new ImportGlFromFileCommandHandler(sessionStore, glFileReader, glRepository);
+            var importTbFromFileHandler = new ImportTbFromFileCommandHandler(sessionStore, glFileReader, tbRepository);
+            var importAccountMappingFromFileHandler = new ImportAccountMappingFromFileCommandHandler(sessionStore, glFileReader, accountMappingRepository);
             var autoSuggestHandler = new AutoSuggestMappingQueryHandler();
-            var commitMappingHandler = new CommitMappingCommandHandler(sessionStore);
-            var validationHandler = new RunValidationQueryHandler(sessionStore);
-            var prescreenHandler = new RunPrescreenQueryHandler(sessionStore);
-            var filterHandler = new FilterScenarioCommandHandler(sessionStore);
+            var commitMappingHandler = new CommitMappingCommandHandler(sessionStore, glProjectionRepository, tbProjectionRepository);
+            var validationHandler = new RunValidationQueryHandler(sessionStore, validationRepository);
+            var validationDetailsPageHandler = validationRepository is null ? null : new QueryValidationDetailsPageQueryHandler(sessionStore, validationRepository);
+            var prescreenHandler = new RunPrescreenQueryHandler(sessionStore, preScreenRepository);
+            var prescreenPageHandler = preScreenRepository is null ? null : new QueryPreScreenPageQueryHandler(sessionStore, preScreenRepository);
+            var filterHandler = new FilterScenarioCommandHandler(sessionStore, scenarioRepository);
+            var loadProjectHandler = new LoadProjectQueryHandler(sessionStore, projectRepository);
             var exportHandler = new ExportReportCommandHandler();
 
             _routes = new Dictionary<string, Func<JsonElement, CancellationToken, Task<object?>>>(StringComparer.OrdinalIgnoreCase)
@@ -42,6 +68,9 @@ namespace JET.Bridge
                 ["system.ping"] = async (_, ct) => await pingQueryHandler.HandleAsync(new SystemPingQuery(), ct),
                 ["app.bootstrap"] = async (_, ct) => await bootstrapQueryHandler.HandleAsync(new GetAppBootstrapQuery(_supportedActions), ct),
                 ["project.loadDemo"] = async (_, ct) => await demoQueryHandler.HandleAsync(new GetProjectDemoQuery(), ct),
+                ["demo.exportGlFile"] = async (_, ct) => await demoGlFileHandler.HandleAsync(new ExportDemoGlFileQuery(), ct),
+                ["demo.exportTbFile"] = async (_, ct) => await demoTbFileHandler.HandleAsync(new ExportDemoTbFileQuery(), ct),
+                ["demo.exportAccountMappingFile"] = async (_, ct) => await demoAccountMappingFileHandler.HandleAsync(new ExportDemoAccountMappingFileQuery(), ct),
                 ["demo.fetchGlRows"] = async (_, ct) => await demoGlRowsHandler.HandleAsync(new FetchDemoGlRowsQuery(), ct),
                 ["demo.fetchTbRows"] = async (_, ct) => await demoTbRowsHandler.HandleAsync(new FetchDemoTbRowsQuery(), ct),
                 ["demo.fetchAccountMappingRows"] = async (_, ct) => await demoAccountMappingRowsHandler.HandleAsync(new FetchDemoAccountMappingRowsQuery(), ct),
@@ -59,44 +88,69 @@ namespace JET.Bridge
                     return await createProjectHandler.HandleAsync(cmd, ct);
                 },
 
-                ["import.gl"] = async (payload, ct) =>
+                ["project.load"] = async (payload, ct) => await loadProjectHandler.HandleAsync(new LoadProjectQuery(GetString(payload, "projectId")), ct),
+
+                ["import.gl"] = (payload, ct) =>
                 {
+                    // Deprecated: kept only as a no-op echo so legacy small-file callers do not
+                    // fail outright. New code must use import.gl.fromFile (plan §1.5.1).
                     var fileName = GetString(payload, "fileName");
                     var rows = DeserializeRows(payload, "rows");
                     var columns = DeserializeStringList(payload, "columns");
-                    sessionStore.SetGlData(fileName, rows, columns);
-                    return new { fileName, rows, columns };
+                    return Task.FromResult<object?>(new { fileName, rows, columns });
                 },
 
-                ["import.tb"] = async (payload, ct) =>
+                ["import.gl.fromFile"] = async (payload, ct) =>
                 {
+                    var filePath = GetString(payload, "filePath");
+                    var fileName = payload.TryGetProperty("fileName", out var fn) ? fn.GetString() : null;
+                    var mode = payload.TryGetProperty("mode", out var md) ? md.GetString() : null;
+                    return await importGlFromFileHandler.HandleAsync(filePath, fileName, mode, ct);
+                },
+
+                ["import.tb"] = (payload, ct) =>
+                {
+                    // Deprecated: see import.gl note.
                     var fileName = GetString(payload, "fileName");
                     var rows = DeserializeRows(payload, "rows");
                     var columns = DeserializeStringList(payload, "columns");
-                    sessionStore.SetTbData(fileName, rows, columns);
-                    return new { fileName, rows, columns };
+                    return Task.FromResult<object?>(new { fileName, rows, columns });
                 },
 
-                ["import.accountMapping"] = async (payload, ct) =>
+                ["import.tb.fromFile"] = async (payload, ct) =>
                 {
+                    var filePath = GetString(payload, "filePath");
+                    var fileName = payload.TryGetProperty("fileName", out var fn) ? fn.GetString() : null;
+                    var mode = payload.TryGetProperty("mode", out var md) ? md.GetString() : null;
+                    return await importTbFromFileHandler.HandleAsync(filePath, fileName, mode, ct);
+                },
+
+                ["import.accountMapping"] = (payload, ct) =>
+                {
+                    // Deprecated: see import.gl note.
                     var fileName = GetString(payload, "fileName");
                     var rows = DeserializeRows(payload, "rows");
-                    sessionStore.SetAccountMappingData(fileName, rows);
-                    return new { fileName, rows };
+                    return Task.FromResult<object?>(new { fileName, rows });
+                },
+
+                ["import.accountMapping.fromFile"] = async (payload, ct) =>
+                {
+                    var filePath = GetString(payload, "filePath");
+                    var fileName = payload.TryGetProperty("fileName", out var fn) ? fn.GetString() : null;
+                    var mode = payload.TryGetProperty("mode", out var md) ? md.GetString() : null;
+                    return await importAccountMappingFromFileHandler.HandleAsync(filePath, fileName, mode, ct);
                 },
 
                 ["import.holiday"] = async (payload, ct) =>
                 {
                     var dates = DeserializeStringList(payload, "dates");
-                    sessionStore.SetHolidays(dates);
-                    return new { dates };
+                    return await importDataHandler.HandleImportHolidayAsync(dates, ct);
                 },
 
                 ["import.makeupDay"] = async (payload, ct) =>
                 {
                     var dates = DeserializeStringList(payload, "dates");
-                    sessionStore.SetMakeupDays(dates);
-                    return new { dates };
+                    return await importDataHandler.HandleImportMakeupDayAsync(dates, ct);
                 },
 
                 ["mapping.autoSuggest"] = async (payload, ct) =>
@@ -120,12 +174,57 @@ namespace JET.Bridge
 
                 ["validate.run"] = async (_, ct) => await validationHandler.HandleAsync(ct),
 
+                ["query.validationDetailsPage"] = async (payload, ct) =>
+                {
+                    if (validationDetailsPageHandler is null)
+                    {
+                        return new ValidationDetailsPageResult(Array.Empty<ValidationDetailRow>(), null);
+                    }
+
+                    var query = new QueryValidationDetailsPageQuery(
+                        GetString(payload, "projectId"),
+                        GetString(payload, "kind"),
+                        payload.TryGetProperty("cursor", out var cursor) && cursor.ValueKind == JsonValueKind.Number ? cursor.GetInt64() : null,
+                        payload.TryGetProperty("pageSize", out var pageSize) && pageSize.ValueKind == JsonValueKind.Number ? pageSize.GetInt32() : 100);
+                    return await validationDetailsPageHandler.HandleAsync(query, ct);
+                },
+
                 ["prescreen.run"] = async (_, ct) => await prescreenHandler.HandleAsync(ct),
+
+                ["query.prescreenPage"] = async (payload, ct) =>
+                {
+                    if (prescreenPageHandler is null)
+                    {
+                        return new PreScreenPageResult(Array.Empty<PreScreenDetailRow>(), null);
+                    }
+
+                    var query = new QueryPreScreenPageQuery(
+                        GetString(payload, "projectId"),
+                        GetString(payload, "kind"),
+                        payload.TryGetProperty("cursor", out var cursor) && cursor.ValueKind == JsonValueKind.Number ? cursor.GetInt64() : null,
+                        payload.TryGetProperty("pageSize", out var pageSize) && pageSize.ValueKind == JsonValueKind.Number ? pageSize.GetInt32() : 100);
+                    return await prescreenPageHandler.HandleAsync(query, ct);
+                },
 
                 ["filter.preview"] = async (payload, ct) =>
                 {
                     var scenario = payload.GetProperty("scenario");
                     return await filterHandler.HandlePreviewAsync(scenario, ct);
+                },
+
+                ["query.filterPage"] = async (payload, ct) =>
+                {
+                    if (scenarioRepository is null)
+                    {
+                        return new ScenarioPageResult(Array.Empty<ScenarioFilterRow>(), null);
+                    }
+
+                    var projectId = GetString(payload, "projectId");
+                    if (string.IsNullOrWhiteSpace(projectId)) projectId = sessionStore.CurrentProjectId ?? string.Empty;
+                    var runId = payload.TryGetProperty("runId", out var rid) ? rid.GetString() : null;
+                    var cursor = payload.TryGetProperty("cursor", out var c) && c.ValueKind == JsonValueKind.Number ? c.GetInt64() : (long?)null;
+                    var pageSize = payload.TryGetProperty("pageSize", out var ps) && ps.ValueKind == JsonValueKind.Number ? ps.GetInt32() : 100;
+                    return await scenarioRepository.QueryPageAsync(projectId, runId, cursor, pageSize, ct);
                 },
 
                 ["filter.commit"] = async (payload, ct) =>
