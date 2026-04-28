@@ -1,35 +1,45 @@
 ---
 name: jet-harness-engineering
-description: Use when changing JET's AI workflow surfaces such as AGENTS.md, docs/agent-harness.md, docs/copilot-visualstudio-harness-spec.md, .github/instructions, .github/prompts, .github/agents, or .github/skills. Keeps the repo aligned with Visual Studio Copilot support and contract-first development.
+description: Use when changing JET AI workflow surfaces such as AGENTS.md, docs/agent-harness.md, .github/agents, .github/instructions, .github/prompts, or .github/skills.
 ---
 
 # JET Harness Engineering
 
-This skill is for maintaining the AI operating framework of the JET repository.
+Maintain JET's AI-agent customization surfaces without turning them into a second architecture manual.
 
-## Use This Skill When
+## Applies When
 
-- updating Copilot customization files
-- adding or revising prompt files
-- adding or revising custom agents
-- changing project skills
-- refining AGENTS.md or system-of-record docs for agent workflows
-- reconciling differences between Visual Studio, VS Code, Codex, and Copilot CLI behavior
+- Updating `.github/agents`, `.github/instructions`, `.github/prompts`, or `.github/skills`.
+- Cleaning stale agent guidance.
+- Reconciling customization files with the source-of-truth hierarchy.
+- Updating `AGENTS.md` or `docs/agent-harness.md` for persistent AI workflow changes.
+
+## Must Not Apply When
+
+- The task is application implementation.
+- The task is only UI review, SQL pushdown review, or action contract review; use the narrower JET skill.
+- The requested change would copy external skill content wholesale.
 
 ## Read Order
 
-1. `AGENTS.md`
-2. `docs/agent-harness.md`
-3. `docs/copilot-visualstudio-harness-spec.md`
-4. `docs/action-contract-manifest.md`
-5. `.github/copilot-instructions.md`
+1. `docs/agent-harness.md`
+2. `AGENTS.md`
+3. `.github/copilot-instructions.md`
+4. `docs/jet-guide.md`
+5. `docs/action-contract-manifest.md`
 
-## Key Rules
+## Checklist
 
-- For Visual Studio Copilot, treat repository instructions and path-specific instructions as the baseline control surface.
-- Use prompt files for repeatable workflows.
-- Use `.github/agents/*.agent.md` for Visual Studio 2026 18.4+ specialized agent personas.
-- Treat `.github/skills/` as a useful layer, but not the only layer.
-- Keep `AGENTS.md` short and cross-tool.
-- Put durable detail in `docs/`.
-- If you add a new AI workflow file, make it clear which tool is expected to consume it.
+- Keep customization files short and concrete.
+- Point to authoritative docs instead of duplicating them.
+- Remove roadmap, phase archive, and temporary plan content from persistent guidance.
+- Remove personality imitation and external repo summaries.
+- Keep verification-before-completion explicit.
+- Run `git diff --check` for customization-only cleanup.
+
+## Output
+
+- Inventory of files reviewed.
+- Changed / removed / merged / kept files.
+- Conflicts fixed.
+- Remaining risks.
