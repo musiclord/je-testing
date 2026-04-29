@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="JET/JET.csproj" />
-  <Project Path="tests/JET.Tests/JET.Tests.csproj" />
-</Solution>
